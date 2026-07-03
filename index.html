@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مرسل الافتقاد</title>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%20%22%D9%85%D8%B1%D8%B3%D9%84%20%D8%A7%D9%84%D8%A7%D9%81%D8%AA%D9%82%D8%A7%D8%AF%22%2C%20%22short_name%22%3A%20%22%D9%85%D8%B1%D8%B3%D9%84%20%D8%A7%D9%84%D8%A7%D9%81%D8%AA%D9%82%D8%A7%D8%AF%22%2C%20%22description%22%3A%20%22%D8%A5%D8%AF%D8%A7%D8%B1%D8%A9%20%D8%A7%D9%84%D9%85%D8%AE%D8%AF%D9%88%D9%85%D9%8A%D9%86%20%D9%88%D9%85%D8%AA%D8%A7%D8%A8%D8%B9%D8%A9%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%87%D9%85%22%2C%20%22start_url%22%3A%20%22./%22%2C%20%22scope%22%3A%20%22./%22%2C%20%22display%22%3A%20%22standalone%22%2C%20%22orientation%22%3A%20%22portrait%22%2C%20%22background_color%22%3A%20%22%23f7f4ec%22%2C%20%22theme_color%22%3A%20%22%230f3d3e%22%2C%20%22lang%22%3A%20%22ar%22%2C%20%22dir%22%3A%20%22rtl%22%2C%20%22icons%22%3A%20%5B%7B%22src%22%3A%20%22data%3Aimage/png%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAFxElEQVR4nO3dvY4URxSG4VoLkW7oSyCyheQAOWAviwA7NQGX5QQROLEjX4kFQshBS6PR/O10f%2BdUfaf6fXKgu%2BrdUz2zs8vD49unBmz1w%2BgLQG0EBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBMmL0Rfg4t%2BPv679I6/efcq4kloedvh5oA2t3G9vVe0loNRortlDTDMHNCSaa2aNacKArLo5N1lJ8wQkdrNhX/v/i4ZmCGjtRqbunNXFdFA4oFVbNWSf/K9QVzKg%2BzfGZFfKXfD9igV0507YbkP16z9XKaBnV7/Quk9zLzUCmma5T0xwX%2B4B3V5i//W9U93btA7oxrI6r%2BlmFe/XNKCKSxml1r07fh6o1gqGu3GPht%2BlsZtA19ZoD%2BmcKLEURgGVWK/%2BzJfF5QgzX6aBrq2AyXFmERD13Obc0Pgj7OIqkM5Fhms1eAIZroiziyszdg4Nm0AcW5tZLd2YgBg8OpM1HHCEmdx5dSbHWe%2BAqCeQQ0PjX8ZTj2L46nUN6PyLY/j9T%2BB8DXsOoX4BUU%2BegQ11Coh6so1qqEdA1NPHkIbSA6Kenvo3NP5VGErLDYjx01/nIZQYEPWM0rOhrICoZ6xuDfEMBElKQIwfB32GUHxA1OOjQ0PpRxj1jJW9/sEBOXzMG7fF7lHuBGL8OEjdhciAGD9VBO5UWEA8OzvLe5rOOsKox03SjsQExOFVUciupUwgxo%2BnjH0JCIjxU5e%2Bd/ETiPHjLHx3%2BGYqJGpAnF/ViTsYPIE4v/zF7pEUEONnDso%2BRk4gxk8VgTvF/9p86p8Pb16%2BuPp19fP7z1%2B%2Bfe95Pea2TyDOr5ls3s2wI4zzq5ao/eJ9IEg2BsT5NZ9texozgTi/KgrZNY4wSAgIki0BnRyWnF91nezdhscgJhAkBAQJAUGyOiAegCYjPgYxgSAhIEgICBICgoSAICEgSNYFxGv4KSmv5JlAkBAQJLP9VMafv/3y4%2BPLvL//7w9vlD/%2B39fvr3//HHUxDphAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJDM9k700x9/iX8Dvx9oFSYQJAQECQFBsi4g/UepYUj5nCATCBICgoSAICEgSAgIEgKCZHVAvJKfjPizfkwgSAgIEgKCZEtAPAZNQ/9lB0wgSAgIkpiAOMUqCtm1jQHxm4Hms21POcIgCQuIU6yWqP3a/lMZr959mjKan95P9ft77rT5mYQjDJLIgKYcSFMK3CkpIF6LzUHZx%2BAjjCHkL3aP1IAYQtWJO8hDNCTxAXGKOQvfnYCAOMXq0vcu5QhjCHnK2JeYgBhCFYXsWtZDNEPITdKOhAV0njMN%2BTjfi6hDI3ICcZBVEbhTue8DMYQcpO5CcEAMIX%2Bxe5T%2BTjRDaKzs9Y8PiKdpH3nPzgcpE4iGHHSop/HNVIiyAmIIjdVn/LTUCURDo3Srp2UfYTTUX896Gs9AEKUHxBDqqfP4aX0mEA310b%2Be1u0Io6FsQ%2BppPZ%2BBaCjPqHpa54doGsowsJ7m8CqMhhTDV693QBe/OIavQlEX163zJ2oGTCAaCuFQT2vt4fHtU%2Bd/cnGtGD6S9iyrpRsW0MLky6gQtxUb/BDNcbaKWz1t%2BARaWM1kT7ZLNP5lfLu%2BCoyihW09zSSgRkPXOdfTTI6wY%2Bbr1VOJpbALqN2cOlZrl6fQCrgcYcdurNEeTrRC9TTPCXRQayl1Fe/XOqD23MixXda16t6me0CLZ08u5yW%2BYYL7qhHQYoLlPpjmXioF1O5%2BiLZd/erXf65YQIv7X4uZ7ES5C75fyYAWq17SD9kY/yvUFQ7oYO2bQ6lbZXUxHcwQ0EJ8j3HDRvb/Fw3NE9CB%2BbvVc3RzMGFAB1YlTdbNwcwBHRsS06zRHNtLQMdSY9pDNMf2GNBFG6raWysXERAkjp8HQiEEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECT/A6g5Vzww/ce/AAAAAElFTkSuQmCC%22%2C%20%22sizes%22%3A%20%22192x192%22%2C%20%22type%22%3A%20%22image/png%22%2C%20%22purpose%22%3A%20%22any%20maskable%22%7D%2C%20%7B%22src%22%3A%20%22data%3Aimage/png%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAARCklEQVR4nO3dva0dyZmA4eZgfFqbwQIKYC0ZZA6yNgBlsIagEBYTg2wBCkAZCJArT5B2QpChENa4A84d8v6crq7q%2Bn6exxaog3uqvrer%2BnL44eOnzwcA/Xy3%2BwMAsIcAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNCQBAUwIA0JQAADQlAABNfb/7A8B8//jh1yv%2B2F/97q8r/ljY5cPHT593fwY4Z9F8v04hyEUACC3srH%2BcKhCWABBIgXH/CEkgCAFgpyYT/216wC4CwK1M/HfpAbcRAJYz9IeJAUsJAEsY%2BtOJAdMJADOZ%2BzdQAmYRAK4y9DcSA64QAAaZ%2B6EoAQMEgHPM/eCUgMcJAA8x99NRAt4lALzF3C9ACXiNAPAyo78YGeBbAsAv1Jj7i4adHw7FCAA/yTXdAk4xP0DSEYDu4o%2Bt1KPKj5fIBKCvmLOp/DzyYycOAego1AxqPnp8F2wkAL0EGTcGzYt8O9xMALrYPlyMlVN8X9xAAOrbOEoMkSl8gywiAJXtGhymxiK%2BUOYSgJrunxRmxM18xVwnANXcPBcMhe184wwTgDruHASmQEAWAGcJQAV2Pl9YDDxOAHK7bbfb6ulYG7xLABK7YYfb2wVYJ7xGAFKypTnLmuFbApCMbcwV1g/PCUAmS3evfduKtcQhAFnYrqxgXTUnANHZoqxmjbUlAKGt25m2JV%2Bx2BoSgKDsRraw8FoRgIgWbUI7kAdZgU0IQCw2HnFYjeUJQCAr9pvNxkWWZWECEMX0bWaPMZH1WZIA7GdrkYW1Wsx3uz9Ad3YUiUxfXRv/uWMOJ4C95q5%2Bo5/bWLo1CMAe9g8FWMbZuQLawLahhrlrz3XQ/ZwA7jZxlRv9BGFVJyUA9/HgT2GWd0YCcBOPSHRgnefiHcAd7AqamLg%2BvRK4gRPAcrPWsdFPIpZ9Ck4Aa9kG9DRrxToHLOUEsIrRD4eNEJsTwBIWPTxxFIhMAOYz/eE5DQjLFdBkU9ao0U9Jdkc0TgAzWd/whilr2zlgIgGYxvSHd2lAKK6A5ri%2BIo1%2BWrFlInACmMBShrOur3nngOsE4CrTH8ZowHYCcInpD1dowF7eAYy7uPKMfvjCbtrCCWCQ9QoTXdwRzgFjBGCE6Q/TacD9BOA00x8W0YCbCcA5pj8spQF3EoATTH%2B4gQbcRgAeZfrDbTTgHn4N9CFX1pPRD8NsvaWcAN5nCcIuV3aQc8C7BOAdpj/spQHrCMBbTH%2BIQAMWEYBXmf4QhwasIAAvM/0hGg2YTgBeYPpDTBowlwDMZPrDanbZRALwteHHBOsS7jG81xwCviIAv2D6QwoaMIUA/MzKgA7s9C8E4Cde/EIuXghfJwDHYfpDThpwkQBcYvrDXvbgFQLgxS/k5oXwsO4BMP2hAA0Y0zoApj%2BUoQEDWgdgjOkPMdmbZ/UNQOfsA8%2B1nQZNA%2BDyB0pyEXRKxwCY/lCYBjyuYwDGmP6Qhd36oHYBGIu89QS5jO3ZboeAXgHo9u0CZ7WaEo0C4OofWvEy4F2NAjDG9Ie87N%2B3dQmAq3/oycuAN7QIQJPvEpiow9xoEYAxHv%2BhBnv5NfUD4PIHcBH0ouIBMP2BJxrwreIBAOA1lQPg8R94ziHgK5UDMMD0h9rs8efKBqBwtIGbVZ0nNQPg8gd4jYugL2oGYIDpD33Y708KBqBkqIHt6s2WggEY4HEAurHrj3oBGEi0dQA9Dez9YoeAUgEo9t0AAVWaM6UCMMDjP3TWfALUCYDLH2BA54ugOgEA4JQiAfD4DwxrewgoEgAAzqoQAI//wEU9DwEVAnCW6Q98q%2BFkSB%2BAAhEGkso%2Bf9IH4KyGkQce1G0%2B5A5A9vwC2aWeQrkDcFa3vANntZoSiQOQOrxAGXlnUeIAnNUq7MCwPrMiawDyJheoJ%2BlEyhqAs/okHbiuycRIGYCksQUKyziXUgbgrCYxBybqMDfyBSBjZoEO0k2nfAE4q0PGgRXKT49kAUgXWKCVXDMqWQDOKh9wYKnaMyRTAHKlFegp0aTKFICzaqcbuEfhSVI5AAC8IU0Azp6qCkcbuNnZeZLlFihNAACYK0cAsuQU4EmKqZUjAGe5/wHmKjlVagYAgHclCIDXv0AE9V4FJwgAACtED4DHfyCOYoeA6AEAYBEBAGjqw8dPn3d/hle5/2HY3KP3X/7579/%2B4e8T/0BSKzOanAAAmhIAgKbiBqDMIQsopszvAsUNAABLFQmAx3/gTjVmTtAAhD0xAQyIOdOCBgCA1SoEoMZZDMilwOSJGICYZyWAKwJOtogBAOAG6QNQ4BQGJJV9/qQPAABjwgUg4DUZwBTR5lu4AABwj9wByH4BB2SXegrFCkC08xHAXKGmXKwAAHCbxAFIffICysg7ixIHAIArAgUg1NUYwCJxZl2gAABwp6wByHvpBtSTdCJlDQAAF0UJQJxLMYDVgky8KAEA4GYpA5D0ug0oLONcShkAAK4TAICmQgQgyPsQgNtEmHshAnBKxos2oIN00ylfAACYQgAAmhIAgKb2ByDCmxCA%2B22ffvsDcEq6dyxAK7lmVLIAADCLAAA0JQAATQkAQFObA7D9JTjARntnYKYTQK7X60BPiSZVpgAAMJEAADQlAABNCQBAUwIA0NTOAPgdUICNkzDNCSDRb1YBzWWZV2kCAMBcAgDQlAAANCUAAE0JAEBTAgDQlAAANCUAAE0JAEBTHz5%2B%2Brzl//jU337O8tfqCvvf//7P3/zXf%2Bz%2BFDzqf/74f3/%2B2792f4ru4k85JwCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoKnvd38Acvj9n378/Z9%2B3P0pTvjHD7%2Be%2BKf95Z///u0f/j7xD4QInAAAmtoWgF/97q%2BP/4/nPs0BrHZqap2ahxM5AQA0JQAATQkAQFMCANCUAAA0JQAATQkAQFMCANCUAAA0lSYA/jIwkEWWebUzALv%2B9jNAHBsnYZoTAABzCQBAUwIA0JQAADQlAABNZQpAlt%2BsAjpLNKk2B8BvggKd7Z2BmU4AAEwkAABNCQBAUwIA0FSyACR6vQ40lGtG7Q%2BAXwQCeto%2B/fYHAIAtBACgKQEAaCpfAHK9YwH6SDedQgRg%2B5sQgJtFmHshAgDA/QQAoKmUAUh30QaUl3EupQwAANdFCUCE9yEA9wgy8aIEAICbZQ1Axus2oKqkEylrAAC4KFAAglyKASwVZ9YFCgAAd0ocgKSXbkAxeWdR4gAAcEWsAMS5GgNYIdSUixWAs/KevIAaUk%2Bh3AEAYFi4AIQ6HwFMFG2%2BhQsAAPdIH4DUF3BAatnnT/oAADAmYgCiXZMBXBdwskUMwFnZT2FARgUmT4UAADAgaAACnpUAhsWcaUEDcFaBsxiQSI2ZUyQAAJwVNwBnT0w1ggzEd3baxLz/OY7j%2B90fAJYIu%2BUgjrgnAACWCh0At0BANGXuf47gAQBgHQEAaCp6ANwCAXFUuv854gcAgEUSBMAhAIig2OP/kSIAAKxQMwAOAcBcJadKjgDEP0kBPJdiauUIAADTpQmAV8HALvVe/z5JEwAA5qocAIcA4LrCkyRTALKcqoDOEk2qTAEYUDjdwA1qz5BkAUiUVqChXDMqWQAG1A44sE756ZEvALkCC/SRbjrlC8CA8hkHpuswN1IGIF1mgfIyzqWUARjQIebALE0mRtYAZIwtUFXSiZQ1AAOaJB24qM%2BsSByApMkFisk7ixIHYECfsANjWk2J3AHIG16ghtRTKHcABrTKO3BKt/mQPgCp8wukln3%2BpA/AgG6RBx7RcDJUCMBAhBt%2B08AbBmZC9sf/o0YAABhQJAAOAcCwno//R5kAAHBWnQA4BAAD2j7%2BH5UCMEYDoLPmE6BUAMpkGQir0pwpFYDDRRDwsM6XP0%2BqBWCMBkA3dv1RMgDFEg0EUW%2B2FAzAGI8D0If9/qRmAMZCbU1AB2M7vd7j/1E1AEfRbwvYouo8KRuAMQ4BUJs9/lzlALgIAp5z%2BfOVygEA4A3FA%2BAQADzx%2BP%2Bt4gE4NAAw/V9RPwDDNABqsJdf0yIA5TMOTNdhbrQIwOEiCLpy%2BfOGLgEYpgGQl/37tkYBGE66NQQZDe/cJo//R6sAHJ2%2BV2BMqynRKwCHlwHQg6v/R7QLwDANgCzs1gd1DICXAVCYq//HdQzAoQFQlOl/StMAHF2/b%2BBbbadB3wAMcwiAmOzNs1oHwEUQlOHyZ0DrABwaACWY/mO6B%2BDQAEjO9B8mAJdoAOxlD14hAMdx7UHA%2BoNdruw%2Bj/%2BHAHyhAZCL6X%2BdAPzMmoAO7PQvBOAXvBCGFLz4nUIAvqYBEJzpP4sAzKQBsJpdNpEAvMALYYjJi9%2B5BOBlGgDRmP7TCcCrNADiMP1XEIC3aABEYPovIgDv0ADYy/RfRwDepwGwi%2Bm/1IePnz7v/gw5XBzl1iKcYsfdwAngURfXk6MAPM70v4cAnKABcAPT/zYCcI4GwFKm/50E4DQNgEVM/5sJwAgNgOlM//sJwCANgIlM/y38Gugl1%2Be4hUtzNtFGTgCXXF95jgJ0ZvrvJQBXaQCMMf23E4AJNADOMv0j8A5gmilD3JqmPDslDieAaaasSEcBajP9QxGAmTQA3mD6R%2BMKaL5ZE9xCpwybIiYngPlmrVFHAWow/cMSgCU0AJ6Y/pG5AlrL6qctiz8%2BJ4C1HAXoyfRPwQngDhPHt/1AcFZ7Ik4Ad5i4jh0FiMz0z8UJ4D5zZ7ftQSiWd0YCcDePSNRjVSclABt4VqIMizk17wA2mLvKvRVgF9M/OyeAnewfkrJ0axCAzaY/v9tLLGXFVuIKaLPpq9%2BNEOuY/sU4AURhaxGZ9VmSAASy4uHdNuMiy7IwAYhl0QWO/cYAq7E8AYjIxmMvK7AJAQhq3btcm5A3WHitCEBodiO3sdgaEoDolv5ap53JYY01JgA52KKsYF01JwCZ2K7MYi1xCEA6N/xFX7u3MOuH5wQgJduYs6wZviUAidnSPMI64TUCkNtt/%2Bk3Ozwda4N3CUAFd/4XQO324CwGHicAddj5zVkAnCUA1dz87wEYBNv5xhkmADXd/8/CmAs38xVznQBUtutfBzMpFvGFMpcA1LfxH4k0OKbwDbKIAHSx/d8KNkpO8X1xAwHoZftYeWK4vMi3w80EoKMgg%2BZJ83Hju2AjAegr1Oj5ovwM8mMnDgHoLuY8ei71bPLjJTIB4CfxR9VzAceWHyDpCAC/kGuKvWbRdPPDoRgB4GU1hh1fmPt8SwB4iwwUYPTzGgHgIUqQjrnPuwSAc5QgOHOfxwkAg5QgFHOfAQLAVUqwkbnPFQLATGJwA0OfWQSAJZRgOnOf6QSA5cRgmKHPUgLArcTgXYY%2BtxEAdtKDw8RnHwEgkCY9MPEJQgAIrUASjHvCEgDyCVsFs55cBICCFhXCfKcYAQBo6rvdHwCAPQQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoCkBAGhKAACaEgCApgQAoKn/B%2BnkE4vXItlsAAAAAElFTkSuQmCC%22%2C%20%22sizes%22%3A%20%22512x512%22%2C%20%22type%22%3A%20%22image/png%22%2C%20%22purpose%22%3A%20%22any%20maskable%22%7D%5D%7D">
+<meta name="theme-color" content="#0f3d3e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مرسل الافتقاد">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#1c2b2e;
+    --paper:#f7f4ec;
+    --line:#d8cfb8;
+    --teal:#0f3d3e;
+    --teal-2:#155957;
+    --gold:#b8862b;
+    --gold-light:#e8c777;
+    --ok:#2f6b3a;
+    --warn:#a8481a;
+    --pending:#8a6d1d;
+    --danger:#a3282c;
+    --card:#ffffff;
+    --shadow: 0 2px 10px rgba(15,61,62,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Cairo',sans-serif;
+    background:
+      linear-gradient(180deg, rgba(15,61,62,0.03), rgba(15,61,62,0) 200px),
+      var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{max-width:920px;margin:0 auto;padding:16px 14px 80px;}
+
+  header.top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 20px;
+    background: linear-gradient(135deg, var(--teal), var(--teal-2));
+    border-radius:16px;
+    color:#f4ead0;
+    box-shadow: var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  header.top::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(45deg, rgba(184,134,43,0.08) 0 2px, transparent 2px 22px);
+    pointer-events:none;
+  }
+  header.top h1{
+    margin:0; font-family:'Amiri',serif; font-size:26px; font-weight:700;
+    letter-spacing:.5px;
+  }
+  header.top .sub{font-size:12.5px;opacity:.85;margin-top:4px;}
+  .seal{
+    width:44px;height:44px;border-radius:50%;
+    border:2px solid var(--gold-light);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px; flex-shrink:0;
+    background:rgba(184,134,43,0.15);
+  }
+
+  nav.tabs{
+    display:flex; gap:6px; margin:16px 0; overflow-x:auto;
+    padding-bottom:2px;
+  }
+  nav.tabs button{
+    border:none; background:var(--card); color:var(--teal);
+    padding:10px 16px; border-radius:10px; font-family:'Cairo';
+    font-weight:600; font-size:14px; cursor:pointer; white-space:nowrap;
+    box-shadow:var(--shadow); transition:.15s;
+    border:1.5px solid transparent;
+  }
+  nav.tabs button.active{
+    background:var(--teal); color:#f4ead0; border-color:var(--gold);
+  }
+
+  .card{
+    background:var(--card); border-radius:14px; padding:18px;
+    box-shadow:var(--shadow); margin-bottom:14px; border:1px solid var(--line);
+  }
+  .card h2{
+    margin:0 0 14px; font-size:17px; font-family:'Amiri',serif;
+    color:var(--teal); border-bottom:2px solid var(--gold-light); padding-bottom:8px;
+  }
+
+  .stats-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  .stat{
+    background:linear-gradient(160deg,#fff,#faf6e9);
+    border:1px solid var(--line); border-radius:12px; padding:14px 8px; text-align:center;
+  }
+  .stat .num{font-size:26px; font-weight:900; color:var(--teal); display:block;}
+  .stat .lbl{font-size:11.5px; color:#5a6660; margin-top:2px; display:block;}
+  @media (max-width:520px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+
+  .overdue-item, .contact-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 12px; border:1px solid var(--line); border-radius:10px; margin-bottom:8px;
+    background:#fffefb;
+  }
+  .contact-name{font-weight:700; font-size:14.5px;}
+  .contact-meta{font-size:12px; color:#6b756f; margin-top:2px;}
+  .badge{
+    font-size:11px; padding:3px 9px; border-radius:20px; font-weight:700; white-space:nowrap;
+  }
+  .badge.done{background:#e2f0e2; color:var(--ok);}
+  .badge.pending{background:#fbeecb; color:var(--pending);}
+  .badge.followup{background:#fbe0d5; color:var(--warn);}
+  .badge.issue{background:#fbe0e0; color:#b03a2e; margin-inline-start:6px;}
+
+  input, select, textarea{
+    width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:9px;
+    font-family:'Cairo'; font-size:14px; background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--gold-light); border-color:var(--gold);}
+  label{font-size:12.5px; font-weight:700; color:var(--teal-2); display:block; margin-bottom:4px;}
+  .field{margin-bottom:12px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:480px){.row2{grid-template-columns:1fr;}}
+
+  button.btn{
+    border:none; padding:11px 18px; border-radius:10px; font-family:'Cairo';
+    font-weight:700; font-size:14px; cursor:pointer; transition:.15s;
+  }
+  .btn-primary{background:var(--teal); color:#f4ead0;}
+  .btn-primary:hover{background:var(--teal-2);}
+  .btn-gold{background:var(--gold); color:#2a1f05;}
+  .btn-ghost{background:#eef0ea; color:var(--teal);}
+  .btn-danger{background:#f5dede; color:var(--danger);}
+  .btn-sm{padding:6px 11px; font-size:12.5px; border-radius:8px;}
+  .actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  .empty{
+    text-align:center; padding:30px 10px; color:#8a9490; font-size:14px;
+  }
+  .empty .big{font-size:34px; display:block; margin-bottom:6px;}
+
+  .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .filters select{width:auto; flex:1; min-width:110px;}
+
+  .bulk-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#f2efe3; border:1px dashed var(--gold); border-radius:10px;
+    padding:8px 12px; margin-bottom:12px;
+  }
+  .bulk-bar select{width:auto;}
+  .contact-check{width:auto !important; margin-left:4px; flex-shrink:0;}
+
+  textarea{min-height:100px; resize:vertical; font-size:14.5px; line-height:1.7;}
+  .hint{font-size:11.5px; color:#8a9490; margin-top:4px;}
+  .var-tag{
+    display:inline-block; background:#eaf3e9; color:var(--ok); border-radius:6px;
+    padding:2px 7px; font-size:11.5px; margin-left:4px; cursor:pointer; font-weight:700;
+  }
+
+  .queue-modal{
+    position:fixed; inset:0; background:rgba(15,30,25,0.55); display:flex;
+    align-items:center; justify-content:center; z-index:50; padding:16px;
+  }
+  .queue-card{
+    background:#fff; border-radius:16px; padding:26px; max-width:420px; width:100%;
+    text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.25);
+  }
+  .queue-card .progress-txt{font-size:12.5px; color:#7a847e; margin-bottom:6px;}
+  .queue-card .who{font-size:20px; font-weight:900; color:var(--teal); margin-bottom:2px;}
+  .queue-card .phone{font-size:13.5px; color:#7a847e; margin-bottom:16px; direction:ltr; display:inline-block;}
+  .queue-card .timer{
+    width:74px; height:74px; border-radius:50%; margin:0 auto 16px;
+    display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900;
+    background:conic-gradient(var(--gold) calc(var(--pct,0)*1%), #eee 0);
+    color:var(--teal); position:relative;
+  }
+  .queue-card .timer::after{
+    content:""; position:absolute; inset:6px; background:#fff; border-radius:50%;
+  }
+  .queue-card .timer span{position:relative; z-index:1;}
+  .progressbar{height:6px; background:#eee; border-radius:6px; overflow:hidden; margin-top:16px;}
+  .progressbar .fill{height:100%; background:linear-gradient(90deg,var(--gold),var(--teal)); transition:.3s;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--teal); color:#f4ead0; padding:10px 20px; border-radius:30px;
+    font-size:13.5px; box-shadow:var(--shadow); z-index:60; font-weight:600;
+  }
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(15,30,25,0.5); z-index:40;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  @media (min-width:600px){.modal-bg{align-items:center;}}
+  .modal-box{
+    background:#fff; border-radius:16px 16px 0 0; padding:22px; width:100%; max-width:480px;
+    max-height:88vh; overflow-y:auto;
+  }
+  @media (min-width:600px){.modal-box{border-radius:16px;}}
+  .modal-box h3{margin:0 0 16px; font-family:'Amiri',serif; color:var(--teal); font-size:19px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div>
+      <h1>مرسل الافتقاد</h1>
+      <div class="sub">إدارة المخدومين ومتابعة التواصل معهم</div>
+    </div>
+    <div class="seal">✝</div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">🏠 الرئيسية</button>
+    <button data-tab="contacts">👥 جهات الاتصال</button>
+    <button data-tab="send">✉️ إرسال رسالة</button>
+    <button data-tab="settings">⚙️ الإعدادات</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard">
+    <div class="card">
+      <h2>نظرة عامة</h2>
+      <div class="stats-grid">
+        <div class="stat"><span class="num" id="statTotal">0</span><span class="lbl">إجمالي المخدومين</span></div>
+        <div class="stat"><span class="num" id="statDone">0</span><span class="lbl">تم افتقادهم</span></div>
+        <div class="stat"><span class="num" id="statPending">0</span><span class="lbl">لسه محتاجين افتقاد</span></div>
+        <div class="stat"><span class="num" id="statOverdue">0</span><span class="lbl">متأخرين (14 يوم+)</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>محتاجين متابعة الأسبوع ده</h2>
+      <div id="overdueList"></div>
+    </div>
+  </section>
+
+  <!-- CONTACTS -->
+  <section id="tab-contacts" style="display:none">
+    <div class="card">
+      <h2>إضافة مخدوم</h2>
+      <div class="row2">
+        <div class="field"><label>الاسم</label><input id="newName" placeholder="مثال: مينا سمير"></div>
+        <div class="field"><label>رقم الموبايل</label><input id="newPhone" placeholder="مثال: 01012345678" dir="ltr"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>المجموعة</label>
+          <select id="newGroup" onchange="handleGroupSelectChange(this)"></select>
+        </div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="newStatus">
+            <option value="pending">لسه محتاج افتقاد</option>
+            <option value="done">تم افتقاده</option>
+            <option value="followup">محتاج متابعة</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>ملاحظات (اختياري)</label><input id="newNotes" placeholder="مثال: ظروف صحية، غايب عن الاجتماع..."></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="addContact()">➕ إضافة</button>
+        <button class="btn btn-ghost" onclick="openImport()">📥 استيراد قائمة أرقام</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>القائمة (<span id="contactsCount">0</span>)</h2>
+      <div class="filters">
+        <select id="filterGroup" onchange="renderContacts()"></select>
+        <select id="filterStatus" onchange="renderContacts()">
+          <option value="">كل الحالات</option>
+          <option value="pending">لسه محتاج افتقاد</option>
+          <option value="done">تم افتقاده</option>
+          <option value="followup">محتاج متابعة</option>
+        </select>
+        <select id="filterIssue" onchange="renderContacts()">
+          <option value="">كل الأرقام</option>
+          <option value="issues">بس اللي فيهم مشكلة (مفيش واتساب/رقم غلط)</option>
+          <option value="no_whatsapp">مفيش واتساب بس</option>
+          <option value="wrong_number">أرقام غلط بس</option>
+          <option value="ok">استبعاد اللي فيهم مشكلة</option>
+        </select>
+        <input id="searchBox" placeholder="بحث بالاسم..." oninput="renderContacts()" style="flex:2;min-width:150px;">
+      </div>
+
+      <div class="bulk-bar" id="bulkBar">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--teal-2);cursor:pointer;">
+          <input type="checkbox" id="selectAllBox" onchange="toggleSelectAll(this.checked)" style="width:auto;">
+          تحديد الكل
+        </label>
+        <span class="hint" id="selectedCount">0 محدد</span>
+        <select id="bulkGroupTarget" style="width:auto;min-width:130px;" onchange="handleGroupSelectChange(this)"></select>
+        <button class="btn btn-ghost btn-sm" onclick="bulkMove()">➡️ نقل للمجموعة</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑️ حذف المحدد</button>
+      </div>
+
+      <div id="contactsList"></div>
+    </div>
+  </section>
+
+  <!-- SEND -->
+  <section id="tab-send" style="display:none">
+    <div class="card">
+      <h2>1. اختار المستقبلين</h2>
+      <div class="filters">
+        <select id="sendGroup" onchange="updateSendCount()"></select>
+        <select id="sendStatus" onchange="updateSendCount()">
+          <option value="">كل الحالات</option>
+          <option value="pending">لسه محتاج افتقاد</option>
+          <option value="done">تم افتقاده</option>
+          <option value="followup">محتاج متابعة</option>
+        </select>
+      </div>
+      <div class="hint" id="sendCountTxt">هيتم الإرسال لـ 0 شخص</div>
+    </div>
+
+    <div class="card">
+      <h2>2. اكتب الرسالة</h2>
+      <div class="actions" style="margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--teal-2);cursor:pointer;">
+          <input type="radio" name="msgMode" id="msgModeSingle" value="single" style="width:auto;" checked onchange="setMsgMode('single')">
+          رسالة واحدة للكل
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--teal-2);cursor:pointer;">
+          <input type="radio" name="msgMode" id="msgModeMulti" value="multi" style="width:auto;" onchange="setMsgMode('multi')">
+          أكتر من رسالة (توزيع عشوائي على الأشخاص)
+        </label>
+      </div>
+
+      <div id="singleMsgBox">
+        <div class="field">
+          <textarea id="msgText" placeholder="مثال: سلام ونعمة يا {الاسم}، افتقدناك في الاجتماع، حابين نطمن عليك 🙏"></textarea>
+        </div>
+        <div>
+          <span class="var-tag" onclick="insertVar('msgText','{الاسم كامل}')">{الاسم كامل}</span>
+          <span class="var-tag" onclick="insertVar('msgText','{الاسم الأول}')">{الاسم الأول}</span>
+          <span class="var-tag" onclick="insertVar('msgText','{اليوم}')">{اليوم}</span>
+        </div>
+      </div>
+
+      <div id="multiMsgBox" style="display:none;">
+        <p class="hint" style="margin-bottom:10px;">هتضيف أكتر من نص رسالة، وكل شخص هياخد وحدة منهم عشوائيًا لما تبدأ الإرسال (عشان الرسايل متبقاش شكلها واحد لكل الناس).</p>
+        <div id="templatesList"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addTemplate()">➕ إضافة رسالة جديدة</button>
+      </div>
+      <p class="hint" style="margin-top:10px;">دوس على الوسم عشان يتضاف في مكان الكتابة. {الاسم كامل} هيتحول للاسم بالكامل، و{الاسم الأول} هيتحول للاسم الأول بس.</p>
+    </div>
+
+    <div class="card">
+      <h2>3. ابدأ الإرسال</h2>
+      <p class="hint">هيفتحلك واتساب لكل شخص تلقائي بالترتيب، وكل اللي عليك هو تدوس "إرسال" جوه واتساب.</p>
+      <button class="btn btn-gold" style="width:100%;padding:14px;font-size:16px;" onclick="startQueue()">🚀 ابدأ إرسال الرسائل</button>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="tab-settings" style="display:none">
+    <div class="card">
+      <h2>📱 تثبيت التطبيق على الموبايل</h2>
+      <p class="hint">لما تفتح الرابط من الموبايل، تقدر تثبته زي أي أبلكيشن وتفتحه من الشاشة الرئيسية.</p>
+      <div class="actions">
+        <button class="btn btn-gold" id="installAppBtn" style="display:none;" onclick="installApp()">⬇️ تثبيت التطبيق الآن</button>
+      </div>
+      <p class="hint" style="margin-top:10px;">
+        <b>أندرويد (كروم):</b> افتح القائمة (⋮) واختار "إضافة إلى الشاشة الرئيسية" أو "تثبيت التطبيق".<br>
+        <b>آيفون (سفاري):</b> دوس زرار المشاركة ⬆️ واختار "إضافة إلى الشاشة الرئيسية".<br>
+        <span class="hint">التطبيق ملف واحد بس، وأفضل طريقة يشتغل بيها زي أبلكيشن هي إنه يكون على رابط إنترنت.</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>💾 حفظ البيانات ونسخة احتياطية</h2>
+      <p class="hint">التطبيق بيحفظ كل حاجة (الأسماء، الأرقام، المجموعات، الرسايل) تلقائيًا في ذاكرة الموبايل أول ما تضيفها أو تعدلها، من غير ما تعمل حاجة إضافية. البيانات هتفضل موجودة كل مرة تفتح فيها التطبيق من نفس الرابط.</p>
+      <p class="hint" style="color:#b03a2e;font-weight:700;">⚠️ لو مسحت بيانات المتصفح (Clear browsing data) أو فتحت التطبيق من رابط تاني، هتفضي البيانات المحفوظة. عشان كده يستحسن تاخد نسخة احتياطية بين كل فترة وفترة.</p>
+      <div class="actions">
+        <button class="btn btn-gold" onclick="downloadBackup()">⬇️ تنزيل نسخة احتياطية كاملة</button>
+        <label class="btn btn-ghost" style="cursor:pointer;">
+          ⬆️ استعادة من نسخة احتياطية
+          <input type="file" accept=".json" style="display:none;" onchange="restoreBackup(event)">
+        </label>
+      </div>
+      <p class="hint" id="backupStatus"></p>
+    </div>
+
+    <div class="card">
+      <h2>كود الدولة الافتراضي</h2>
+      <select id="countryCode" onchange="saveSettings()">
+        <option value="20">مصر (+20)</option>
+        <option value="218">ليبيا (+218)</option>
+        <option value="966">السعودية (+966)</option>
+        <option value="">بدون - الرقم مكتوب كامل بالفعل</option>
+      </select>
+      <p class="hint">هيتضاف تلقائيًا لأي رقم بيبدأ بـ 0، مش هيتضاف لو الرقم مكتوب بالكود بالفعل.</p>
+    </div>
+
+    <div class="card">
+      <h2>مجموعات الافتقاد</h2>
+      <p class="hint">مثال: ثانوي، إعدادي، متزوجين، خدام... تقدر تضيف وتعدل وتحذف أي مجموعة.</p>
+      <div id="groupsList"></div>
+      <div class="actions" style="margin-top:10px;">
+        <input id="newGroupName" placeholder="اسم مجموعة جديدة، مثال: ثانوي" style="flex:1;">
+        <button class="btn btn-ghost btn-sm" onclick="addGroup()">➕ إضافة مجموعة</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>تذكير المتأخرين</h2>
+      <p class="hint">لما تفعّل ده، هيبعتلك التطبيق إشعار من المتصفح لما تفتحه لو فيه حد متأخر عن الافتقاد. لازم تسمح للمتصفح بالإشعارات.</p>
+      <div class="actions">
+        <button class="btn btn-gold" id="notifBtn" onclick="enableNotifications()">🔔 تفعيل التذكير</button>
+        <span id="notifStatus" class="hint"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⏰ تذكير مجدول بيوم وساعة</h2>
+      <p class="hint">حدد يوم/أيام وساعة معينة، والتطبيق هيبعتلك إشعار في المعاد ده يفكّرك تعمل افتقاد. لازم "تفعيل التذكير" فوق يكون شغال، وتسيب التطبيق مفتوح (تاب في المتصفح، أو مثبّت على الموبايل) عشان المعاد يشتغل.</p>
+      <div class="field">
+        <label>الأيام</label>
+        <div class="actions" id="reminderDaysBox">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="0" style="width:auto;">حد</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="1" style="width:auto;">اتنين</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="2" style="width:auto;">تلات</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="3" style="width:auto;">أربع</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="4" style="width:auto;">خميس</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="5" style="width:auto;">جمعة</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" class="rem-day" value="6" style="width:auto;">سبت</label>
+        </div>
+        <p class="hint">سيبهم كلهم فاضيين لو عايزه يتكرر كل يوم.</p>
+      </div>
+      <div class="field">
+        <label>الساعة</label>
+        <input type="time" id="reminderTime" value="18:00">
+      </div>
+      <div class="field">
+        <label>عنوان التذكير (اختياري)</label>
+        <input id="reminderLabel" placeholder="مثال: تذكير افتقاد يوم الخميس">
+      </div>
+      <button class="btn btn-gold" onclick="addReminder()">➕ إضافة التذكير</button>
+      <div id="remindersList" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>استيراد من نظام قديم</h2>
+      <div class="field">
+        <label>📊 ارفع ملف إكسل أو CSV</label>
+        <input type="file" id="excelFileMigrate" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event,null,'excelMigrateStatus')">
+        <p class="hint" id="excelMigrateStatus">الأعمدة المتوقعة: الاسم / رقم الموبايل / المجموعة (اختياري) / ملاحظات (اختياري)</p>
+      </div>
+      <p class="hint" style="text-align:center;margin:10px 0;">— أو —</p>
+      <p class="hint">الصق محتوى CSV أو JSON من التطبيق القديم.</p>
+      <textarea id="migrateText" style="min-height:120px;" placeholder="الصق هنا محتوى CSV أو JSON من النظام القديم"></textarea>
+      <div class="actions" style="margin-top:8px;">
+        <button class="btn btn-primary" onclick="migrateOldData()">📤 ترحيل النص الملصوق</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>البيانات</h2>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="exportCSV()">⬇️ تصدير القائمة (CSV)</button>
+        <button class="btn btn-danger" onclick="clearAll()">🗑️ مسح كل البيانات</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Import modal -->
+<div class="modal-bg" id="importModal" style="display:none">
+  <div class="modal-box">
+    <h3>استيراد قائمة أرقام</h3>
+
+    <div class="field">
+      <label>📊 ارفع ملف إكسل أو CSV</label>
+      <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event,'importGroup','excelStatus')">
+      <p class="hint" id="excelStatus">الأعمدة المتوقعة: الاسم / رقم الموبايل / المجموعة (اختياري) / ملاحظات (اختياري)</p>
+    </div>
+
+    <p class="hint" style="text-align:center;margin:10px 0;">— أو —</p>
+
+    <p class="hint">الصق كل سطر بالشكل: الاسم، الرقم (فاصلة بينهم). سطر لكل شخص.</p>
+    <textarea id="importText" style="min-height:120px;" placeholder="مينا سمير, 01012345678
+مريم فايز, 01198765432"></textarea>
+    <div class="field" style="margin-top:10px;">
+      <label>هيتم وضعهم في مجموعة</label>
+      <select id="importGroup" onchange="handleGroupSelectChange(this)"></select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="doImport()">استيراد النص الملصوق</button>
+      <button class="btn btn-ghost" onclick="closeImport()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit contact modal -->
+<div class="modal-bg" id="editModal" style="display:none">
+  <div class="modal-box">
+    <h3>تعديل بيانات المخدوم</h3>
+    <input type="hidden" id="editId">
+    <div id="editIssueBox" style="display:none; margin-bottom:10px; padding:10px; background:#fbe0e0; border-radius:10px;">
+      <p class="hint" id="editIssueTxt" style="color:#b03a2e;font-weight:700;margin-bottom:6px;"></p>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="editFixIssue" style="width:auto;" checked>
+        تم تصحيح الرقم - رجّعه طبيعي في مجموعته لما أحفظ
+      </label>
+    </div>
+    <div class="field"><label>الاسم</label><input id="editName"></div>
+    <div class="field"><label>رقم الموبايل</label><input id="editPhone" dir="ltr"></div>
+    <div class="field">
+      <label>المجموعة</label>
+      <select id="editGroup" onchange="handleGroupSelectChange(this)"></select>
+    </div>
+    <div class="field"><label>ملاحظات</label><input id="editNotes"></div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveEditContact()">💾 حفظ التعديلات</button>
+      <button class="btn btn-ghost" onclick="closeEditContact()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Queue modal -->
+<div class="queue-modal" id="queueModal" style="display:none">
+  <div class="queue-card">
+    <div class="progress-txt" id="qProgress">1 من 10</div>
+    <div class="who" id="qName">—</div>
+    <div class="phone" id="qPhone">—</div>
+
+    <div id="qEditBox" style="display:none; text-align:right; margin:12px 0; padding:12px; background:#f7f4ec; border-radius:10px; border:1px dashed var(--gold);">
+      <div class="field" style="margin-bottom:8px;">
+        <label style="margin-bottom:2px;">الاسم</label>
+        <input id="qEditName">
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label style="margin-bottom:2px;">رقم الموبايل</label>
+        <input id="qEditPhone" dir="ltr">
+      </div>
+      <button class="btn btn-gold btn-sm" style="width:100%;" onclick="saveQueueEdit()">💾 حفظ التعديل وتحديث الرسالة</button>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="qEditToggleBtn" style="width:100%;margin-bottom:8px;" onclick="toggleQueueEdit()">✏️ تعديل الاسم أو الرقم قبل الإرسال</button>
+    <div class="actions" style="margin-bottom:8px;">
+      <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="markIssueFromQueue('no_whatsapp')">🚫 الرقم مفيش عليه واتساب</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="markIssueFromQueue('wrong_number')">⚠️ الرقم غلط</button>
+    </div>
+
+    <p class="hint" id="qHint">اتفتح واتساب في تاب جديد ومعاه الرسالة جاهزة. دوس إرسال جوه واتساب، وبعدين دوس الزرار تحت عشان يفتحلك الشخص اللي بعده.</p>
+    <button class="btn btn-primary" style="width:100%;padding:12px;margin-bottom:8px;" onclick="reopenCurrentChat()">↻ إعادة فتح واتساب لنفس الشخص</button>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:15px;margin-bottom:10px;" onclick="nextQueueItem(true)">✅ اتبعتت - افتح التالي</button>
+    <div class="actions" style="justify-content:center;">
+      <button class="btn btn-ghost btn-sm" onclick="nextQueueItem(false)">⏭ تخطي من غير إرسال</button>
+      <button class="btn btn-danger btn-sm" onclick="stopQueue()">⏹ إيقاف</button>
+    </div>
+    <div class="progressbar"><div class="fill" id="qFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- Column mapping modal -->
+<div class="modal-bg" id="mappingModal" style="display:none">
+  <div class="modal-box" style="max-width:640px;">
+    <h3>حدد الأعمدة</h3>
+    <p class="hint">دي أول صفوف من الملف اللي رفعته، اختار تحتها العمود المناسب لكل حقل.</p>
+    <div id="previewTableWrap" style="overflow:auto; max-height:190px; border:1px solid var(--line); border-radius:8px; margin-bottom:16px;">
+      <table id="previewTable" style="width:100%; border-collapse:collapse; font-size:12.5px;"></table>
+    </div>
+    <div class="field">
+      <label>عمود الاسم *</label>
+      <select id="mapName"></select>
+    </div>
+    <div class="field">
+      <label>عمود رقم التليفون *</label>
+      <select id="mapPhone"></select>
+    </div>
+    <div class="field">
+      <label>عمود المجموعة (اختياري)</label>
+      <select id="mapGroup"></select>
+    </div>
+    <div class="field" id="mapDefaultGroupWrap">
+      <label>المجموعة الافتراضية (لو عمود المجموعة مش محدد)</label>
+      <select id="mapDefaultGroup" onchange="handleGroupSelectChange(this)"></select>
+    </div>
+    <div class="field">
+      <label>عمود الملاحظات (اختياري)</label>
+      <select id="mapNotes"></select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="confirmMapping()">✅ استيراد</button>
+      <button class="btn btn-ghost" onclick="closeMapping()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Data layer ----------
+let db = JSON.parse(localStorage.getItem('mursil_db') || 'null') || {
+  contacts: [],
+  groups: ['شباب', 'متزوجين', 'خدام'],
+  settings: { countryCode: '20', delay: 4 },
+  templates: [],
+  msgMode: 'single',
+  msgTextSaved: ''
+};
+if(!Array.isArray(db.templates)) db.templates = [];
+if(!db.msgMode) db.msgMode = 'single';
+
+function save(){ localStorage.setItem('mursil_db', JSON.stringify(db)); }
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ['dashboard','contacts','send','settings'].forEach(t=>{
+      document.getElementById('tab-'+t).style.display = (t===btn.dataset.tab)?'block':'none';
+    });
+    if(btn.dataset.tab==='dashboard') renderDashboard();
+    if(btn.dataset.tab==='contacts') renderContacts();
+    if(btn.dataset.tab==='send'){ initSendUI(); updateSendCount(); }
+  });
+});
+
+// ---------- Groups ----------
+function refreshGroupSelects(){
+  const sels = [
+    {el: document.getElementById('newGroup'), withAll:false, withNew:true},
+    {el: document.getElementById('filterGroup'), withAll:true, withNew:false},
+    {el: document.getElementById('sendGroup'), withAll:true, withNew:false},
+    {el: document.getElementById('importGroup'), withAll:false, withNew:true},
+    {el: document.getElementById('bulkGroupTarget'), withAll:false, withNew:true},
+    {el: document.getElementById('editGroup'), withAll:false, withNew:true},
+  ];
+  sels.forEach(({el, withAll, withNew})=>{
+    const current = el.value;
+    el.innerHTML = '';
+    if(withAll){
+      const o = document.createElement('option'); o.value=''; o.textContent='كل المجموعات'; el.appendChild(o);
+    }
+    db.groups.forEach(g=>{
+      const o = document.createElement('option'); o.value=g; o.textContent=g; el.appendChild(o);
+    });
+    if(withNew){
+      const o = document.createElement('option'); o.value='__new__'; o.textContent='➕ مجموعة جديدة...'; el.appendChild(o);
+    }
+    if(current && current!=='__new__') el.value = current;
+  });
+  renderGroupsList();
+}
+
+function handleGroupSelectChange(selectEl){
+  if(selectEl.value !== '__new__') return;
+  const name = prompt('اكتب اسم المجموعة الجديدة (مثال: ثانوي، إعدادي):');
+  if(name && name.trim()){
+    const trimmed = name.trim();
+    if(!db.groups.includes(trimmed)) db.groups.push(trimmed);
+    save();
+    refreshGroupSelects();
+    if(!selectEl.querySelector(`option[value="${trimmed.replace(/"/g,'')}"]`)){
+      const o = document.createElement('option'); o.value=trimmed; o.textContent=trimmed;
+      const newOpt = selectEl.querySelector('option[value="__new__"]');
+      if(newOpt) selectEl.insertBefore(o, newOpt); else selectEl.appendChild(o);
+    }
+    selectEl.value = trimmed;
+    toast(`تمت إضافة مجموعة "${trimmed}" ✅`);
+  } else {
+    selectEl.selectedIndex = 0;
+  }
+}
+
+function renderGroupsList(){
+  const box = document.getElementById('groupsList');
+  box.innerHTML = '';
+  db.groups.forEach((g,i)=>{
+    const row = document.createElement('div');
+    row.className = 'contact-row';
+    const countIn = db.contacts.filter(c=>c.group===g).length;
+    row.innerHTML = `
+      <div>
+        <span style="font-weight:700;">${g}</span>
+        <span class="hint">(${countIn} مخدوم)</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="renameGroup(${i})">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="removeGroup(${i})">🗑️ حذف</button>
+      </div>`;
+    box.appendChild(row);
+  });
+}
+function addGroup(){
+  const inp = document.getElementById('newGroupName');
+  const v = inp.value.trim();
+  if(!v) return;
+  if(db.groups.includes(v)){ toast('المجموعة موجودة بالفعل'); return; }
+  db.groups.push(v); save(); inp.value=''; refreshGroupSelects();
+  toast('تمت إضافة المجموعة');
+}
+function renameGroup(i){
+  const oldName = db.groups[i];
+  const newName = prompt('اكتب الاسم الجديد للمجموعة:', oldName);
+  if(!newName || !newName.trim() || newName.trim()===oldName) return;
+  const trimmed = newName.trim();
+  if(db.groups.includes(trimmed)){ toast('فيه مجموعة تانية بنفس الاسم بالفعل'); return; }
+  db.groups[i] = trimmed;
+  db.contacts.forEach(c=>{ if(c.group===oldName) c.group = trimmed; });
+  save(); refreshGroupSelects(); renderContacts();
+  toast('تم تعديل اسم المجموعة ✅');
+}
+function removeGroup(i){
+  if(!confirm('حذف المجموعة؟ (المخدومين هيفضلوا موجودين بدون مجموعة)')) return;
+  db.groups.splice(i,1); save(); refreshGroupSelects(); renderContacts();
+}
+
+// ---------- Contacts ----------
+function normalizePhone(p){
+  let n = p.replace(/\D/g,'');
+  const cc = db.settings.countryCode;
+  if(cc && n.startsWith('0')) n = cc + n.slice(1);
+  else if(cc && !n.startsWith(cc) && n.length <= 11) n = cc + n;
+  return n;
+}
+
+function addContact(){
+  const name = document.getElementById('newName').value.trim();
+  const phone = document.getElementById('newPhone').value.trim();
+  if(!name || !phone){ toast('من فضلك اكتب الاسم والرقم'); return; }
+  db.contacts.push({
+    id: Date.now()+Math.random(),
+    name, phone,
+    group: document.getElementById('newGroup').value,
+    status: document.getElementById('newStatus').value,
+    notes: document.getElementById('newNotes').value.trim(),
+    lastVisit: null,
+    createdAt: Date.now()
+  });
+  save();
+  document.getElementById('newName').value='';
+  document.getElementById('newPhone').value='';
+  document.getElementById('newNotes').value='';
+  renderContacts();
+  toast('تمت الإضافة ✅');
+}
+
+function daysSince(ts){
+  if(!ts) return Infinity;
+  return Math.floor((Date.now()-ts)/86400000);
+}
+
+function statusBadge(c){
+  if(c.status==='done') return `<span class="badge done">تم الافتقاد${c.lastVisit? ' - منذ '+daysSince(c.lastVisit)+' يوم':''}</span>`;
+  if(c.status==='followup') return `<span class="badge followup">محتاج متابعة</span>`;
+  return `<span class="badge pending">لسه محتاج افتقاد</span>`;
+}
+function issueBadge(c){
+  if(c.issue==='no_whatsapp') return `<span class="badge issue">🚫 مفيش واتساب</span>`;
+  if(c.issue==='wrong_number') return `<span class="badge issue">⚠️ رقم غلط</span>`;
+  return '';
+}
+
+let selectedIds = new Set();
+
+function renderContacts(){
+  const list = document.getElementById('contactsList');
+  const fg = document.getElementById('filterGroup').value;
+  const fs = document.getElementById('filterStatus').value;
+  const fi = document.getElementById('filterIssue').value;
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  let items = db.contacts.filter(c=>{
+    if(fg && c.group!==fg) return false;
+    if(fs && c.status!==fs) return false;
+    if(fi==='issues' && !c.issue) return false;
+    if(fi==='no_whatsapp' && c.issue!=='no_whatsapp') return false;
+    if(fi==='wrong_number' && c.issue!=='wrong_number') return false;
+    if(fi==='ok' && c.issue) return false;
+    if(q && !c.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('contactsCount').textContent = items.length;
+  list.innerHTML = '';
+  // remove selected ids no longer visible? keep selection persistent across filters intentionally
+  updateSelectedCount();
+  if(items.length===0){
+    list.innerHTML = `<div class="empty"><span class="big">📇</span>مفيش حد هنا لسه</div>`;
+    return;
+  }
+  items.sort((a,b)=>b.createdAt-a.createdAt).forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'contact-row';
+    const checked = selectedIds.has(String(c.id)) ? 'checked' : '';
+    const issueActions = c.issue
+      ? `<button class="btn btn-gold btn-sm" onclick="clearIssue('${c.id}')">✅ اتصلح - رجّعه طبيعي</button>`
+      : `<button class="btn btn-ghost btn-sm" onclick="markIssue('${c.id}','no_whatsapp')">🚫 مفيش واتساب</button>
+         <button class="btn btn-ghost btn-sm" onclick="markIssue('${c.id}','wrong_number')">⚠️ رقم غلط</button>`;
+    row.innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <input type="checkbox" class="contact-check" ${checked} onchange="toggleSelectOne('${c.id}', this.checked)">
+        <div>
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-meta">${c.phone} · ${c.group}${c.notes? ' · '+c.notes:''}</div>
+          ${statusBadge(c)}${issueBadge(c)}
+        </div>
+      </div>
+      <div class="actions">
+        <select onchange="setStatus('${c.id}', this.value)" class="btn-sm" style="width:auto;padding:6px 8px;">
+          <option value="pending" ${c.status==='pending'?'selected':''}>لسه</option>
+          <option value="done" ${c.status==='done'?'selected':''}>تم</option>
+          <option value="followup" ${c.status==='followup'?'selected':''}>متابعة</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="openEditContact('${c.id}')">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">حذف</button>
+        ${issueActions}
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleSelectOne(id, checked){
+  if(checked) selectedIds.add(String(id)); else selectedIds.delete(String(id));
+  updateSelectedCount();
+}
+function toggleSelectAll(checked){
+  const boxes = document.querySelectorAll('#contactsList .contact-check');
+  boxes.forEach(b=> b.checked = checked);
+  // apply to currently visible items only
+  const fg = document.getElementById('filterGroup').value;
+  const fs = document.getElementById('filterStatus').value;
+  const fi = document.getElementById('filterIssue').value;
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  db.contacts.filter(c=>{
+    if(fg && c.group!==fg) return false;
+    if(fs && c.status!==fs) return false;
+    if(fi==='issues' && !c.issue) return false;
+    if(fi==='no_whatsapp' && c.issue!=='no_whatsapp') return false;
+    if(fi==='wrong_number' && c.issue!=='wrong_number') return false;
+    if(fi==='ok' && c.issue) return false;
+    if(q && !c.name.toLowerCase().includes(q)) return false;
+    return true;
+  }).forEach(c=>{
+    if(checked) selectedIds.add(String(c.id)); else selectedIds.delete(String(c.id));
+  });
+  updateSelectedCount();
+}
+function updateSelectedCount(){
+  document.getElementById('selectedCount').textContent = `${selectedIds.size} محدد`;
+}
+function bulkMove(){
+  if(selectedIds.size===0){ toast('اختار مخدومين الأول'); return; }
+  const target = document.getElementById('bulkGroupTarget').value;
+  if(!target) return;
+  db.contacts.forEach(c=>{ if(selectedIds.has(String(c.id))) c.group = target; });
+  save();
+  toast(`تم نقل ${selectedIds.size} شخص لمجموعة "${target}" ✅`);
+  selectedIds.clear();
+  renderContacts(); renderDashboard();
+}
+function bulkDelete(){
+  if(selectedIds.size===0){ toast('اختار مخدومين الأول'); return; }
+  if(!confirm(`حذف ${selectedIds.size} شخص من القائمة نهائيًا؟`)) return;
+  db.contacts = db.contacts.filter(c=> !selectedIds.has(String(c.id)));
+  save();
+  toast('تم الحذف ✅');
+  selectedIds.clear();
+  renderContacts(); renderDashboard();
+}
+
+function setStatus(id, status){
+  const c = db.contacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  c.status = status;
+  if(status==='done') c.lastVisit = Date.now();
+  save(); renderContacts(); renderDashboard();
+}
+function markIssue(id, issue){
+  const c = db.contacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  c.issue = issue;
+  save();
+  renderContacts(); renderDashboard();
+  toast(issue==='no_whatsapp' ? 'اتحط عليه علامة "مفيش واتساب" 🚫' : 'اتحط عليه علامة "رقم غلط" ⚠️');
+}
+function clearIssue(id){
+  const c = db.contacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  c.issue = null;
+  save();
+  renderContacts(); renderDashboard();
+  toast('رجع طبيعي في مجموعته تاني ✅');
+}
+function deleteContact(id){
+  if(!confirm('حذف الشخص ده من القائمة؟')) return;
+  db.contacts = db.contacts.filter(x=>String(x.id)!==String(id));
+  selectedIds.delete(String(id));
+  save(); renderContacts(); renderDashboard();
+}
+
+// ---------- Edit contact ----------
+function openEditContact(id){
+  const c = db.contacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  refreshGroupSelects();
+  document.getElementById('editId').value = c.id;
+  document.getElementById('editName').value = c.name;
+  document.getElementById('editPhone').value = c.phone;
+  document.getElementById('editGroup').value = c.group;
+  document.getElementById('editNotes').value = c.notes || '';
+  const issueBox = document.getElementById('editIssueBox');
+  if(c.issue){
+    issueBox.style.display = 'block';
+    document.getElementById('editIssueTxt').textContent = c.issue==='no_whatsapp'
+      ? '🚫 الرقم ده متعلم عليه "مفيش واتساب"'
+      : '⚠️ الرقم ده متعلم عليه "رقم غلط"';
+    document.getElementById('editFixIssue').checked = true;
+  } else {
+    issueBox.style.display = 'none';
+  }
+  document.getElementById('editModal').style.display='flex';
+}
+function closeEditContact(){
+  document.getElementById('editModal').style.display='none';
+}
+function saveEditContact(){
+  const id = document.getElementById('editId').value;
+  const c = db.contacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  const name = document.getElementById('editName').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if(!name || !phone){ toast('لازم تكتب الاسم والرقم'); return; }
+  c.name = name;
+  c.phone = phone;
+  c.group = document.getElementById('editGroup').value;
+  c.notes = document.getElementById('editNotes').value.trim();
+  let fixedMsg = '';
+  if(c.issue && document.getElementById('editFixIssue').checked){
+    c.issue = null;
+    fixedMsg = ' ورجع طبيعي في مجموعته ✅';
+  }
+  save();
+  closeEditContact();
+  renderContacts(); renderDashboard();
+  toast('تم حفظ التعديلات' + fixedMsg);
+}
+
+// ---------- Import ----------
+function openImport(){ refreshGroupSelects(); document.getElementById('importModal').style.display='flex'; }
+function closeImport(){ document.getElementById('importModal').style.display='none'; }
+function doImport(){
+  const text = document.getElementById('importText').value;
+  const group = document.getElementById('importGroup').value;
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let count=0;
+  lines.forEach(line=>{
+    const parts = line.split(',');
+    if(parts.length<2) return;
+    const name = parts[0].trim();
+    const phone = parts.slice(1).join(',').trim();
+    if(!name||!phone) return;
+    db.contacts.push({
+      id: Date.now()+Math.random(), name, phone, group,
+      status:'pending', notes:'', lastVisit:null, createdAt:Date.now()
+    });
+    count++;
+  });
+  save();
+  document.getElementById('importText').value='';
+  closeImport();
+  renderContacts();
+  toast(`تم استيراد ${count} شخص ✅`);
+}
+
+// ---------- Dashboard ----------
+function renderDashboard(){
+  const total = db.contacts.length;
+  const done = db.contacts.filter(c=>c.status==='done').length;
+  const pending = db.contacts.filter(c=>c.status!=='done').length;
+  const overdue = db.contacts.filter(c=> c.status!=='done' || daysSince(c.lastVisit)>=14 );
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statOverdue').textContent = overdue.length;
+
+  const box = document.getElementById('overdueList');
+  box.innerHTML = '';
+  if(overdue.length===0){
+    box.innerHTML = `<div class="empty"><span class="big">✅</span>الحمد لله، مفيش حد متأخر دلوقتي</div>`;
+    return;
+  }
+  overdue.slice(0,15).forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'overdue-item';
+    row.innerHTML = `
+      <div>
+        <div class="contact-name">${c.name}</div>
+        <div class="contact-meta">${c.group}${c.lastVisit? ' · آخر افتقاد منذ '+daysSince(c.lastVisit)+' يوم':' · لسه ماتافتقدش'}</div>
+      </div>
+      <a class="btn btn-gold btn-sm" href="${waLink(c, defaultQuickMsg(c))}" target="_blank">واتساب</a>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function defaultQuickMsg(c){
+  return `سلام ونعمة يا ${c.name}، افتقدناك 🙏 عايزين نطمن عليك.`;
+}
+
+// ---------- Send / WhatsApp ----------
+function insertVar(targetId, v){
+  const ta = document.getElementById(targetId);
+  if(!ta) return;
+  const pos = ta.selectionStart || ta.value.length;
+  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(pos);
+  ta.focus();
+  if(ta.dataset.tplId) updateTemplateFromTextarea(ta);
+  if(ta.id==='msgText'){ db.msgTextSaved = ta.value; save(); }
+}
+
+// ---------- Multiple message templates ----------
+function setMsgMode(mode){
+  db.msgMode = mode;
+  save();
+  document.getElementById('singleMsgBox').style.display = mode==='single' ? 'block' : 'none';
+  document.getElementById('multiMsgBox').style.display = mode==='multi' ? 'block' : 'none';
+  document.getElementById('msgModeSingle').checked = mode==='single';
+  document.getElementById('msgModeMulti').checked = mode==='multi';
+  if(mode==='multi' && db.templates.length===0){
+    db.templates.push({id: Date.now()+Math.random(), text: document.getElementById('msgText').value || ''});
+    save();
+  }
+  renderTemplatesList();
+}
+
+function renderTemplatesList(){
+  const box = document.getElementById('templatesList');
+  box.innerHTML = '';
+  db.templates.forEach((t, i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'field';
+    wrap.style.border = '1px solid var(--line)';
+    wrap.style.borderRadius = '10px';
+    wrap.style.padding = '10px';
+    wrap.style.marginBottom = '10px';
+    wrap.style.background = '#fffefb';
+    wrap.innerHTML = `
+      <label>رسالة رقم ${i+1}</label>
+      <textarea data-tpl-id="${t.id}" placeholder="اكتب نص الرسالة هنا...">${t.text}</textarea>
+      <div class="actions" style="margin-top:6px;">
+        <span class="var-tag" data-var-target="${t.id}">{الاسم كامل}</span>
+        <span class="var-tag" data-var-target="${t.id}">{الاسم الأول}</span>
+        <span class="var-tag" data-var-target="${t.id}" data-var-value="{اليوم}">{اليوم}</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${t.id}')" ${db.templates.length<=1?'disabled':''}>🗑️ حذف</button>
+      </div>`;
+    const ta = wrap.querySelector('textarea');
+    ta.dataset.tplId = t.id;
+    ta.addEventListener('input', ()=> updateTemplateFromTextarea(ta));
+    const tags = wrap.querySelectorAll('.var-tag');
+    tags[0].addEventListener('click', ()=> insertIntoTemplateTextarea(ta, '{الاسم كامل}'));
+    tags[1].addEventListener('click', ()=> insertIntoTemplateTextarea(ta, '{الاسم الأول}'));
+    tags[2].addEventListener('click', ()=> insertIntoTemplateTextarea(ta, '{اليوم}'));
+    box.appendChild(wrap);
+  });
+}
+function insertIntoTemplateTextarea(ta, v){
+  const pos = ta.selectionStart || ta.value.length;
+  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(pos);
+  ta.focus();
+  updateTemplateFromTextarea(ta);
+}
+function updateTemplateFromTextarea(ta){
+  const t = db.templates.find(x=>String(x.id)===String(ta.dataset.tplId));
+  if(!t) return;
+  t.text = ta.value;
+  save();
+}
+function addTemplate(){
+  db.templates.push({id: Date.now()+Math.random(), text: ''});
+  save();
+  renderTemplatesList();
+}
+function deleteTemplate(id){
+  if(db.templates.length<=1) return;
+  if(!confirm('حذف الرسالة دي؟')) return;
+  db.templates = db.templates.filter(t=>String(t.id)!==String(id));
+  save();
+  renderTemplatesList();
+}
+
+function getSendTargets(){
+  const fg = document.getElementById('sendGroup').value;
+  const fs = document.getElementById('sendStatus').value;
+  return db.contacts.filter(c=>{
+    if(c.issue) return false;
+    if(fg && c.group!==fg) return false;
+    if(fs && c.status!==fs) return false;
+    return true;
+  });
+}
+function updateSendCount(){
+  const fg = document.getElementById('sendGroup').value;
+  const fs = document.getElementById('sendStatus').value;
+  const excludedIssues = db.contacts.filter(c=>{
+    if(!c.issue) return false;
+    if(fg && c.group!==fg) return false;
+    if(fs && c.status!==fs) return false;
+    return true;
+  }).length;
+  let txt = `هيتم الإرسال لـ ${getSendTargets().length} شخص`;
+  if(excludedIssues>0) txt += ` (${excludedIssues} مستبعدين لمشاكل في الرقم 🚫)`;
+  document.getElementById('sendCountTxt').textContent = txt;
+}
+
+let sendUIInited = false;
+function initSendUI(){
+  const msgTa = document.getElementById('msgText');
+  if(!sendUIInited){
+    msgTa.value = db.msgTextSaved || '';
+    msgTa.addEventListener('input', ()=>{ db.msgTextSaved = msgTa.value; save(); });
+    sendUIInited = true;
+  }
+  const mode = db.msgMode || 'single';
+  document.getElementById('singleMsgBox').style.display = mode==='single' ? 'block' : 'none';
+  document.getElementById('multiMsgBox').style.display = mode==='multi' ? 'block' : 'none';
+  document.getElementById('msgModeSingle').checked = mode==='single';
+  document.getElementById('msgModeMulti').checked = mode==='multi';
+  renderTemplatesList();
+}
+
+function firstNameOf(fullName){
+  const parts = (fullName || '').trim().split(/\s+/);
+  return parts[0] || fullName || '';
+}
+function fillTemplate(tpl, c){
+  const today = new Date().toLocaleDateString('ar-EG');
+  return tpl
+    .replaceAll('{الاسم الأول}', firstNameOf(c.name))
+    .replaceAll('{الاسم كامل}', c.name)
+    .replaceAll('{الاسم}', c.name)
+    .replaceAll('{اليوم}', today);
+}
+function waLink(c, text){
+  const phone = normalizePhone(c.phone);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+let queue = [];
+let queueIndex = 0;
+let queueTemplate = '';
+let queueAssignments = {}; // id -> assigned template text (multi mode)
+
+function pickRandomTemplate(){
+  const valid = db.templates.filter(t=>t.text && t.text.trim());
+  if(valid.length===0) return '';
+  return valid[Math.floor(Math.random()*valid.length)].text;
+}
+
+function startQueue(){
+  const targets = getSendTargets();
+  if(targets.length===0){ toast('مفيش حد مطابق للفلتر ده'); return; }
+
+  if(db.msgMode==='multi'){
+    const hasValid = db.templates.some(t=>t.text && t.text.trim());
+    if(!hasValid){ toast('اكتب رسالة واحدة على الأقل'); return; }
+    queueAssignments = {};
+    targets.forEach(c=>{ queueAssignments[c.id] = pickRandomTemplate(); });
+  } else {
+    const tpl = document.getElementById('msgText').value.trim();
+    if(!tpl){ toast('اكتب الرسالة الأول'); return; }
+    queueTemplate = tpl;
+    queueAssignments = {};
+  }
+
+  queue = targets;
+  queueIndex = 0;
+  document.getElementById('qEditBox').style.display = 'none';
+  document.getElementById('queueModal').style.display='flex';
+  openQueueItem();
+}
+
+function currentQueueTemplateText(c){
+  return db.msgMode==='multi' ? (queueAssignments[c.id] || pickRandomTemplate()) : queueTemplate;
+}
+
+function openQueueItem(){
+  if(queueIndex >= queue.length){ stopQueue(true); return; }
+  const c = queue[queueIndex];
+  document.getElementById('qProgress').textContent = `${queueIndex+1} من ${queue.length}`;
+  document.getElementById('qName').textContent = c.name;
+  document.getElementById('qPhone').textContent = normalizePhone(c.phone);
+  document.getElementById('qFill').style.width = Math.round((queueIndex/queue.length)*100)+'%';
+  document.getElementById('qEditBox').style.display = 'none';
+
+  const text = fillTemplate(currentQueueTemplateText(c), c);
+  window.open(waLink(c, text), '_blank');
+}
+
+function reopenCurrentChat(){
+  if(queueIndex >= queue.length) return;
+  const c = queue[queueIndex];
+  const text = fillTemplate(currentQueueTemplateText(c), c);
+  window.open(waLink(c, text), '_blank');
+}
+
+// ---------- Edit contact during send queue ----------
+function toggleQueueEdit(){
+  if(queueIndex >= queue.length) return;
+  const c = queue[queueIndex];
+  const box = document.getElementById('qEditBox');
+  const showing = box.style.display === 'block';
+  if(showing){
+    box.style.display = 'none';
+  } else {
+    document.getElementById('qEditName').value = c.name;
+    document.getElementById('qEditPhone').value = c.phone;
+    box.style.display = 'block';
+  }
+}
+function saveQueueEdit(){
+  if(queueIndex >= queue.length) return;
+  const c = queue[queueIndex];
+  const name = document.getElementById('qEditName').value.trim();
+  const phone = document.getElementById('qEditPhone').value.trim();
+  if(!name || !phone){ toast('لازم تكتب الاسم والرقم'); return; }
+  // update in-memory queue item and the real contact record in db (same object reference, but ensure persisted)
+  c.name = name;
+  c.phone = phone;
+  const real = db.contacts.find(x=>String(x.id)===String(c.id));
+  if(real){ real.name = name; real.phone = phone; }
+  save();
+  document.getElementById('qName').textContent = c.name;
+  document.getElementById('qPhone').textContent = normalizePhone(c.phone);
+  document.getElementById('qEditBox').style.display = 'none';
+  toast('تم حفظ التعديل، دلوقتي دوس إعادة فتح واتساب ✅');
+}
+
+function markIssueFromQueue(issue){
+  if(queueIndex >= queue.length) return;
+  const c = queue[queueIndex];
+  c.issue = issue;
+  const real = db.contacts.find(x=>String(x.id)===String(c.id));
+  if(real) real.issue = issue;
+  save();
+  toast(issue==='no_whatsapp' ? 'اتحط "مفيش واتساب" - هنعدي للي بعده 🚫' : 'اتحط "رقم غلط" - هنعدي للي بعده ⚠️');
+  queueIndex++;
+  if(queueIndex >= queue.length){
+    stopQueue(true);
+  } else {
+    openQueueItem();
+  }
+}
+
+function nextQueueItem(markSent){
+  if(queueIndex >= queue.length) return;
+  const c = queue[queueIndex];
+  if(markSent){
+    c.lastVisit = Date.now();
+    if(c.status==='pending') c.status='done';
+    save();
+  }
+  queueIndex++;
+  if(queueIndex >= queue.length){
+    stopQueue(true);
+  } else {
+    openQueueItem();
+  }
+}
+
+function stopQueue(done){
+  document.getElementById('queueModal').style.display='none';
+  renderDashboard(); renderContacts();
+  toast(done? 'تم الانتهاء من كل القائمة ✅' : 'تم إيقاف الإرسال');
+}
+
+// ---------- Settings ----------
+function saveSettings(){
+  db.settings.countryCode = document.getElementById('countryCode').value;
+  save();
+}
+function loadSettingsUI(){
+  document.getElementById('countryCode').value = db.settings.countryCode ?? '20';
+  renderRemindersList();
+}
+
+// ---------- Full backup / restore ----------
+function downloadBackup(){
+  const dataStr = JSON.stringify(db, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `نسخة_احتياطية_مرسل_الافتقاد_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('اتنزلت النسخة الاحتياطية ✅');
+}
+
+function restoreBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('backupStatus');
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed || !Array.isArray(parsed.contacts)){
+        statusEl.textContent = '⚠️ الملف ده مش نسخة احتياطية صحيحة';
+        return;
+      }
+      if(!confirm('هيتم استبدال كل البيانات الحالية بالنسخة الاحتياطية دي. متأكد؟')) return;
+      db = parsed;
+      if(!Array.isArray(db.templates)) db.templates = [];
+      if(!db.msgMode) db.msgMode = 'single';
+      save();
+      refreshGroupSelects();
+      loadSettingsUI();
+      renderDashboard();
+      renderContacts();
+      sendUIInited = false;
+      statusEl.textContent = '✅ تم استرجاع البيانات بنجاح';
+      toast('تم استرجاع النسخة الاحتياطية ✅');
+    }catch(err){
+      statusEl.textContent = '⚠️ حصل خطأ في قراءة الملف';
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+  event.target.value = '';
+}
+
+function exportCSV(){
+  let csv = 'الاسم,الرقم,المجموعة,الحالة,آخر افتقاد,ملاحظات\n';
+  db.contacts.forEach(c=>{
+    const last = c.lastVisit ? new Date(c.lastVisit).toLocaleDateString('ar-EG') : '';
+    const statusAr = c.status==='done'?'تم':c.status==='followup'?'متابعة':'لسه';
+    csv += `"${c.name}","${c.phone}","${c.group}","${statusAr}","${last}","${c.notes||''}"\n`;
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'كشف_الافتقاد.csv';
+  a.click();
+}
+function clearAll(){
+  if(!confirm('هيتم مسح كل البيانات نهائيًا. متأكد؟')) return;
+  db = { contacts:[], groups:['شباب','متزوجين','خدام'], settings:{countryCode:'20', delay:4} };
+  save(); refreshGroupSelects(); loadSettingsUI(); renderContacts(); renderDashboard();
+  toast('تم مسح كل البيانات');
+}
+
+// ---------- Notifications ----------
+function enableNotifications(){
+  if(!('Notification' in window)){
+    document.getElementById('notifStatus').textContent = 'المتصفح ده مش بيدعم الإشعارات';
+    return;
+  }
+  Notification.requestPermission().then(perm=>{
+    db.settings.notifEnabled = (perm === 'granted');
+    save();
+    updateNotifStatusUI();
+    if(perm === 'granted'){
+      toast('تم تفعيل التذكير 🔔');
+      checkOverdueNotification();
+    }
+  });
+}
+function updateNotifStatusUI(){
+  const el = document.getElementById('notifStatus');
+  if(!('Notification' in window)){ el.textContent=''; return; }
+  if(Notification.permission==='granted' && db.settings.notifEnabled){
+    el.textContent = '✅ مفعّل';
+  } else if(Notification.permission==='denied'){
+    el.textContent = '⛔ محظور من إعدادات المتصفح';
+  } else {
+    el.textContent = 'غير مفعّل';
+  }
+}
+function checkOverdueNotification(){
+  if(!db.settings.notifEnabled) return;
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const overdue = db.contacts.filter(c=> c.status!=='done' || daysSince(c.lastVisit)>=14 );
+  if(overdue.length===0) return;
+  // avoid spamming: only once per day
+  const lastNotif = db.settings.lastNotifDate;
+  const today = new Date().toDateString();
+  if(lastNotif === today) return;
+  db.settings.lastNotifDate = today; save();
+  new Notification('مرسل الافتقاد 🙏', {
+    body: `عندك ${overdue.length} شخص محتاجين افتقاد أو متابعة`,
+  });
+}
+
+// ---------- Scheduled day/time reminders ----------
+const DAY_NAMES = ['حد','اتنين','تلات','أربع','خميس','جمعة','سبت'];
+
+function addReminder(){
+  const days = Array.from(document.querySelectorAll('.rem-day:checked')).map(el=>Number(el.value));
+  const time = document.getElementById('reminderTime').value;
+  const label = document.getElementById('reminderLabel').value.trim();
+  if(!time){ toast('اختار الساعة'); return; }
+  if(!db.settings.reminders) db.settings.reminders = [];
+  db.settings.reminders.push({
+    id: Date.now()+Math.random(),
+    days, time,
+    label: label || 'تذكير الافتقاد'
+  });
+  save();
+  document.getElementById('reminderLabel').value = '';
+  document.querySelectorAll('.rem-day').forEach(el=> el.checked=false);
+  renderRemindersList();
+  toast('تم إضافة التذكير ✅');
+  if(!(Notification && Notification.permission==='granted' && db.settings.notifEnabled)){
+    toast('متنساش تدوس "تفعيل التذكير" فوق عشان الإشعار يظهر فعليًا 🔔');
+  }
+}
+
+function renderRemindersList(){
+  const box = document.getElementById('remindersList');
+  if(!box) return;
+  const reminders = db.settings.reminders || [];
+  if(reminders.length===0){ box.innerHTML = `<p class="hint">مفيش تذكيرات مضافة لسه.</p>`; return; }
+  box.innerHTML = '';
+  reminders.forEach(r=>{
+    const daysTxt = (!r.days || r.days.length===0) ? 'كل يوم' : r.days.map(d=>DAY_NAMES[d]).join('، ');
+    const row = document.createElement('div');
+    row.className = 'contact-row';
+    row.innerHTML = `
+      <div>
+        <div class="contact-name">🔔 ${r.label}</div>
+        <div class="contact-meta">${daysTxt} · الساعة ${r.time}</div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteReminder('${r.id}')">🗑️ حذف</button>
+      </div>`;
+    box.appendChild(row);
+  });
+}
+function deleteReminder(id){
+  db.settings.reminders = (db.settings.reminders||[]).filter(r=>String(r.id)!==String(id));
+  save();
+  renderRemindersList();
+}
+
+function checkScheduledReminders(){
+  if(!db.settings.notifEnabled) return;
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const reminders = db.settings.reminders || [];
+  if(reminders.length===0) return;
+  const now = new Date();
+  const curDay = now.getDay();
+  const curHM = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const todayKey = now.toDateString();
+  reminders.forEach(r=>{
+    const dayMatches = !r.days || r.days.length===0 || r.days.includes(curDay);
+    if(!dayMatches || r.time !== curHM) return;
+    if(r.lastFired === todayKey) return;
+    r.lastFired = todayKey;
+    save();
+    new Notification('🔔 ' + r.label, { body: 'معاد الافتقاد دلوقتي - يلا نطمن على حد 🙏' });
+  });
+}
+setInterval(checkScheduledReminders, 20000);
+
+// ---------- Migrate old data ----------
+function migrateOldData(){
+  const raw = document.getElementById('migrateText').value.trim();
+  if(!raw){ toast('الصق البيانات الأول'); return; }
+  let count = 0;
+  try{
+    // Try JSON first
+    const parsed = JSON.parse(raw);
+    const arr = Array.isArray(parsed) ? parsed : (parsed.contacts || parsed.data || []);
+    arr.forEach(item=>{
+      const name = item.name || item.الاسم || item.اسم;
+      const phone = item.phone || item.الرقم || item.رقم || item.number;
+      if(!name || !phone) return;
+      db.contacts.push({
+        id: Date.now()+Math.random(),
+        name: String(name), phone: String(phone),
+        group: item.group || item.المجموعة || db.groups[0] || 'عام',
+        status: 'pending', notes: item.notes || item.ملاحظات || '',
+        lastVisit: null, createdAt: Date.now()
+      });
+      count++;
+    });
+  }catch(e){
+    // Fallback: CSV / line based "name, phone[, group]"
+    const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+    lines.forEach(line=>{
+      if(line.toLowerCase().includes('الاسم') && line.toLowerCase().includes('رقم')) return; // skip header
+      const parts = line.split(/[,\t]/).map(p=>p.trim().replace(/^"|"$/g,''));
+      if(parts.length<2) return;
+      const name = parts[0];
+      const phone = parts[1];
+      if(!name || !phone || !/\d/.test(phone)) return;
+      db.contacts.push({
+        id: Date.now()+Math.random(), name, phone,
+        group: parts[2] || db.groups[0] || 'عام',
+        status:'pending', notes: parts[3]||'',
+        lastVisit:null, createdAt:Date.now()
+      });
+      count++;
+    });
+  }
+  save();
+  if(!db.groups.includes(db.groups[0])) {}
+  refreshGroupSelects();
+  document.getElementById('migrateText').value='';
+  renderContacts(); renderDashboard();
+  toast(count>0 ? `تم ترحيل ${count} شخص ✅` : 'مقدرناش نتعرف على صيغة البيانات دي');
+}
+
+// ---------- Excel/CSV upload with column mapping ----------
+let pendingRows = [];
+let pendingStatusEl = null;
+
+function guessColumn(headers, keys){
+  return headers.find(h => keys.some(k => h.trim().toLowerCase() === k.toLowerCase())) || '';
+}
+
+function handleExcelUpload(event, groupSelectId, statusElId){
+  const file = event.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById(statusElId);
+  pendingStatusEl = statusEl;
+  statusEl.textContent = 'جاري القراءة...';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type:'array'});
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      if(rows.length===0){ statusEl.textContent = '⚠️ الملف فاضي'; return; }
+      pendingRows = rows;
+      openMapping(Object.keys(rows[0]), groupSelectId);
+      statusEl.textContent = '';
+    }catch(err){
+      statusEl.textContent = '⚠️ حصل خطأ في قراءة الملف، تأكد إنه إكسل أو CSV صحيح';
+    }
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function openMapping(headers, groupSelectId){
+  const fill = (id, includeEmpty)=>{
+    const sel = document.getElementById(id);
+    sel.innerHTML = includeEmpty ? '<option value="">بدون</option>' : '';
+    headers.forEach(h=>{
+      const o = document.createElement('option'); o.value=h; o.textContent=h; sel.appendChild(o);
+    });
+  };
+  fill('mapName', false);
+  fill('mapPhone', false);
+  fill('mapGroup', true);
+  fill('mapNotes', true);
+
+  document.getElementById('mapName').value = guessColumn(headers, ['الاسم','اسم','name','الإسم']);
+  document.getElementById('mapPhone').value = guessColumn(headers, ['رقم الموبايل','الرقم','رقم','phone','number','موبايل']);
+  document.getElementById('mapGroup').value = guessColumn(headers, ['المجموعة','مجموعة','group']);
+  document.getElementById('mapNotes').value = guessColumn(headers, ['ملاحظات','notes']);
+
+  const defGroupSel = document.getElementById('mapDefaultGroup');
+  defGroupSel.innerHTML='';
+  db.groups.forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; defGroupSel.appendChild(o); });
+  { const o=document.createElement('option'); o.value='__new__'; o.textContent='➕ مجموعة جديدة...'; defGroupSel.appendChild(o); }
+  if(groupSelectId){
+    const chosen = document.getElementById(groupSelectId).value;
+    if(chosen) defGroupSel.value = chosen;
+  }
+  const toggleDefaultGroupVisibility = ()=>{
+    document.getElementById('mapDefaultGroupWrap').style.display = document.getElementById('mapGroup').value ? 'none':'block';
+  };
+  toggleDefaultGroupVisibility();
+  document.getElementById('mapGroup').onchange = toggleDefaultGroupVisibility;
+
+  renderPreviewTable(headers);
+
+  document.getElementById('mappingModal').style.display='flex';
+}
+
+function renderPreviewTable(headers){
+  const table = document.getElementById('previewTable');
+  const previewRows = pendingRows.slice(0, 8);
+  let html = '<thead><tr>';
+  headers.forEach(h=>{
+    html += `<th style="position:sticky;top:0;background:var(--teal);color:#f4ead0;padding:6px 8px;text-align:right;white-space:nowrap;">${h}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  previewRows.forEach((row,i)=>{
+    html += `<tr style="background:${i%2?'#faf8f0':'#fff'};">`;
+    headers.forEach(h=>{
+      html += `<td style="padding:6px 8px;border-top:1px solid var(--line);white-space:nowrap;">${row[h]!==undefined ? row[h] : ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function closeMapping(){
+  document.getElementById('mappingModal').style.display='none';
+  pendingRows = [];
+}
+
+function confirmMapping(){
+  const nameCol = document.getElementById('mapName').value;
+  const phoneCol = document.getElementById('mapPhone').value;
+  const groupCol = document.getElementById('mapGroup').value;
+  const notesCol = document.getElementById('mapNotes').value;
+  const defaultGroup = document.getElementById('mapDefaultGroup').value;
+
+  if(!nameCol || !phoneCol){ toast('لازم تحدد عمود الاسم وعمود الرقم'); return; }
+
+  let count = 0;
+  pendingRows.forEach(row=>{
+    const name = row[nameCol];
+    const phone = row[phoneCol];
+    if(!name || !phone) return;
+    const group = (groupCol ? row[groupCol] : '') || defaultGroup || db.groups[0] || 'عام';
+    const notes = notesCol ? (row[notesCol]||'') : '';
+    if(!db.groups.includes(group)) db.groups.push(group);
+    db.contacts.push({
+      id: Date.now()+Math.random(),
+      name: String(name).trim(), phone: String(phone).trim(),
+      group: String(group).trim(), status:'pending',
+      notes: String(notes).trim(), lastVisit:null, createdAt:Date.now()
+    });
+    count++;
+  });
+  save();
+  refreshGroupSelects();
+  renderContacts(); renderDashboard();
+  if(pendingStatusEl) pendingStatusEl.textContent = count>0 ? `✅ تم استيراد ${count} شخص` : '⚠️ مفيش صفوف صالحة';
+  closeMapping();
+  if(count>0) toast(`تم استيراد ${count} شخص ✅`);
+}
+
+// ---------- Toast ----------
+function toast(msg){
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2400);
+}
+
+// ---------- Init ----------
+refreshGroupSelects();
+loadSettingsUI();
+renderDashboard();
+renderContacts();
+updateNotifStatusUI();
+checkOverdueNotification();
+
+// ---------- PWA: service worker + install prompt ----------
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    const swCode = `
+      const CACHE_NAME='mursil-eftiqad-v2';
+      self.addEventListener('install', e=>{
+        self.skipWaiting();
+        e.waitUntil(caches.open(CACHE_NAME).then(c=>c.add(self.registration.scope)));
+      });
+      self.addEventListener('activate', e=>{
+        e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));
+        self.clients.claim();
+      });
+      self.addEventListener('fetch', e=>{
+        const url=new URL(e.request.url);
+        if(url.origin!==self.location.origin) return;
+        e.respondWith(
+          fetch(e.request).then(res=>{
+            if(res && res.status===200){ const copy=res.clone(); caches.open(CACHE_NAME).then(c=>c.put(e.request, copy)); }
+            return res;
+          }).catch(()=> caches.match(e.request))
+        );
+      });
+    `;
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{ /* offline caching unavailable, app still works fine */ });
+  });
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installAppBtn');
+  if(btn) btn.style.display = 'inline-block';
+});
+function installApp(){
+  if(!deferredInstallPrompt){ toast('التطبيق مثبت بالفعل أو المتصفح مش بيدعم التثبيت المباشر'); return; }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(()=>{ deferredInstallPrompt = null; });
+}
+</script>
+</body>
+</html>
