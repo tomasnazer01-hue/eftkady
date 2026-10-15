@@ -2546,10 +2546,10 @@
           <button class="btn btn-gold btn-sm" id="btnAddPersonManual">+ إضافة شخص</button>
         </div>
         <div class="row wrap" id="streetFilterRow" style="margin-bottom:8px;gap:6px">
-          <button class="btn btn-outline btn-sm" id="btnStreetFilter">🛣️ فلتر بالشارع (من الخريطة)</button>
+          <button class="btn btn-outline btn-sm" id="btnStreetFilter">🛣️ فلتر باسم الشارع</button>
           <button class="btn btn-ghost btn-sm" id="btnStreetRename" style="display:none">✏️ تغيير اسم شارع</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v114</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v115</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلاتر <span id="contactFiltersBadge"></span></button>
@@ -3776,15 +3776,14 @@
 
   <div class="modal-overlay" id="modalStreetFilter">
     <div class="modal-sheet">
-      <div class="modal-head"><h3>🛣️ فلتر بالشارع</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalStreetFilter')">✕</button></div>
-      <p class="muted" style="margin-top:0;font-size:12.5px">قرّب الخريطة لحد ما الشوارع تظهر كخطوط زرقا (زوم ١٥ أو أكتر) ودوس على الشارع. هتظهرلك كل المخدومين اللي جواه.</p>
-      <div class="muted" style="font-size:12px;margin-bottom:4px">المجموعات (سيبها فاضية لكل المجموعات):</div>
-      <div class="row wrap" id="streetGroupChips" style="margin-bottom:6px;gap:6px"></div>
-      <div id="streetFilterMap" style="height:300px;border-radius:12px;overflow:hidden"></div>
-      <div id="streetFilterStatus" class="muted" style="font-size:12px;margin:6px 0"></div>
-      <div id="streetFilterResult" style="max-height:170px;overflow-y:auto;margin-bottom:8px"></div>
-      <div class="row" style="gap:6px">
+      <div class="modal-head"><h3>🛣️ فلتر باسم الشارع</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalStreetFilter')">✕</button></div>
+      <p class="muted" style="margin-top:0;font-size:12.5px">اكتب اسم الشارع (أو جزء منه) وهتظهرلك كل المخدومين اللي عنوانهم فيه الاسم ده.</p>
+      <input id="streetNameQ" placeholder="مثال: فريد عبد العظيم" autocomplete="off" style="width:100%;margin-bottom:6px">
+      <select id="streetNameGroup" style="width:100%;margin-bottom:6px"><option value="all">كل المجموعات</option></select>
+      <div id="streetFilterResult" style="max-height:260px;overflow-y:auto;margin-bottom:8px"></div>
+      <div class="row wrap" style="gap:6px">
         <button class="btn btn-primary grow" id="btnStreetApply" disabled>تطبيق على القايمة</button>
+        <button class="btn btn-sage grow" id="btnStreetSetLoc" disabled>📍 حدد موقع واحد للمحددين</button>
         <button class="btn btn-ghost" id="btnStreetClear">مسح الفلتر</button>
       </div>
     </div>
@@ -11781,6 +11780,19 @@ document.getElementById("btnConfirmLocation").addEventListener("click", async ()
     updateMemberLocationStatus();
     closeModal("modalLocationPicker");
     toast("تم تحديد الموقع — دوس حفظ عشان يتسجل ✅");
+  } else if(locationPickerTarget==="street-bulk"){
+    if(!pendingLocation){ toast("حدد نقطة على الخريطة الأول"); return; }
+    const ids = [...sfPicked];
+    const hadLoc = ids.filter(i=>contacts.find(c=>c.id===i)?.location).length;
+    if(!confirm(`هتحط نفس الموقع لـ ${ids.length} مخدوم في «${sfQuery}»${hadLoc?` (منهم ${hadLoc} ليهم موقع قديم هيتبدل)`:""}. متأكد؟`)) return;
+    closeModal("modalLocationPicker");
+    try{
+      recordUndo(`تحديد موقع واحد لشارع «${sfQuery}» (${ids.length})`);
+      await commitContactUpdates(new Map(ids.map(i=>[i,{location:{lat:pendingLocation.lat, lng:pendingLocation.lng}}])));
+      logActivity("تحديد موقع لشارع كامل", `${sfQuery} (${ids.length})`);
+      toast(`✅ اتحدد الموقع لـ ${ids.length} مخدوم`);
+    }catch(err){ console.error(err); toast("تعذر الحفظ — تأكد من الإنترنت والصلاحيات"); }
+    openModal("modalStreetFilter"); sfRender();
   } else if(locationPickerTarget==="servant-self"){
     closeModal("modalLocationPicker");
     if(!pendingLocation){ toast("حدد نقطة على الخريطة الأول"); return; }
@@ -22122,103 +22134,47 @@ async function autoLocLoadNearby(me, addr){
 })();
 
 
-// ---------------- فلتر المخدومين بالشارع (اختيار الشارع من الخريطة) ----------------
+// ---------------- فلتر المخدومين باسم الشارع (بحث في العنوان) + تحديد موقع واحد لكل الشارع ----------------
 let streetGeoFilter = null;   // {name, ids:Set}
-let sfMap = null, sfStreetLayer = null, sfContactLayer = null, sfWays = new Map(), sfSel = null, sfLoadedKey = "", sfGroups = new Set(), sfTimer = null;
-function sfPointSegM(p, a, b){
-  const k = Math.cos(p.lat*Math.PI/180), X = q=>(q.lng-p.lng)*k*111320, Y = q=>(q.lat-p.lat)*110540;
-  const ax=X(a), ay=Y(a), bx=X(b), by=Y(b), dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
-  let t = l2 ? ((-ax)*dx + (-ay)*dy)/l2 : 0; t = Math.max(0, Math.min(1, t));
-  return Math.hypot(ax+t*dx, ay+t*dy);
-}
+let sfHits = [], sfPicked = new Set(), sfQuery = "";
 function sfBaseContacts(){
+  const g = (document.getElementById("streetNameGroup")||{}).value || "all";
   return contacts.filter(c=>{
     if(myRole==="supervisor" && !mySupervisedGroups.includes(c.group)) return false;
-    if(sfGroups.size && !sfGroups.has(c.group)) return false;
+    if(g!=="all" && c.group!==g) return false;
     return true;
   });
 }
-function sfLocated(){ return sfBaseContacts().filter(c=>c.location && typeof c.location.lat==="number" && typeof c.location.lng==="number"); }
-function sfMatches(name){
-  const ways = sfWays.get(name) || [];
-  const words = autoLocNorm(autoLocDigits(name)).split(/\s+/).filter(w=>w.length>=3 && w!=="شارع");
-  const hits = new Map();
-  sfBaseContacts().forEach(c=>{
-    let how = "";
-    if(c.location && typeof c.location.lat==="number"){
-      const p = {lat:c.location.lat, lng:c.location.lng};
-      outer: for(const w of ways){ for(let i=0;i<w.length-1;i++){ if(sfPointSegM(p,w[i],w[i+1])<=45){ how="موقع"; break outer; } } }
-    }
-    if(!how && words.length){ const ad = autoLocNorm(autoLocDigits(c.address||"")); if(words.every(x=>ad.includes(x))) how="عنوان"; }
-    if(how) hits.set(c.id,{c,how});
-  });
-  return hits;
+function sfWords(q){ return autoLocNorm(autoLocDigits(q)).split(/\s+/).filter(w=>w.length>=2 && w!=="شارع" && w!=="ش" && w!=="الشارع"); }
+function sfCompute(){
+  const q = document.getElementById("streetNameQ").value.trim(); sfQuery = q;
+  const words = sfWords(q);
+  const prevAll = new Set(sfHits.map(c=>c.id));
+  sfHits = words.length ? sfBaseContacts().filter(c=>{ const ad = autoLocNorm(autoLocDigits(c.address||"")); return ad && words.every(x=>ad.includes(x)); }) : [];
+  sfHits.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"ar"));
+  sfPicked = new Set(sfHits.map(c=>c.id));
+  sfRender();
 }
-function sfRenderContacts(){
-  if(!sfMap) return;
-  if(sfContactLayer) sfMap.removeLayer(sfContactLayer);
-  sfContactLayer = L.layerGroup().addTo(sfMap);
-  const hit = sfSel ? sfSel.hits : new Map();
-  const sfItems = [];
-  sfLocated().forEach(c=>{
-    const on = hit.has(c.id);
-    const cm = L.circleMarker([c.location.lat,c.location.lng], {radius:on?8:5, color:on?"#b00020":"#555", weight:on?3:1, fillColor:on?"#ff5252":"#999", fillOpacity:on?0.95:0.55}).bindTooltip(c.name||"").addTo(sfContactLayer);
-    sfItems.push({m:cm, lat:c.location.lat, lng:c.location.lng});
-  });
-  spreadMarkers(sfMap, sfItems, 16, "sf");
+function sfRender(){
+  const box = document.getElementById("streetFilterResult"), ba = document.getElementById("btnStreetApply"), bl = document.getElementById("btnStreetSetLoc");
+  if(!sfQuery){ box.innerHTML = ""; ba.disabled = bl.disabled = true; return; }
+  const withLoc = sfHits.filter(c=>c.location).length;
+  box.innerHTML = `<div style="font-weight:700;margin-bottom:4px">🛣️ ${cardEsc(sfQuery)} — ${sfHits.length} مخدوم (${withLoc} ليهم موقع)</div>` +
+    (sfHits.length ? `<label style="font-size:12.5px;display:block;margin-bottom:4px"><input type="checkbox" id="sfAll" ${sfPicked.size===sfHits.length?"checked":""}> تحديد الكل</label>` +
+      sfHits.map(c=>`<label style="display:block;font-size:13px;padding:3px 0;border-bottom:1px dashed #ddd"><input type="checkbox" data-sfp="${c.id}" ${sfPicked.has(c.id)?"checked":""}> ${cardEsc(c.name||"")} <span class="muted" style="font-size:11px">· ${cardEsc(groupName(c.group))} · ${cardEsc(c.address||"")} ${c.location?"· 📍":""}</span></label>`).join("")
+      : `<div class="muted">مفيش مخدومين عنوانهم فيه الاسم ده.</div>`);
+  ba.disabled = !sfPicked.size; bl.disabled = !sfPicked.size;
+  bl.textContent = `📍 حدد موقع واحد للمحددين (${sfPicked.size})`;
 }
-function sfRenderResult(){
-  const box = document.getElementById("streetFilterResult"), btn = document.getElementById("btnStreetApply");
-  if(!sfSel){ box.innerHTML=""; btn.disabled=true; return; }
-  const arr = [...sfSel.hits.values()];
-  box.innerHTML = `<div style="font-weight:700;margin-bottom:4px">🛣️ ${cardEsc(sfSel.name)} — ${arr.length} مخدوم</div>` +
-    (arr.length ? arr.map(x=>`<div style="font-size:13px;padding:3px 0;border-bottom:1px dashed #ddd">${cardEsc(x.c.name||"")} <span class="muted" style="font-size:11px">· ${cardEsc(groupName(x.c.group))} · ${x.how==="موقع"?"📍 على الخريطة":"🏠 بالعنوان"}</span></div>`).join("") : `<div class="muted">مفيش مخدومين متسجلين في الشارع ده (اللي ليهم موقع على الخريطة أو عنوان فيه اسمه).</div>`);
-  btn.disabled = !arr.length;
-}
-function sfSelect(name){
-  sfSel = {name, hits: sfMatches(name)};
-  sfStreetLayer && sfStreetLayer.eachLayer(l=>{ const on = l._sfName===name; l.setStyle({color:on?"#d81b60":"#2a6df4", weight:on?9:7, opacity:on?0.85:0.4}); });
-  sfRenderContacts(); sfRenderResult();
-}
-async function sfLoadStreets(force){
-  if(!sfMap) return;
-  const st = document.getElementById("streetFilterStatus");
-  if(sfMap.getZoom()<15){ st.textContent = "قرّب الخريطة أكتر (زوم ١٥ أو أكتر) عشان تظهر الشوارع."; return; }
-  const b = sfMap.getBounds(), key = [b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(x=>x.toFixed(3)).join(",");
-  if(!force && key===sfLoadedKey) return;
-  st.textContent = "⏳ بحمّل الشوارع...";
-  const q = `[out:json][timeout:25];way["highway"]["name"](${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()});out tags geom 700;`;
-  let j=null, err="";
-  for(const ep of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"]){
-    try{ const r = await fetch(ep+"?data="+encodeURIComponent(q)); if(r.ok){ j = await r.json(); break; } err="HTTP "+r.status; }catch(e){ err=String(e&&e.message||e); }
-  }
-  if(!j){ st.textContent = "تعذر تحميل الشوارع ("+err+") — جرّب تاني."; return; }
-  sfLoadedKey = key;
-  if(sfStreetLayer) sfMap.removeLayer(sfStreetLayer);
-  sfStreetLayer = L.layerGroup().addTo(sfMap);
-  sfWays = new Map();
-  (j.elements||[]).forEach(el=>{
-    const t = el.tags||{}, name = (t["name:ar"]||t.name||"").trim(); if(!name || !el.geometry) return;
-    const pts = el.geometry.map(g=>({lat:g.lat,lng:g.lon}));
-    (sfWays.get(name) || sfWays.set(name,[]).get(name)).push(pts);
-    const pl = L.polyline(pts.map(p=>[p.lat,p.lng]), {color:"#2a6df4", weight:7, opacity:0.4});
-    pl._sfName = name; pl.bindTooltip(name, {sticky:true}); pl.on("click", ()=>sfSelect(name)); pl.addTo(sfStreetLayer);
-  });
-  st.textContent = `اتحمّل ${sfWays.size} شارع — دوس على الشارع المطلوب.`;
-  if(sfSel) sfSelect(sfSel.name);
-  sfContactLayer && sfContactLayer.bringToFront && 0;
-}
-function sfRenderGroupChips(){
-  const ids = [...new Set(contacts.filter(c=>c.location).map(c=>c.group).filter(Boolean))];
-  const wrap = document.getElementById("streetGroupChips");
-  wrap.innerHTML = ids.map(g=>`<button class="chip ${sfGroups.has(g)?"active":""}" data-sfg="${cardEsc(g)}">${cardEsc(groupName(g))}</button>`).join("") || `<span class="muted">مفيش مخدومين ليهم موقع.</span>`;
-}
-document.getElementById("streetGroupChips").addEventListener("click", e=>{
-  const b = e.target.closest("[data-sfg]"); if(!b) return;
-  const g = b.dataset.sfg; sfGroups.has(g) ? sfGroups.delete(g) : sfGroups.add(g);
-  sfRenderGroupChips();
-  if(sfSel) sfSel.hits = sfMatches(sfSel.name);
-  sfRenderContacts(); sfRenderResult();
+document.getElementById("streetNameQ").addEventListener("input", sfCompute);
+document.getElementById("streetNameGroup").addEventListener("change", sfCompute);
+document.getElementById("streetFilterResult").addEventListener("change", e=>{
+  if(e.target.id==="sfAll"){ sfPicked = e.target.checked ? new Set(sfHits.map(c=>c.id)) : new Set(); sfRender(); return; }
+  const id = e.target.dataset.sfp; if(!id) return;
+  e.target.checked ? sfPicked.add(id) : sfPicked.delete(id);
+  const ba = document.getElementById("btnStreetApply"), bl = document.getElementById("btnStreetSetLoc");
+  ba.disabled = bl.disabled = !sfPicked.size; bl.textContent = `📍 حدد موقع واحد للمحددين (${sfPicked.size})`;
+  const all = document.getElementById("sfAll"); if(all) all.checked = sfPicked.size===sfHits.length;
 });
 function renderStreetFilterBadge(){
   const el = document.getElementById("streetFilterActive"); if(!el) return;
@@ -22226,32 +22182,51 @@ function renderStreetFilterBadge(){
   const x = document.getElementById("btnStreetFilterX");
   if(x) x.addEventListener("click", ()=>{ streetGeoFilter = null; renderStreetFilterBadge(); renderContacts(); });
 }
-document.getElementById("btnStreetFilter").addEventListener("click", async ()=>{
-  try{ await Promise.race([leafletReady, new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), 8000))]); }catch(e){ toast("تعذر تحميل الخريطة"); return; }
-  if(!window.L){ toast("تعذر تحميل مكتبة الخريطة"); return; }
+document.getElementById("btnStreetFilter").addEventListener("click", ()=>{
+  const gs = document.getElementById("streetNameGroup"), prev = gs.value || "all";
+  const gl = myRole==="supervisor" ? groups.filter(g=>mySupervisedGroups.includes(g.id)) : groups;
+  gs.innerHTML = `<option value="all">كل المجموعات</option>` + gl.map(g=>`<option value="${g.id}">${cardEsc(g.name)}</option>`).join("");
+  gs.value = [...gs.options].some(o=>o.value===prev) ? prev : "all";
   openModal("modalStreetFilter");
-  sfSel = null; sfRenderGroupChips(); sfRenderResult();
-  document.getElementById("streetFilterStatus").textContent = "";
-  setTimeout(()=>{
-    const loc = sfLocated();
-    if(!sfMap){
-      sfMap = L.map("streetFilterMap").setView(loc.length?[loc[0].location.lat,loc[0].location.lng]:DEFAULT_MAP_CENTER, 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom:19}).addTo(sfMap);
-      sfMap.on("moveend", ()=>{ clearTimeout(sfTimer); sfTimer = setTimeout(()=>sfLoadStreets(false), 700); });
-    } else { sfMap.invalidateSize(); }
-    if(loc.length){ try{ sfMap.fitBounds(L.latLngBounds(loc.map(c=>[c.location.lat,c.location.lng])).pad(0.1), {maxZoom:16}); }catch(_){ } }
-    sfRenderContacts();
-    sfLoadedKey = ""; sfLoadStreets(true);
-  }, 300);
+  sfCompute();
+  setTimeout(()=>document.getElementById("streetNameQ").focus(), 200);
 });
 document.getElementById("btnStreetApply").addEventListener("click", ()=>{
-  if(!sfSel || !sfSel.hits.size) return;
-  streetGeoFilter = {name: sfSel.name, ids: new Set(sfSel.hits.keys())};
+  if(!sfPicked.size) return;
+  streetGeoFilter = {name: sfQuery, ids: new Set(sfPicked)};
   closeModal("modalStreetFilter"); renderStreetFilterBadge(); renderContacts();
   toast(`🛣️ ${streetGeoFilter.name}: ${streetGeoFilter.ids.size} مخدوم`);
 });
 document.getElementById("btnStreetClear").addEventListener("click", ()=>{
-  streetGeoFilter = null; sfSel = null; closeModal("modalStreetFilter"); renderStreetFilterBadge(); renderContacts();
+  streetGeoFilter = null; sfHits = []; sfPicked = new Set(); sfQuery = "";
+  document.getElementById("streetNameQ").value = "";
+  closeModal("modalStreetFilter"); renderStreetFilterBadge(); renderContacts();
+});
+// تحديد موقع واحد لكل المحددين في الشارع
+document.getElementById("btnStreetSetLoc").addEventListener("click", async ()=>{
+  if(!sfPicked.size) return;
+  toast("⏳ جاري تحميل الخريطة...");
+  try{ await Promise.race([leafletReady, new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), 8000))]); }
+  catch(err){ alert("تعذر تحميل الخريطة. جرب شبكة تانية."); return; }
+  if(!window.L){ alert("تعذر تحميل مكتبة الخريطة"); return; }
+  locationPickerTarget = "street-bulk";
+  autoLocAddr = sfQuery;
+  const first = sfHits.find(c=>sfPicked.has(c.id) && c.location);
+  pendingLocation = first ? {lat:first.location.lat, lng:first.location.lng} : null;
+  closeModal("modalStreetFilter");
+  openModal("modalLocationPicker");
+  setTimeout(()=>{
+    try{
+      const startPoint = pendingLocation ? [pendingLocation.lat, pendingLocation.lng] : DEFAULT_MAP_CENTER;
+      if(!locationPickerMapInstance){
+        locationPickerMapInstance = L.map("locationPickerMap").setView(startPoint, pendingLocation?16:11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom:19}).addTo(locationPickerMapInstance);
+        locationPickerMapInstance.on("click", e=>placeLocationMarker(e.latlng.lat, e.latlng.lng));
+      } else { locationPickerMapInstance.invalidateSize(); locationPickerMapInstance.setView(startPoint, pendingLocation?16:11); }
+      if(pendingLocation) placeLocationMarker(pendingLocation.lat, pendingLocation.lng, true);
+      else if(locationPickerMarker){ locationPickerMapInstance.removeLayer(locationPickerMarker); locationPickerMarker = null; }
+    }catch(err){ console.error(err); alert("حصلت مشكلة في عرض الخريطة: "+err.message); }
+  }, 300);
 });
 
 // ---------------- أماكن مشهورة على الخرائط (مساجد، كنايس، صيدليات، محلات...) من OpenStreetMap ----------------
@@ -22344,7 +22319,6 @@ poiSetup("locationPickerMap", ()=>locationPickerMapInstance, (lat,lng,name,type)
   const q = document.getElementById("pickerStreetQ"); if(q) q.value = name;
   toast(`${type.e} اتحط الدبوس عند ${name} — حرّكه لبيت المخدوم لو محتاج ثم تأكيد`);
 });
-poiSetup("streetFilterMap", ()=>sfMap, null);
 poiSetup("visitMapContainer", ()=>visitMapInstance, null);
 // ربط حدث تحريك الخريطة بمجرد ما الخريطة تتعمل (الخرائط بتتكوّن متأخر)
 setInterval(()=>{
@@ -22585,7 +22559,7 @@ attachSpouseNameSuggest("addPersonWifeName","addPersonWifePhone");
   }).observe(document.body, {childList:true, subtree:true});
 })();
 
-const APP_VERSION = "114"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "115"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
