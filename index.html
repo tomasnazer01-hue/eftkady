@@ -2234,6 +2234,7 @@
             <div class="grow">
               <label class="field-label">مين؟</label>
               <select id="parentsTypeFilter">
+                <option value="auto">🤖 تلقائي: رسالة واحدة لكل طفل (الأم ← الأب ← رقم الطفل)</option>
                 <option value="all">الآباء والأمهات</option>
                 <option value="father">الآباء بس</option>
                 <option value="mother">الأمهات بس</option>
@@ -2265,16 +2266,22 @@
             <button class="chip" data-parent-ph="{اسم_ولي_الأمر}">+ اسم ولي الأمر</button>
             <button class="chip" data-parent-ph="{ابنك/بنتك}">+ ابنك/بنتك</button>
             <button class="chip" data-parent-ph="{اسم_الطفل_الأول}">+ اسم الطفل</button>
+            <button class="chip" data-parent-ph="{ولد|بنت}" title="الكلمة الأولى للولد والتانية للبنت، مثال: {غاب|غابت}">+ صيغة ولد|بنت</button>
             <button class="chip" data-parent-ph="{اسم_الأب_الأول}">+ اسم الأب</button>
             <button class="chip" data-parent-ph="{اسم_الأم_الأول}">+ اسم الأم</button>
           </div>
           <select id="parentsTemplatePick" style="margin-bottom:6px"><option value="">— أو اختار رسالة محفوظة —</option></select>
+          <div class="muted" style="font-size:11.5px;margin-bottom:6px">💡 اكتب بصيغة المذكر في رسالة الأولاد وبصيغة المؤنث في رسالة البنات واحفظهم منفصلين، أو استخدم <b>{غاب|غابت}</b> (الأولى للولد والتانية للبنت) في رسالة واحدة.</div>
           <textarea id="parentsMsgText" rows="4" placeholder="مثال: سلام ونعمة يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🙏 عايزين نطمن على {ابنك/بنتك} {اسم_الطفل_الأول}"></textarea>
           <label class="row" style="gap:8px;cursor:pointer;margin-top:8px">
             <input type="checkbox" id="parentsUseTemplates" style="width:auto" />
             <span style="font-size:13px">🔁 استخدم الرسايل المحفوظة بالتبادل (حسب وضع التبديل في تاب الرسائل) بدل النص ده</span>
           </label>
           <div class="muted" id="parentsPreview" style="font-size:12px;margin:8px 0;white-space:pre-wrap"></div>
+          <div class="row wrap" style="margin-bottom:8px;gap:6px">
+            <select id="parentsSaveKind" class="grow"><option value="both">💾 تتحفظ لـ: الأولاد والبنات</option><option value="boy">💾 تتحفظ لـ: الأولاد بس 👦</option><option value="girl">💾 تتحفظ لـ: البنات بس 👧</option></select>
+            <button class="btn btn-outline btn-sm" id="btnParentsSaveTpl">💾 حفظ الرسالة</button>
+          </div>
           <button class="btn btn-primary btn-block" id="btnStartParentsSend">📤 بدء الإرسال للمحددين</button>
         </div>
       </div>
@@ -2764,7 +2771,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v234</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v236</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3047,7 +3054,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v234</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v236</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4590,6 +4597,39 @@
         <div style="height:12px"></div>
         <button class="btn btn-primary btn-block" id="btnSaveMyAccount">حفظ التغييرات</button>
         <p class="muted" id="myAccountResult" style="margin-top:8px"></p>
+      </details>
+
+      <details id="adminRegDetails" style="display:none;margin-bottom:10px">
+        <summary style="font-weight:700;cursor:pointer;padding:6px 0">📝 التسجيل العام (رابط + QR) <span id="regBadge" class="muted"></span></summary>
+        <div style="margin-top:8px">
+          <p class="muted" style="font-size:12.5px;margin:0 0 8px">أي حد يفتح الرابط أو يمسح الـ QR يقدر يسجّل بياناته أو بيانات أولاده أو حد يعرفه، من KG1 لحد المتزوجين. من غير تسجيل دخول.</p>
+          <label class="field-label">🔗 رابط التسجيل</label>
+          <input id="regLink" readonly dir="ltr" style="font-size:13px" />
+          <div class="row wrap" style="gap:6px;margin:6px 0 10px">
+            <button class="btn btn-outline btn-sm grow" id="btnRegCopy">📋 نسخ الرابط</button>
+            <button class="btn btn-outline btn-sm grow" id="btnRegWa">💬 إرسال واتساب</button>
+          </div>
+          <div style="text-align:center;margin:6px 0">
+            <canvas id="regQr" width="10" height="10" style="width:210px;height:210px;max-width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:8px"></canvas>
+          </div>
+          <button class="btn btn-gold btn-block btn-sm" id="btnRegQrDl">⬇ تنزيل صورة الـ QR</button>
+          <div style="border-top:1.5px dashed var(--line);margin:12px 0 8px"></div>
+          <div class="row wrap" style="gap:6px">
+            <select id="regStageFilter" class="grow"></select>
+            <select id="regExportFilter" class="grow">
+              <option value="all">كل التسجيلات</option>
+              <option value="new">⏳ لسه ما اتصدّرتش</option>
+              <option value="done">✅ اتصدّرت</option>
+            </select>
+          </div>
+          <input id="regSearch" placeholder="دوّر بالاسم أو الرقم" style="margin-top:6px" />
+          <div class="muted" id="regCount" style="margin:6px 0;font-size:12.5px"></div>
+          <div class="row wrap" style="gap:6px;margin-bottom:6px">
+            <button class="btn btn-sage btn-sm grow" id="btnRegExportNew">📥 تصدير الجديد بس</button>
+            <button class="btn btn-outline btn-sm grow" id="btnRegExportAll">📥 تصدير اللي ظاهر</button>
+          </div>
+          <div id="regList"></div>
+        </div>
       </details>
 
       <details id="adminServantScopeDetails" style="display:none;margin-bottom:10px" open>
@@ -6948,6 +6988,7 @@ function markConnected(){
   document.getElementById("statusLine").innerHTML = `متصل ومتزامن لحظيًا <span class="conn-dot on"></span>`;
 }
 function stopAppListeners(){
+  try{ if(typeof regUnsub==="function") regUnsub(); regUnsub = null; regSubFor = ""; regs = []; }catch(_){}
   unsubscribers.forEach(fn=>{ try{ fn(); }catch(_){} });
   unsubscribers = [];
   contacts=[]; groups=[]; templates=[]; attendance=[]; meetings=[]; pendingUsers=[]; servicePlans=[]; spiritualStages=[]; trips=[]; quizQuestions=[]; churchEvents=[]; chatMessages=[]; resources=[]; expenses=[]; regions=[]; pointActivities=[]; preparedContent=[]; messageImages=[]; servantAttendance=[]; planMonths=[];
@@ -7127,6 +7168,7 @@ async function startAppListeners(churchCode){
     templates = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
     renderTemplates();
     try{ renderSpouseTplList(); }catch(_){}
+    try{ fillParentTemplatePick(); }catch(_){}
   }));
 
   unsubscribers.push(onSnapshot(query(colAttendance, where("churchCode","==",churchCode)), snap=>{
@@ -7381,6 +7423,7 @@ async function startAppListeners(churchCode){
     loadTrash();
     document.getElementById("adminRolesDetails").style.display = "block";
     { const sd = document.getElementById("adminServantScopeDetails"); if(sd) sd.style.display = "block"; }
+    try{ refreshRegPanel(true); }catch(_){}
     try{ refreshApkCard(); }catch(_){}
     document.getElementById("adminMemberLinksDetails").style.display = "block";
     document.getElementById("churchCodeDisplay").textContent = churchCode;
@@ -7410,6 +7453,7 @@ async function startAppListeners(churchCode){
     document.getElementById("adminAiDetails").style.display = "none";
     document.getElementById("adminRolesDetails").style.display = "none";
     { const sd = document.getElementById("adminServantScopeDetails"); if(sd) sd.style.display = "none"; }
+    try{ refreshRegPanel(false); }catch(_){}
     try{ refreshApkCard(); }catch(_){}
     document.getElementById("adminMemberLinksDetails").style.display = "none";
   }
@@ -9828,13 +9872,23 @@ function guessParentColumns(headers){
   return {child: child<0 ? 0 : child, fatherName, fatherPhone, motherName, motherPhone};
 }
 function childWord(c){ return c.gender==="female" ? "بنتك" : c.gender==="male" ? "ابنك" : "ابنك/بنتك"; }
-function parentTitle(type){ return type==="father" ? "أستاذ" : "أستاذة"; }
+function parentTitle(type){ return type==="father" ? "أستاذ" : type==="self" ? "مامت أو بابا" : "أستاذة"; }
+function parentTplKind(t){ return (t.kidKind==="boy"||t.kidKind==="girl") ? t.kidKind : "both"; }
+function parentTplList(){ return templates.filter(t=>t.spKind!=="husband" && t.spKind!=="wife"); }
+function parentPoolFor(child, list){
+  const g = child && child.gender==="female" ? "girl" : child && child.gender==="male" ? "boy" : "";
+  const spec = g ? list.filter(t=>parentTplKind(t)===g) : [];
+  if(spec.length) return spec;
+  const both = list.filter(t=>parentTplKind(t)==="both");
+  return both.length ? both : list;
+}
 function fillParentMessage(text, r){
   const parentFirst = firstName(r.name||"");
   let t = (text||"")
     .replace(/\{أستاذ\/أستاذة\}/g, parentTitle(r.type))
     .replace(/\{ابنك\/بنتك\}/g, childWord(r.child))
-    .replace(/\{اسم_ولي_الأمر\}/g, parentFirst);
+    .replace(/\{اسم_ولي_الأمر\}/g, r.type==="self" ? firstName(r.child.name||"") : parentFirst);
+  t = t.replace(/\{([^{}|]+)\|([^{}|]+)\}/g, (m,a,b)=> r.child.gender==="female" ? b : r.child.gender==="male" ? a : a+"/"+b);
   t = fillTemplate(t, r.child);
   return t.replace(/[ \t]{2,}/g, " ").replace(/ +\n/g, "\n").trim();
 }
@@ -9849,6 +9903,8 @@ function buildParentRecipients(){
   contacts.forEach(c=>{
     if(c.fatherPhone && !c.fatherDeceased) out.push({key:c.id+"_f", type:"father", child:c, name:c.fatherName||"", phone:c.fatherPhone});
     if(c.motherPhone && !c.motherDeceased) out.push({key:c.id+"_m", type:"mother", child:c, name:c.motherName||"", phone:c.motherPhone});
+    const hasM = c.motherPhone && !c.motherDeceased, hasF = c.fatherPhone && !c.fatherDeceased;
+    if(!hasM && !hasF && c.phone) out.push({key:c.id+"_s", type:"self", child:c, name:"", phone:c.phone});
   });
   return out.sort((a,b)=>(a.child.name||"").arLocale(b.child.name||"",'ar') || (a.type==="father"?-1:1));
 }
@@ -10303,9 +10359,15 @@ function parentsFilterState(){
 }
 function getFilteredParentRecipients(){
   const f = parentsFilterState(), today = todayStr();
+  const autoSeen = new Set();
   return buildParentRecipients().filter(r=>{
     if(f.g!=="all" && r.child.group!==f.g) return false;
-    if(f.t!=="all" && r.type!==f.t) return false;
+    if(f.t==="auto"){
+      // one message per child: mother first, then father, then the child's own number
+      const c = r.child, pref = (c.motherPhone && !c.motherDeceased) ? "mother" : (c.fatherPhone && !c.fatherDeceased) ? "father" : "self";
+      if(r.type!==pref) return false;
+    } else if(r.type==="self") return false;
+    else if(f.t!=="all" && r.type!==f.t) return false;
     const last = parentLastSent(r.child, r.type);
     if(f.x==="never" && last) return false;
     if(f.x==="today" && last===today) return false;
@@ -10330,7 +10392,7 @@ function updateParentsPreview(){
   const box = document.getElementById("parentsPreview");
   const text = document.getElementById("parentsMsgText").value;
   const first = buildParentRecipients().find(r=>parentsSelected.has(r.key)) || getFilteredParentRecipients()[0];
-  box.textContent = (text.trim() && first) ? `معاينة (لـ ${first.name || (first.type==='father'?'والد ':'والدة ') + firstName(first.child.name)}):\n${fillParentMessage(text, first)}` : "";
+  box.textContent = (text.trim() && first) ? `معاينة (لـ ${first.name || (first.type==='father'?'والد ':first.type==='self'?'رقم ':'والدة ') + firstName(first.child.name)}):\n${fillParentMessage(text, first)}` : "";
 }
 function eyeBtn(id){ return `<button type="button" data-open-contact="${id}" title="فتح بيانات الطفل" style="border:none;background:#EEF1F7;border-radius:50%;width:30px;height:30px;font-size:15px;cursor:pointer;flex:0 0 auto">👁️</button>`; }
 document.addEventListener("click", e=>{
@@ -10342,7 +10404,7 @@ function renderParentsList(){
   const wrap = document.getElementById("parentsList");
   const list = getFilteredParentRecipients();
   document.getElementById("parentsSelectedCount").textContent = `محدد: ${parentsSelected.size}`;
-  const noPhone = contacts.filter(c=>!c.fatherPhone && !c.motherPhone && !(c.fatherDeceased && c.motherDeceased)).length;
+  const noPhone = contacts.filter(c=>!c.fatherPhone && !c.motherPhone && !c.phone && !(c.fatherDeceased && c.motherDeceased)).length;
   const noGender = contacts.filter(c=>!c.gender).length;
   const notes = [];
   if(noPhone) notes.push(`⚠️ ${noPhone} طفل مالهمش رقم أب أو أم (استوردهم من تاب "📥 من إكسيل")`);
@@ -10355,7 +10417,7 @@ function renderParentsList(){
     <label class="row" style="gap:8px;cursor:pointer;padding:8px 0;border-bottom:1px solid var(--line)">
       <input type="checkbox" class="parentChk" data-key="${r.key}" style="width:auto" ${parentsSelected.has(r.key)?'checked':''} />
       <div class="grow">
-        <div class="item-name" style="font-size:13px">${r.type==='father'?'👨':'👩'} ${r.name||(r.type==='father'?'الأب':'الأم')} <span class="muted">— ${r.type==='father'?'والد':'والدة'} ${r.child.name||''}</span></div>
+        <div class="item-name" style="font-size:13px">${r.type==='father'?'👨':r.type==='self'?'📱':'👩'} ${r.name||(r.type==='father'?'الأب':r.type==='self'?'رقم المخدوم':'الأم')} <span class="muted">— ${r.type==='father'?'والد':r.type==='self'?'':'والدة'} ${r.child.name||''} ${r.child.gender==='female'?'👧':r.child.gender==='male'?'👦':''}</span></div>
         <div class="item-sub" dir="ltr" style="text-align:right">${r.phone}</div>
       </div>
       ${last?`<span class="muted" style="font-size:11px;white-space:nowrap">✅ ${parentSentLabel(last)}</span>`:''}
@@ -10812,12 +10874,22 @@ function readChildren(containerId){
   });
 });
 
+function fillParentTemplatePick(){
+  const el = document.getElementById("parentsTemplatePick"); if(!el) return;
+  const list = parentTplList();
+  const grp = (label, k)=>{
+    const items = list.filter(t=>parentTplKind(t)===k);
+    return items.length ? `<optgroup label="${label}">` + items.map(t=>`<option value="${cardEsc(t.id)}">${cardEsc((t.text||"").slice(0,45))}</option>`).join("") + `</optgroup>` : "";
+  };
+  el.innerHTML = `<option value="">— أو اختار رسالة محفوظة —</option>` + grp("👦 رسايل الأولاد","boy") + grp("👧 رسايل البنات","girl") + grp("👥 للاتنين","both");
+}
 // ----- screen wiring -----
 function openParentsScreen(){
   openScreenSimple("screen-parents");
   fillGroupSelectKeepValue("parentsGroupFilter");
   fillGroupSelectKeepValue("parentsTableGroup");
-  document.getElementById("parentsTemplatePick").innerHTML = `<option value="">— أو اختار رسالة محفوظة —</option>` + templates.map((t,i)=>`<option value="${i}">${(t.text||"").slice(0,45)}</option>`).join("");
+  document.getElementById("parentsTemplatePick").innerHTML = `<option value="">— أو اختار رسالة محفوظة —</option>` + "";
+  fillParentTemplatePick();
   setParentsTab(parentsTab);
 }
 document.getElementById("btnOpenParents").addEventListener("click", openParentsScreen);
@@ -10838,8 +10910,23 @@ document.querySelectorAll("[data-parent-ph]").forEach(b=>b.addEventListener("cli
   ta.focus(); updateParentsPreview();
 }));
 document.getElementById("parentsTemplatePick").addEventListener("change", (e)=>{
-  const t = templates[parseInt(e.target.value)];
-  if(t){ document.getElementById("parentsMsgText").value = t.text||""; updateParentsPreview(); }
+  const t = templates.find(x=>x.id===e.target.value);
+  if(t){
+    document.getElementById("parentsMsgText").value = t.text||"";
+    document.getElementById("parentsSaveKind").value = parentTplKind(t);
+    updateParentsPreview();
+  }
+});
+document.getElementById("btnParentsSaveTpl").addEventListener("click", async ()=>{
+  const text = document.getElementById("parentsMsgText").value.trim();
+  if(!text){ toast("اكتب الرسالة الأول"); return; }
+  const kind = document.getElementById("parentsSaveKind").value;
+  if(templates.some(t=>(t.text||"").trim()===text && parentTplKind(t)===kind && !t.spKind)){ toast("الرسالة دي محفوظة قبل كده"); return; }
+  try{
+    await addDoc(colTemplates, {text, category:"عام", kidKind:kind, order: templates.length, churchCode: myChurchCode, createdAt: serverTimestamp()});
+    logActivity("حفظ رسالة أطفال");
+    toast(kind==="boy" ? "اتحفظت في رسايل الأولاد ✅" : kind==="girl" ? "اتحفظت في رسايل البنات ✅" : "اتحفظت للأولاد والبنات ✅");
+  }catch(err){ console.error("saveParentTpl", err); toast("تعذر حفظ الرسالة — تأكد من الاتصال والصلاحيات"); }
 });
 
 // ----- sequential send -----
@@ -10854,8 +10941,8 @@ function renderParentSendStep(){
   const r = parentSendQueue[parentSendIdx];
   document.getElementById("parentSendTitle").textContent = "إرسال لأولياء الأمور";
   document.getElementById("parentSendProgress").textContent = `${parentSendIdx+1} من ${parentSendQueue.length}`;
-  document.getElementById("parentSendWho").textContent = `${r.type==='father'?'👨':'👩'} ${r.name||(r.type==='father'?'الأب':'الأم')} — ${r.phone}`;
-  document.getElementById("parentSendChild").textContent = `${r.type==='father'?'والد':'والدة'} ${r.child.name||''}`;
+  document.getElementById("parentSendWho").textContent = `${r.type==='father'?'👨':r.type==='self'?'📱':'👩'} ${r.name||(r.type==='father'?'الأب':r.type==='self'?'رقم المخدوم':'الأم')} — ${r.phone}`;
+  document.getElementById("parentSendChild").textContent = `${r.type==='father'?'والد':r.type==='self'?'المخدوم':'والدة'} ${r.child.name||''}`;
   document.getElementById("parentSendPreview").textContent = fillParentMessage(r.msg, r);
 }
 document.getElementById("steConfirm").addEventListener("click", async ()=>{
@@ -10876,7 +10963,7 @@ document.getElementById("btnStartParentsSend").addEventListener("click", ()=>{
   const useTpl = document.getElementById("parentsUseTemplates").checked;
   const msg = document.getElementById("parentsMsgText").value;
   if(!useTpl && !msg.trim()){ toast("اكتب الرسالة الأول"); return; }
-  if(useTpl && templates.length===0){ toast("مفيش رسايل محفوظة. ضيف رسالة من تاب الرسائل"); return; }
+  if(useTpl && parentTplList().length===0){ toast("مفيش رسايل محفوظة. ضيف رسالة من تاب الرسائل"); return; }
   let recips = buildParentRecipients().filter(r=>parentsSelected.has(r.key));
   if(!recips.length){ toast("حدد ولي أمر واحد على الأقل"); return; }
   const sentToday = recips.filter(r=>parentLastSent(r.child, r.type)===todayStr());
@@ -10885,7 +10972,13 @@ document.getElementById("btnStartParentsSend").addEventListener("click", ()=>{
     if(!sendAgain) recips = recips.filter(r=>!sentToday.includes(r));
     if(!recips.length){ toast("مفيش حد باقي"); return; }
   }
-  parentSendQueue = recips.map((r,i)=>({...r, msg: useTpl ? pickParentTemplateText(templates, rotationMode, i) : msg}));
+  const _cnt = {};
+  parentSendQueue = recips.map((r,i)=>{
+    if(!useTpl) return {...r, msg};
+    const pool = parentPoolFor(r.child, parentTplList());
+    const gk = r.child.gender||"-"; const n = _cnt[gk] = (_cnt[gk]==null ? 0 : _cnt[gk]+1);
+    return {...r, msg: pickParentTemplateText(pool, rotationMode, n)};
+  });
   parentSendIdx = 0; parentSendSentCount = 0;
   openModal("modalParentSend");
   renderParentSendStep();
@@ -27179,7 +27272,147 @@ document.getElementById("btnSaveApkUrl")?.addEventListener("click", async ()=>{
   try{ await setDoc(doc(db,"meta",myChurchCode), {apkUrl:v}, {merge:true}); apkUrl = v; refreshApkCard(); toast(v ? "✅ اتحفظ رابط الـ APK" : "✅ اتمسح الرابط"); }
   catch(err){ console.error(err); toast("تعذر الحفظ"); }
 });
-const APP_VERSION = "234"; // shown in the members' install card so we can tell which build is really live
+// ===== التسجيل العام: رابط + QR + قايمة المسجلين + تصدير Excel =====
+const REG_STAGES = [["kg1","KG1"],["kg2","KG2"],["p1","أولى ابتدائي"],["p2","تانية ابتدائي"],["p3","تالتة ابتدائي"],["p4","رابعة ابتدائي"],["p5","خامسة ابتدائي"],["p6","سادسة ابتدائي"],
+  ["prep1","أولى إعدادي"],["prep2","تانية إعدادي"],["prep3","تالتة إعدادي"],["sec1","أولى ثانوي"],["sec2","تانية ثانوي"],["sec3","تالتة ثانوي"],["uni","جامعة"],["grad","خريجين"],["married","متزوجين"]];
+let regs = [], regUnsub = null, regSubFor = "", regShown = 100;
+function regLinkUrl(){ return new URL("tasgeel.html?c=" + encodeURIComponent(myChurchCode||""), location.href).href; }
+function regTs(r){ const t = r.createdAt; return t && t.toMillis ? t.toMillis() : 0; }
+function refreshRegPanel(isAdmin){
+  const box = document.getElementById("adminRegDetails"); if(!box) return;
+  box.style.display = (isAdmin && myChurchCode) ? "block" : "none";
+  if(!isAdmin || !myChurchCode) return;
+  document.getElementById("regLink").value = regLinkUrl();
+  const sf = document.getElementById("regStageFilter");
+  if(!sf.options.length){
+    sf.innerHTML = '<option value="all">كل المراحل</option>' + REG_STAGES.map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
+  }
+  const key = myChurchCode + "|" + (myUid||"");
+  if(regSubFor !== key){
+    try{ if(regUnsub) regUnsub(); }catch(_){}
+    regSubFor = key;
+    regUnsub = onSnapshot(query(collection(db,"registrations"), where("churchCode","==",myChurchCode)), snap=>{
+      regs = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      renderRegList();
+    }, err=>{ console.error("registrations", err); const l = document.getElementById("regList"); if(l) l.innerHTML = '<div class="muted" style="padding:8px">تعذر قراءة التسجيلات — لازم تنشر قواعد Firebase الجديدة (firestore-rules-corrected-v5.txt).</div>'; });
+  }
+}
+function regMatches(r){
+  const sf = document.getElementById("regStageFilter").value, ef = document.getElementById("regExportFilter").value, q = (document.getElementById("regSearch").value||"").trim();
+  if(sf!=="all" && r.stage!==sf) return false;
+  if(ef==="new" && r.exportedAt) return false;
+  if(ef==="done" && !r.exportedAt) return false;
+  if(q){
+    const hay = [r.name,r.guardianName,r.regByName,r.husbandName,r.wifeName,r.address].join(" ");
+    const dq = q.replace(/[^\d٠-٩]/g,"");
+    const nums = [r.phone,r.guardianPhone,r.wifePhone,r.regByPhone,r.whatsapp].join(" ");
+    if(!(hay.arIncludes(q) || (dq.length>=3 && nums.includes(arn(dq))))) return false;
+  }
+  return true;
+}
+function regRelText(r){ return r.regType==="self" ? "سجّل نفسه" : r.regType==="child" ? "سجّله ولي أمره" : "سجّله: " + (r.regByName||"حد تاني"); }
+function renderRegList(){
+  const list = document.getElementById("regList"); if(!list) return;
+  const total = regs.length, fresh = regs.filter(r=>!r.exportedAt).length;
+  document.getElementById("regBadge").textContent = fresh ? `(${fresh} جديد)` : (total ? `(${total})` : "");
+  const rows = regs.filter(regMatches).sort((a,b)=>String(a.name||"").arLocale(String(b.name||""),"ar"));
+  document.getElementById("regCount").textContent = `الظاهر: ${rows.length} من ${total} · لسه ما اتصدّرش: ${fresh}`;
+  if(!rows.length){ list.innerHTML = '<div class="muted" style="padding:8px">مفيش تسجيلات بالفلتر ده.</div>'; return; }
+  const phoneLine = (lbl,p)=> p ? `<a href="tel:${cardEsc(p)}" dir="ltr" style="text-decoration:none">📞 ${cardEsc(p)}</a>${lbl?` <span class="muted">(${lbl})</span>`:""}` : "";
+  list.innerHTML = rows.slice(0, regShown).map(r=>{
+    const done = r.exportedAt ? '<span title="اتصدّر في Excel" style="color:#15803D;font-weight:900">✅</span> ' : "";
+    const lines = [
+      phoneLine("", r.phone),
+      r.guardianName ? `👨‍👩‍👦 ${cardEsc(r.guardianName)} ${phoneLine("", r.guardianPhone)}` : "",
+      r.stage==="married" && r.wifePhone ? phoneLine("الزوجة", r.wifePhone) : "",
+      r.address ? `📍 ${cardEsc(r.address)}` : "",
+      `<span class="muted">${cardEsc(regRelText(r))}${r.regByPhone?` · ${cardEsc(r.regByPhone)}`:""}</span>`,
+      r.notes ? `📝 ${cardEsc(r.notes)}` : ""
+    ].filter(Boolean).join("<br>");
+    return `<div class="card" style="padding:10px 12px;margin:6px 0">
+      <div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start">
+        <div style="font-weight:800">${done}${cardEsc(r.name||"")}</div>
+        <span class="muted" style="font-size:12px;white-space:nowrap">${cardEsc(r.stageLabel||"")}</span>
+      </div>
+      <div style="font-size:13px;line-height:1.7;margin-top:4px">${lines}</div>
+      <div class="row wrap" style="gap:6px;margin-top:6px">
+        <button class="btn btn-ghost btn-sm regToggle" data-id="${cardEsc(r.id)}">${r.exportedAt?"↩ علّمه ما اتصدّرش":"✓ علّمه اتصدّر"}</button>
+        <button class="btn btn-ghost btn-sm regDel" data-id="${cardEsc(r.id)}" style="color:#B91C1C">🗑 مسح</button>
+      </div>
+    </div>`;
+  }).join("") + (rows.length>regShown ? `<button class="btn btn-outline btn-block btn-sm" id="regMore">عرض المزيد (${rows.length-regShown})</button>` : "");
+}
+async function drawRegQr(){
+  const cv = document.getElementById("regQr"); if(!cv || !myChurchCode) return;
+  try{ if(!window.qrcode) await loadScriptAny(["https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js","https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"]); }
+  catch(err){ toast("تعذر تحميل مولّد الـ QR — تأكد من الإنترنت"); return; }
+  const qr = window.qrcode(0,"M"); qr.addData(regLinkUrl()); qr.make();
+  const n = qr.getModuleCount(), px = 8, quiet = 3, size = (n+quiet*2)*px;
+  cv.width = cv.height = size;
+  const c = cv.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0,0,size,size); c.fillStyle = "#1B2A4A";
+  for(let y=0;y<n;y++) for(let x=0;x<n;x++) if(qr.isDark(y,x)) c.fillRect((x+quiet)*px,(y+quiet)*px,px,px);
+}
+async function downloadRegQr(){
+  await drawRegQr();
+  const q = document.getElementById("regQr"); if(!q || q.width<20) return;
+  const W = 560, H = 700, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0,0,W,H);
+  c.fillStyle = "#1B2A4A"; c.textAlign = "center"; c.direction = "rtl";
+  c.font = "800 34px Cairo, Tahoma, sans-serif"; c.fillText(myChurchName || "تسجيل البيانات", W/2, 62);
+  c.font = "700 24px Cairo, Tahoma, sans-serif"; c.fillStyle = "#C9A227"; c.fillText("سجّل بياناتك أو بيانات أولادك", W/2, 104);
+  c.imageSmoothingEnabled = false; c.drawImage(q, 40, 130, W-80, W-80);
+  c.fillStyle = "#1B2A4A"; c.font = "700 24px Cairo, Tahoma, sans-serif"; c.fillText("امسح الكود بكاميرا الموبايل", W/2, H-46);
+  cv.toBlob(b=>{ if(!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "qr-تسجيل-البيانات.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000); }, "image/png");
+}
+async function exportRegs(onlyNew){
+  let rows = regs.filter(regMatches).sort((a,b)=>String(a.name||"").arLocale(String(b.name||""),"ar"));
+  if(onlyNew) rows = rows.filter(r=>!r.exportedAt);
+  if(!rows.length){ toast(onlyNew ? "مفيش تسجيلات جديدة تتصدّر بالفلتر ده" : "مفيش تسجيلات تتصدّر"); return; }
+  try{ await xlsxReady; }catch(_){ toast("تعذر تحميل مكتبة Excel — تأكد من الإنترنت"); return; }
+  if(!window.XLSX){ toast("تعذر تحميل مكتبة Excel — تأكد من الإنترنت"); return; }
+  const fmt = r=>{ const t = regTs(r); return t ? new Date(t).toLocaleString("en-GB") : ""; };
+  const data = rows.map(r=>({
+    "الاسم": r.name||"", "المرحلة": r.stageLabel||"", "النوع": r.gender==="male"?"ذكر":r.gender==="female"?"أنثى":"",
+    "تاريخ الميلاد": r.birthDate||"", "الموبايل": r.phone||"", "واتساب": r.whatsapp||"",
+    "ولي الأمر": r.guardianName||"", "موبايل ولي الأمر": r.guardianPhone||"",
+    "اسم الزوج": r.husbandName||"", "اسم الزوجة": r.wifeName||"", "موبايل الزوجة": r.wifePhone||"", "تاريخ الزواج": r.weddingDate||"", "عدد الأولاد": r.kidsCount==null?"":r.kidsCount,
+    "العنوان": r.address||"", "سجّله": regRelText(r), "موبايل المسجِّل": r.regByPhone||"", "ملاحظات": r.notes||"", "تاريخ التسجيل": fmt(r),
+    "اتصدّر قبل كده": r.exportedAt ? "✓" : ""
+  }));
+  const ws = XLSX.utils.json_to_sheet(data); ws["!cols"] = Object.keys(data[0]).map(k=>({wch: Math.max(10, Math.min(34, k.length+8))}));
+  const wb = XLSX.utils.book_new(); wb.Workbook = {Views:[{RTL:true}]};
+  XLSX.utils.book_append_sheet(wb, ws, "التسجيلات");
+  downloadWorkbook(wb, `التسجيل-العام-${todayStr()}.xlsx`);
+  // علّم اللي اتصدّر ✅ جنب الاسم
+  const fresh = rows.filter(r=>!r.exportedAt);
+  try{
+    for(let i=0;i<fresh.length;i+=400){
+      const b = _writeBatch(db);
+      fresh.slice(i,i+400).forEach(r=>b.update(doc(db,"registrations",r.id), {exportedAt: serverTimestamp()}));
+      await b.commit();
+    }
+  }catch(err){ console.error(err); toast("اتصدّر الملف لكن تعذر وضع علامة ✓ — تأكد من نشر قواعد Firebase الجديدة"); return; }
+  logActivity("تصدير التسجيل العام", `${rows.length} اسم`);
+  toast(`تم تصدير ${rows.length} اسم ✅` + (fresh.length ? ` وعلّمنا ${fresh.length} بعلامة ✓` : ""));
+}
+document.getElementById("adminRegDetails")?.addEventListener("toggle", e=>{ if(e.target.open) drawRegQr(); });
+["regStageFilter","regExportFilter"].forEach(id=>document.getElementById(id)?.addEventListener("change", ()=>{ regShown = 100; renderRegList(); }));
+document.getElementById("regSearch")?.addEventListener("input", ()=>{ regShown = 100; renderRegList(); });
+document.getElementById("btnRegCopy")?.addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText(regLinkUrl()); toast("اتنسخ الرابط ✅"); }catch(_){ const i = document.getElementById("regLink"); i.select(); document.execCommand("copy"); toast("اتنسخ الرابط ✅"); } });
+document.getElementById("btnRegWa")?.addEventListener("click", ()=>{ window.open("https://wa.me/?text=" + encodeURIComponent("سجّل بياناتك أو بيانات أولادك من هنا 👇\n" + regLinkUrl()), "_blank"); });
+document.getElementById("btnRegQrDl")?.addEventListener("click", downloadRegQr);
+document.getElementById("btnRegExportNew")?.addEventListener("click", ()=>exportRegs(true));
+document.getElementById("btnRegExportAll")?.addEventListener("click", ()=>exportRegs(false));
+document.getElementById("regList")?.addEventListener("click", async e=>{
+  if(e.target.closest("#regMore")){ regShown += 100; renderRegList(); return; }
+  const t = e.target.closest(".regToggle"), d = e.target.closest(".regDel");
+  if(t){ const r = regs.find(x=>x.id===t.dataset.id); if(!r) return;
+    try{ await _updateDoc(doc(db,"registrations",r.id), {exportedAt: r.exportedAt ? null : serverTimestamp()}); }catch(err){ console.error(err); toast("تعذر التعديل"); } }
+  if(d){ const r = regs.find(x=>x.id===d.dataset.id); if(!r) return;
+    if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
+    try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
+});
+const APP_VERSION = "236"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.

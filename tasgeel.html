@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1B2A4A">
+<title>تسجيل البيانات</title>
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1B2A4A;--gold:#C9A227;--bg:#FAF7F0;--card:#fff;--ink:#1B2A4A;--muted:#6B7280;--line:#E7E1D1;--ok:#15803D;--err:#B91C1C}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  .top{background:linear-gradient(135deg,#1B2A4A,#24365e);color:#fff;text-align:center;padding:22px 16px 26px;border-bottom:4px solid var(--gold)}
+  .top img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#fff;border:2px solid var(--gold)}
+  .top h1{margin:10px 0 2px;font-size:20px;font-weight:800}
+  .top p{margin:0;font-size:13.5px;opacity:.9}
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+  .card{background:var(--card);border-radius:16px;border:1.5px solid var(--line);padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(27,42,74,.06)}
+  h2{margin:0 0 10px;font-size:16px}
+  label.l{display:block;font-weight:700;font-size:13.5px;margin:12px 0 5px}
+  label.l small{font-weight:500;color:var(--muted)}
+  input,select,textarea{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+  textarea{min-height:70px;resize:vertical}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg label{flex:1 1 30%;min-width:96px;text-align:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 6px;font-weight:700;font-size:14px;cursor:pointer;background:#fff}
+  .seg input{display:none}
+  .seg input:checked+span{color:#fff}
+  .seg label:has(input:checked){background:var(--navy);color:#fff;border-color:var(--navy)}
+  .row2{display:flex;gap:10px}.row2>div{flex:1;min-width:0}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+  .btn-gold{background:var(--gold);color:#1B2A4A}.btn-navy{background:var(--navy);color:#fff}.btn-out{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .btn[disabled]{opacity:.55}
+  .hint{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+  .err{color:var(--err);font-weight:700;font-size:13.5px;margin:10px 0 0;display:none}
+  .hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+  .ok{text-align:center;padding:26px 10px}
+  .ok .tick{font-size:56px}
+  .hide{display:none !important}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:600;font-size:14px}
+  .chk input{width:auto}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="top">
+  <img id="logo" src="./logo.png" alt="">
+  <h1 id="churchTitle">تسجيل البيانات</h1>
+  <p>سجّل بياناتك أو بيانات أولادك أو حد تعرفه ✝️</p>
+</div>
+
+<div class="wrap">
+  <div id="bad" class="card hide" style="text-align:center">
+    <h2>⚠️ الرابط ناقص أو غير صحيح</h2>
+    <p class="hint">اطلب من الخدمة رابط التسجيل أو امسح الـ QR تاني.</p>
+  </div>
+
+  <form id="form" class="hide" autocomplete="off" novalidate>
+    <div class="card">
+      <h2>إنت بتسجّل بيانات مين؟</h2>
+      <div class="seg" id="relSeg">
+        <label><input type="radio" name="rel" value="self" checked><span>👤 نفسي</span></label>
+        <label><input type="radio" name="rel" value="child"><span>👶 ابني / بنتي</span></label>
+        <label><input type="radio" name="rel" value="other"><span>🤝 حد أعرفه</span></label>
+      </div>
+      <div id="byBox" class="hide">
+        <label class="l">اسمك إنت <small>(اللي بتسجّل)</small></label>
+        <input id="byName" placeholder="الاسم">
+        <label class="l">رقم موبايلك</label>
+        <input id="byPhone" type="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🎓 المرحلة</h2>
+      <select id="stage">
+        <option value="">— اختار المرحلة —</option>
+        <optgroup label="حضانة"><option value="kg1">KG1</option><option value="kg2">KG2</option></optgroup>
+        <optgroup label="ابتدائي">
+          <option value="p1">أولى ابتدائي</option><option value="p2">تانية ابتدائي</option><option value="p3">تالتة ابتدائي</option>
+          <option value="p4">رابعة ابتدائي</option><option value="p5">خامسة ابتدائي</option><option value="p6">سادسة ابتدائي</option>
+        </optgroup>
+        <optgroup label="إعدادي"><option value="prep1">أولى إعدادي</option><option value="prep2">تانية إعدادي</option><option value="prep3">تالتة إعدادي</option></optgroup>
+        <optgroup label="ثانوي"><option value="sec1">أولى ثانوي</option><option value="sec2">تانية ثانوي</option><option value="sec3">تالتة ثانوي</option></optgroup>
+        <optgroup label="كبار"><option value="uni">جامعة</option><option value="grad">خريجين</option></optgroup>
+        <optgroup label="أسر"><option value="married">متزوجين</option></optgroup>
+      </select>
+    </div>
+
+    <!-- فرد -->
+    <div class="card" id="personBox">
+      <h2>📝 البيانات</h2>
+      <label class="l">الاسم بالكامل <small>(ثلاثي على الأقل)</small> *</label>
+      <input id="name" placeholder="الاسم">
+      <label class="l">النوع *</label>
+      <div class="seg" id="genSeg">
+        <label><input type="radio" name="gender" value="male"><span>ولد / رجل</span></label>
+        <label><input type="radio" name="gender" value="female"><span>بنت / سيدة</span></label>
+      </div>
+      <label class="l">تاريخ الميلاد <small>(اختياري)</small></label>
+      <input id="birth" type="date">
+      <div id="guardBox">
+        <label class="l">اسم ولي الأمر *</label>
+        <input id="guardName" placeholder="اسم الأب أو الأم">
+        <label class="l">رقم موبايل ولي الأمر *</label>
+        <input id="guardPhone" type="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx">
+      </div>
+      <label class="l" id="phoneLbl">رقم الموبايل *</label>
+      <input id="phone" type="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx">
+    </div>
+
+    <!-- متزوجين -->
+    <div class="card hide" id="marriedBox">
+      <h2>💍 بيانات الأسرة</h2>
+      <label class="l">اسم الزوج بالكامل *</label>
+      <input id="husband" placeholder="اسم الزوج">
+      <label class="l">اسم الزوجة بالكامل *</label>
+      <input id="wife" placeholder="اسم الزوجة">
+      <label class="l">رقم موبايل الزوج *</label>
+      <input id="mPhone" type="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx">
+      <label class="l">رقم موبايل الزوجة <small>(اختياري)</small></label>
+      <input id="wPhone" type="tel" inputmode="tel" dir="ltr" placeholder="01xxxxxxxxx">
+      <div class="row2">
+        <div><label class="l">تاريخ الزواج <small>(اختياري)</small></label><input id="wedding" type="date"></div>
+        <div><label class="l">عدد الأولاد <small>(اختياري)</small></label><input id="kids" type="number" inputmode="numeric" min="0" max="20"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📍 العنوان والملاحظات</h2>
+      <label class="l">العنوان <small>(الشارع / المنطقة)</small></label>
+      <input id="address" placeholder="مثال: شارع ... – منطقة ...">
+      <div id="waBox">
+        <div class="chk"><input type="checkbox" id="waSame" checked><label for="waSame">الرقم ده عليه واتساب</label></div>
+        <input id="waOther" class="hide" type="tel" inputmode="tel" dir="ltr" placeholder="رقم الواتساب" style="margin-top:8px">
+      </div>
+      <label class="l">ملاحظات <small>(اختياري)</small></label>
+      <textarea id="notes" maxlength="300"></textarea>
+      <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="err" id="err"></p>
+    </div>
+
+    <button class="btn btn-gold" id="submit" type="submit">✅ تسجيل</button>
+    <p class="foot">بياناتك بتوصل لخدمة الكنيسة بس.</p>
+  </form>
+
+  <div id="done" class="card ok hide">
+    <div class="tick">✅</div>
+    <h2 style="font-size:19px">اتسجّل بنجاح</h2>
+    <p id="doneName" style="font-weight:700"></p>
+    <p class="hint">ربنا يبارك حياتكم 🙏</p>
+    <button class="btn btn-navy" id="again" style="margin-top:12px">➕ سجّل شخص تاني</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBpI2wVpkWwqBQQN9qsZDrtOHuuI0qsoko",
+  authDomain: "eftkad-pro.firebaseapp.com",
+  projectId: "eftkad-pro",
+  storageBucket: "eftkad-pro.firebasestorage.app",
+  messagingSenderId: "563829960812",
+  appId: "1:563829960812:web:290af231292fec6d2ba849"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+const $ = id => document.getElementById(id);
+const code = (new URLSearchParams(location.search).get("c") || "").trim().toUpperCase();
+const STAGES = {kg1:"KG1",kg2:"KG2",p1:"أولى ابتدائي",p2:"تانية ابتدائي",p3:"تالتة ابتدائي",p4:"رابعة ابتدائي",p5:"خامسة ابتدائي",p6:"سادسة ابتدائي",
+  prep1:"أولى إعدادي",prep2:"تانية إعدادي",prep3:"تالتة إعدادي",sec1:"أولى ثانوي",sec2:"تانية ثانوي",sec3:"تالتة ثانوي",uni:"جامعة",grad:"خريجين",married:"متزوجين"};
+const isMinor = s => /^(kg|p\d|prep|sec)/.test(s);
+const LS = "tasgeelMe";
+const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAABgFBMVEVZco8lS2qWoqpvi6EnS2gwUWopTWZ0j6Bwi6BLbYhYZGicnZV3kaWHnawQIDg7YYCRe1lMbHxMboechGH///8QMlAdPmsAAP8VfxWCmqtDYn2bqsYLKz8VP2AA/wBbUT9Mb4vo0Z/4+PUAAADq6+fs5dXT19QSNlIEKUbb4ubUx6+WprHk28nNt5FOZnfS3OJxh5Xp17K5xcs2Vm4mRFqHmqatu8NZdIhleom0mHAqSmOntLvEy87ErIVEXG1Ma4PGqHjaw5V6k6UBIjwBPT0AVVW6poehrra7oXnc0btwi6EAAH8VN1LMvKMVN1KmhloRNlNnc3ghPVN/f3+oi2QTNE4RNFBVVapVqqpVVVUAHDgWNlD48NwAf3/jyZQNLUcTNVAdQFo+PnwAAFXd4NscRGQ0V3ONiHSDkpzhzKibsL7QsnwKLEdJZ3Z9kJ4mSWVpbWeEm6wOK0gKLEYA//86WHczWHRTdpCcssDz4bgLJzsOLkgeQl0qSmY4W3g/f3/5BjKrAAAAgHRSTlMepRedWOAkH2ah//PUShX3/xlj/wGqEQECokIJQP8B/9n//gD+//78/v7//v///v79//79/v7+/f7//v7+//78///8/gQD//7///gCjv9t/9H//gL/TbQDAwP/GP8C/0ox/wQD//wu//7///8tEf9L/2oOzgEQb83//xeVaRiTBHGDV1cAABaoSURBVHjavVuHn9s2slbcS5w4PffuVRAE2EWxSFSXVmtt81ave0/suMU+pzixk0vyr98MAJJQW9s55yH5rSmRwnyY+aagsGK8XbtcuSIv/n7o0JkzZ77DdubMoUOHittfvF2Hlbd49scrQgxI/u5vp08vlW19fen99w+fOHH873j/ypUf/xIAQvqhQ9/97f2lNE1daO16PYJWr7ddN00FkMMnjlcEhncN4NML8Of4GRC+tJS67YhRMtUoi9x0HRqo4jg8/Men7xDABTH4w0J4VCWLG2X1NFwXigA1XHhHAFD88RPvo/TZgc8BEbnrYfg+Qrh84R0A+BHMefzw+tKS2ymlm3ObhiENw/AwQvj03wUgxa+vu9VJ4XBx4wZ+kl/eEN/XShDMzRrh4Yro4N8AcOFTo4Li67SUTsU/4jKXLxCZpkDhmepZGyA0EMLVPw/gD8M4sb4etlWXRedmMXRToRHI5FfU85QeqNtohB9/ebASDgBw4UfUfujahfh87PJfHHfNM2s1cSGEUmkd/E5qIW00fgYRF/4MgCs4/DBkSronJZoFAyeoL77xalI1oAqztiYfYGG/cfIF6vJtAfwB1g8bbdm/56nBe2hkc6EHIk4BBVB4TD7n9lEJl98SwI8XjBNhoxi+UDvKr5l6JGCuaCvteocVPKmhqWgBWyrh44VmmA8AHgb5ruyyJpRK5MCmYg5jrNPptFcwGbj1HC/AlDZzvFwJJ79a4A1zAVw1np5sNKJS+17OwYOicBuij4pW5hr+CvAwR3yOAMFT46s3BXDFqPzcCG3Zk0mEWdc88gZRuOMCBqEHkyENQBOOwF1t9P/3o7lUrCyQv1QM36PEmxIPbobt1TydMMAgdOc5a6bJPMIEIBp+2D82TwezAL4yKo1+KjuDUQD3PA/1GGV1KaKmIm7h/dN6aIchPkoRNv7viK/X4/5/zEEwA+Ayypf0A+2BaCaMz8LMpTknSR4Fi4gzDSHLIqEE+RP5TzoXQWWGf7l8Cj9D/KhBmirxMPzSEGJ8cxFAFA7CKjLT8RgzqSQCIPhoBsEUgJvG05+l/ikjJlUWrGdplUzLJ6bMAvMRkGoYrBCJHyxZIPhm2hsrU/FHl+8B+zCoPGvUc5mP9NCrEtICBKQeoCeB/jGKSARL8YcvYJCLAVwxTvZDqX90Y2G8jvJIbMMch3QDlRFrC7zSDoMIEayBIRSCMD764upiAF+B/EzyDweJKEg7SIsea0Mhq3bLvAEKuPFKGaS2MES5savIBAgEiRrxyUkaVCYc4ON+X4xW6F+YPw3qZX8OEfn3likCwatXr24pBAtDUz1+hr9DZ5YI7ODDnyYyU0VPAE/7sYghkFlQ/3D1LGBlbzVHqkHFIWwSwWIVEBajSh3IGabokHTieIKIGoDLF07GwgEhfAHD8PEw0Ivw4bBW8zAOaQBuTfvGLIIGWsGkHYiLwiytox/NBQAG+DCUYRwc0MT8Gga23pePocfxa8PhEFj4f8OhPzSH5kE0FP6ICExBahmVw/h3zQiV0gCVDwNFAEZF6Ah7E/KJL0Y78J0171Vt6Dv4jKDlgQBItZUJb8ydkQbxkdIIlTIEnozrRCVRtAKEDUZmAXR9YQHfKbVCyKMDkyRLQkzMkJloRzCzdfTFhWkAhQFANDUhDAGBIzILwPHNW7duDZ84GOkhV/k1rD4OBkCipC2ZbYrADr5YeoICcPNmJRYGoAz/Y2g6d7ofGK05AN75g4EvK0C0APVqfu01hYLbgh47WKkJIzD0hAsTAC4buQdQTz4lI+JEc0yz69RAvpToOMTzRaocvrZaCXsUXAEGhsGNkrT1Xs6CispBx+K+8gCGf8hSMNuL6YN84L4/fDI0i4QNXPRfXyz1kAYMqIjsIrRXBIOKUsDvBQPBThR40pnpw2uCwcEFfcd/4pt5xIbvc0Ie1DpAAxg9hOWOtMl7ygaVXAGNYpKH3IpnDWA2QfbAHw673tB/UgPfc2q+5gmK8Ysm8GHLJqwD6pc8DEAF5woAmgKEE4IHzvbjD4ZPBqvDIRAQrIBtICU7mgI6uw8XFaw4pk5HRHnMcaCCEoDxVDHARAjwJ2nP9tAdrDabKBWC0RMfraDk6wxgu+HCvMQ7wC7wMVHG0Lj1jagMKiIL/6RcAIsshiF49vdOs+s73ScDMUkD8QBlOC2fsvRB2FlkhKAvoxwGGXCE+1IFCOCLq0djW7oAxgHCWtGsAboo2RkMUN83TFCEj1hMX8mHWRFLg6A3fNALMpjPu2w2HO11sNCistiuxq3flAmuGt+0ZBAE6Qgv7M/Kl3LM1VrXFyqAYDSAOFiEoPpuFpxmpN7brVbbWZBlc/TQaAhXFCgoCe8fMT5QAH6POyoICgbMKsDp5q5AyaqDmoDs7ohZa8HyXSHyVFvG3mhuRGYizKOWwdPBBjelCSo6BQFab8YDVwVv1mSVDzSsDWpTU0W2m0n3wlKYPAzncjEIRbHFPDQE7YENNgDAVeNIK83TIGqn5S4wAARegaA78Adr3mACQdiOhMxdBFANyO48FbgJxAImcx0lS/d/wmmYCAJyPgmWAQWsJPZcBaAOup6qzYYOGejuV30OsrGXDE1w2iXtbF6ZnLgwgUWaow06EApQA8ZHR4XXUWzQR9CYYUAhyuuW5SHkpPKRFAbeRhVkK1h4orpn3YCSRiDTLRXGjO+/ML6snDO+uR8qBeBCRDWpz4SgUlIe9oGBvhYB7MxGxcOfBgBIn0FXbjYHQJ0LlqlQkPF/GMsViEKttqQARe9wW3SRBXDkSgX+GvG9Ya3Mttnu7m4vFSSkwe5uEARJZ048TlIcpALg8veMz0ED77WYnIsJzfRnLJALFU2BATJAKeCXszBIUqd7QLwAGLz74JbvP4AKACaVQVafsAFGQ5qT4O6O8d8V42lBAcLuETLrAxPBvitsQAeUQAzqFqpxg7NnT+EvEQALdh88PxWJiRFb6aUaANQvMs0UBo/5b0DCnAL0HjHvQd6eIU/XmUGDZAQAGrSO6wqVB20xmw9TGysv7MuONVswqDNMGfJQH0CCinHkvisBiOl2OkMBsuoRX6tKTMVFAGCuTj26ksan0iICPJTRKAsJzTVAIOuBlHumiMYpPwIAfrofqdk+uSccZZo4IFJjQdORmJAGZKoWyp4/+OTBg1O5zhsrOQDVE8iEyS8GfBWNgYUVxUERhoACcQG3rISIZmyy2b1B1uArgpHQa05Ew73nu8+f7/a40rmY11IauBqAMCYiDggA7D4COCqqH3QAdATuTgNAIVokMJseWd3ElICgBnpAbot1U9jPUjTCoVPSVtWVCHQkTTAdKzeg8dHPKx/tFE6AmHh9GsDa6qSqoTRuUuThDcwOg+ZYlMbe3OyXgpplsUdlI20IRfeQbiLoBPy3ygve0AB0uGDHdCp2urpJtjfRFL6InVgqNVcBR67mLIA9tRxB3Ip5n+gAIgvcAK/Q5KTPj1W+4aEGoM6r0wD8bs79HNH2JiyBrj6SezbeGCKSWbhqO2j3jvaiYmq+4qrcohAIFRcAMn6k8o8cgMCAqZBOIkAApPmorA3H/rgJbbULdeHQB0qQ1e2m4/jNJs4oId1EkQwmUSLoF6e5dGhVvqLSnqAkvwgAUuWiIhMkSlUTAMAPV2/I7zabTO0MrDmO021uCpr43XHX8bpjpH4qEn9dTUlRKTEpEVQxIwvCC0ryLQDgzgGgIWj6N4Bl+7ICMk9PB0n5KAU846Yn1Q5BsJ649by2tyEtFQBsCUBpwAUAR+YDKBBk/+NjIb/aleX8VIzy1P5NDarUfekJtNcQOPaKLBS7OQBbAaAFgPOVf/KV+QCkrGd7D7o4X/O2JzdLpIc2Hw1gwggonO7+ds59WdNR8ZFFshTMAdjV1wHgNi11gHEh8lfFjHHcJDMI/O3t7QESsttsjk1tApAP3hVxLcuIEm8DCRWAeyWAwgQYtni1ZCxWB33gnym2K5s+md6ugpla0zSbfnfbmbjjymBsZ9g3xYmWkm9TZrWVG04DECogEWdU00GVR/XmAPd/bpDTZ51yW1RuSm3XAIDXrNWaU6p5lkTUdlvCG4HrMVHyqzSyIhWIpBecBxKmGgBQOTxJy8BJg2QMCmDjU8H47ObkPrXTrDW7EKQAxjQ7Uh4nSRzbVFUhBYC6xSYAbOWBSJJAJCMNgMupHSQw5UuOwor15llfE0+xLt5uPjKbj1Y35+zcuOSxKPCR2bYQb1erFEhGcvlgHGurcoxnGgCSLBG7QCBSB4lgR05M3Yhzqlkrd+tp03f2/X3g4L65YGlKdlpPqnL8VUbDpKQAVB/WxcpvPNAB9Pq0qgGw6nlEQMcMjo4/GZcQ9odgAXPz9P6cJRqReGKhVKoAVKHRfk8HEFh3Kk93YqL5Ydayq3auA3igb8M68z2h9noChS5r7jcdtT+73/1k0So1wrYbLQHEhtmAkA7NbmVaYqAt61jl050W1fzQtSKJAMwGPhHyJWpDAQGJusGfCZomD/a3QflrAODsmMyZhQviEZZxSIqCfY+TqgTAqhF3NQCM7xyDkowz7bfMcqkEYNvAQQDUh43hyA14IApZO2nAUtcYItA24JjVu7IdhIBenSj3T2OlAGa7lpYXoPrYwaqYtydY2KBVhUCsbEUxTxKe4EYu0iAWjBl3Vx1v97k0cRE3qeY9Aq6Qz+wYu0T5zG7s6XFuxToPAHQ/JJIEEkEVAFShH7sjShwYCtT4PXxmbRsrQxlf5jRw72KRC0SHOQUYq6L+yudC658A4JgVTMwfkQSy0SUODJTAbDAgcEKkdrLvE0h9ZeKaki+rHhKJ41Vu41ryWLoAUCAPxDnHcV5wnScTTOIhZYqyEX+JTqA+2UsIFX63uU/MbZO09+z5AFypmizuxXHL4mHGY8FCZoecTjrBdaNy07jEI53MYAMplNl1K0bF4Ueb1mMLGAwX7BPYUAQAdT4XgA0bXcTOA7rt8sewIib7qbYmLBBZO7BAsWxsWakOILIeK0ckwdE4kJfVl4EF+0c2IGGfwETN2Ye4sEfnOgFYqkNU4KlWgRBAAb4OH+3HVqQDSIGDyzA9nyABtCSuu4/r2Hga8Va4lIZBwnEPEgZhs210fn8Vlz6j2YY/i2IoyF6+fPz4JcxToJd192XQqsNlPMEaoMBFAGAYx/jkqpA74kUDD7Tgb5DiFgbapbPfRBqsghbacFe2u/jo3bt31RU0q+yC3y2uLL0+pvYeUABICCsUfHJpmEkOgBal/WnppqImoWK9EIouGeBY3vAn2sc5bUIBbWvHkACO8Ab5/2kTADK+ZSyLhcrr/K49U/FqkX3+Zyr/o5QuiEevaXbC78hlOrCB5eoTMho+a6sTQHKiK29F7TJpTgOi2vSO5vXVgQ3i8I7xpSEBXLTiiZGCyweii9SyUi1CETolUpvU5fLFrBd3XcODEYAPoAXkhsX3O9bkyirEqEzVtzxS8tqWPZvzi3KF5ILVOoBr9Q4EAOGGX893TJaNIyCP6moNLZWki+k17PJoKWuSUWUMKi4aPDgYQAZR6FyxZXOMczZhV8aV7lOeyA10ytNJQtIDqA4BvYxuc/I11iJAwQLAOeM8n1pfDyxZqUVclO2o0yoCCyG/4KIPJr0s6PUC2JtopORhI0xhbQBKcaieKXnYa/EW3KJhr6FKINIJGNEz8SVwgXLb7nPO7YnRpcoGS/y/JJKghwsoVpK205bVFza5dgqOri61OOTYCGwW72VpyC1cEnLDmMdLYWizcDSSbCTBHtEzNr+o75qdMz6bUgGTIydx665IlswSszxOxWqj5cpJr9gal78MpK0ibomPmaWCGyCLhL70OCwUcHNi6/ZOyQKq2SDi9ZYVioVl/Fr6FpTzWBicEuRPLLGoAs831D1RNOEj+VgzsShpsXkKyDevgQX4i4kJJjpg1oKxYMESBBq6VOhZ/A86F0YGAIFwxtRqIQv6CgD6AyIkLc0r4OFcATmADYjHVp1QLb4kOHKwQ90CEQzylbxlRysrDUu5BnJUjTSQEhEAmwAQCYfqWPWyfm2PlAtoBxigLilLM3nix0oITiUJhEXwRqoWwSDTJhztJcDGXK5q6QBwb6wwAXwTo74yjYIwtl9z+eURjnPLO1ZYhlmsTq0owxCdQq6CvW2hX85DqFLTUSJ3F0KeL3ppJpgG4FpWm1plZEZefr8xc4bkHPDQKopDDKstK8D1FFK9yzNZ5zJFcSkEVxV5XuRNm0ADQJNRY2XEtLVKfrtQgHaMB6NRixY6EEBlcOhz5KGYb0ggriQaJFRlgEkAeC8rAEBHIwhQRDPAZ5iFZg8yoREaKp3KZVsutQo6zMTFitA4eCNv2YIl1kqef0gwmgLQU3lSON2omBLCHf7LxtyTVF8b3wqfKo9diE9Ch4LCxL5r4S73Qy4AtBGgnS+pTQGAwhLs2c61w++RogyAEPD1/MNs6Ak4ecznienIllk2Gym9RMk1K+EtmC/a6Key9NwTigqu9SSAa9IsvWujViuQQuvXArkuI9R6XjPA1HG+ZaDBnlwuFyff8jzCVgpmwplZ3JrEFRNZhLfhVRcEzSLpGPfUv6T98KGaHxM2auc97fFLJQFnDzSeW75kaUTMM2j5gegT6akMTIpni6VWdfUwIcVkbOeDg450bmBxFEzlcZqvB6saFI5uvE3xCQ/zPAgEI/6tsXHQoVZBxECVlkW5RyeqP2/sHVDsEDpZKGNmHCl3APn/OWmA2WO9yxqCUgWmIw44qk+OOVXf4PGgvMG5JljQdMqwE8bXJJfAbcEBll93sHnZuK0Q5FW/mAk5pjx4gUeduwAATlvrAMpiB254eMrM9BSAIIvybDFH/pyj3QJBT1t7obhfuuqBBmBrCnZJKHDA3ISTHA4rWOFv5gZiDtkEDZiwg6FzEVbx58qfd7hdIEiUN0oSduG0FGxVb+Iequ/5ODM0u8RZw5dKkBU+GeNLCPiLtU14lsFuChlrRITCaQQZYPnNjvcDD3YsLADULAdm4z5sCo3Z2HeaztgEYSBilcGJDjo2KRwkaPpjoMYmYf6aP14bU2/T6zpjfRbArfny57/gsGz88gO3HhKScw12jRw4ClerOXiOhAlWwoFluLsKJm86a0ARsZXtNBm+VuFtglbG2qKNxcH/l9/8FY+vjQ/Oc6uvL8KJ49aOigfq0Dx8XBtvbjoqaPigC7lPMmYAxynyMeSfS7/oCeD1L7lAsIC8gOsGcyYVE26PHlrUmo5XbAriCQFVgCUWTMQXyF/8ms/Xxp0dPmqweTOwiUDHPO16JkbCmukIzf8nXnRaNr4HM+Ds4OAlAH2Flszcc/eu8c9+mW/+173qBTq7vQMznTr5cysQID4KLGvntjEdft/4ZbdzxgfABCvo/BkI+GIAVAznv19k/Td53Q+Qf3sJIWhaIG8xen7pzoHDf4MXHsF4dwDCqOfSt1ADFGO90ci6dPF14t/glc+NDamFURJ2CHkDEHikJkyU+I2Nd/DSq4AADmHxXtp5zeoTvm2V9vDZX6Hy+eKc8W5e+92Ajq5fRDJYSZa/ejs7cHzfLGzBQ9alLVj/2fj6Hb74jBCM61uXLGt0bbQXhPBmnb5YR/G15zDYg7tAvK07yN8N4x2/+i16/OX2rz9YovGkJdZnoAW9GJaUweqW9cOvt68r7v4FL78by2JU129vnf8MYYyuQRNyUfQPv25dvK499lcAwPCoxrZ8/c7Fi1tb57FtbV28c/179f3yW3b4LwXWA9zPg5AJAAAAAElFTkSuQmCC";
+$("logo").onerror = function(){ this.onerror = null; this.src = LOGO; };
+
+function digits(s){ return String(s||"").replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[^\d]/g,""); }
+function validPhone(s){ const d = digits(s); return d.length>=10 && d.length<=15; }
+function clean(s,max){ return String(s||"").replace(/\s+/g," ").trim().slice(0,max||120); }
+function showErr(m){ const e=$("err"); e.textContent=m; e.style.display = m ? "block" : "none"; if(m) e.scrollIntoView({block:"center",behavior:"smooth"}); }
+const rel = () => document.querySelector('input[name="rel"]:checked').value;
+
+function sync(){
+  const st = $("stage").value, married = st==="married", minor = isMinor(st);
+  $("personBox").classList.toggle("hide", married);
+  $("marriedBox").classList.toggle("hide", !married);
+  $("guardBox").classList.toggle("hide", !minor);
+  $("phoneLbl").textContent = minor ? "رقم موبايل المخدوم (لو عنده)" : "رقم الموبايل *";
+  $("byBox").classList.toggle("hide", rel()==="self");
+  $("waBox").classList.toggle("hide", false);
+}
+document.querySelectorAll('input[name="rel"]').forEach(r=>r.addEventListener("change",sync));
+$("stage").addEventListener("change",sync);
+$("waSame").addEventListener("change",()=>$("waOther").classList.toggle("hide",$("waSame").checked));
+
+function loadMe(){ try{ const m=JSON.parse(localStorage.getItem(LS)||"{}"); if(m.byName) $("byName").value=m.byName; if(m.byPhone) $("byPhone").value=m.byPhone; if(m.address) $("address").value=m.address; if(m.guardName) $("guardName").value=m.guardName; if(m.guardPhone) $("guardPhone").value=m.guardPhone; }catch(_){} }
+function saveMe(o){ try{ localStorage.setItem(LS, JSON.stringify(o)); }catch(_){} }
+function rateOk(){ try{ const now=Date.now(); const a=(JSON.parse(localStorage.getItem("tasgeelRate")||"[]")).filter(t=>now-t<3600e3); if(a.length>=15) return false; a.push(now); localStorage.setItem("tasgeelRate",JSON.stringify(a)); }catch(_){} return true; }
+
+(async function init(){
+  if(!code){ $("bad").classList.remove("hide"); return; }
+  try{
+    const s = await getDoc(doc(db,"churches",code));
+    if(!s.exists()){ $("bad").classList.remove("hide"); return; }
+    const nm = s.data().name; if(nm) $("churchTitle").textContent = nm;
+  }catch(e){ console.warn(e); }
+  $("form").classList.remove("hide"); loadMe(); sync();
+})();
+
+$("form").addEventListener("submit", async e=>{
+  e.preventDefault(); showErr("");
+  if($("hp").value) return;   // سبام
+  const st = $("stage").value; if(!st){ showErr("اختار المرحلة الأول"); return; }
+  const r = rel(), married = st==="married", minor = isMinor(st);
+  let byName="", byPhone="";
+  if(r!=="self"){
+    byName = clean($("byName").value,80); byPhone = digits($("byPhone").value);
+    if(byName.length<2){ showErr("اكتب اسمك إنت (اللي بتسجّل)"); return; }
+    if(!validPhone(byPhone)){ showErr("رقم موبايلك مش صحيح"); return; }
+  }
+  const data = { churchCode: code, source:"public", regType:r, regByName:byName, regByPhone:byPhone, stage:st, stageLabel:STAGES[st],
+    address: clean($("address").value,200), notes: clean($("notes").value,300), createdAt: serverTimestamp() };
+  let display = "";
+  if(married){
+    const h=clean($("husband").value,100), w=clean($("wife").value,100), p=digits($("mPhone").value);
+    if(h.split(" ").length<2){ showErr("اكتب اسم الزوج كامل"); return; }
+    if(w.split(" ").length<2){ showErr("اكتب اسم الزوجة كاملة"); return; }
+    if(!validPhone(p)){ showErr("رقم موبايل الزوج مش صحيح"); return; }
+    const wp = digits($("wPhone").value); if(wp && !validPhone(wp)){ showErr("رقم موبايل الزوجة مش صحيح"); return; }
+    Object.assign(data,{ husbandName:h, wifeName:w, name:h+" و"+w, phone:p, wifePhone:wp, weddingDate:$("wedding").value||"", kidsCount:$("kids").value?Math.max(0,Math.min(20,parseInt($("kids").value)||0)):null });
+    display = data.name;
+  }else{
+    const n=clean($("name").value,100), g=(document.querySelector('input[name="gender"]:checked')||{}).value||"";
+    if(n.split(" ").length<2){ showErr("اكتب الاسم كامل (اسمين على الأقل)"); return; }
+    if(!g){ showErr("اختار النوع (ولد أو بنت)"); return; }
+    let p = digits($("phone").value), gn="", gp="";
+    if(minor){
+      gn=clean($("guardName").value,100); gp=digits($("guardPhone").value);
+      if(gn.length<2){ showErr("اكتب اسم ولي الأمر"); return; }
+      if(!validPhone(gp)){ showErr("رقم ولي الأمر مش صحيح"); return; }
+      if(p && !validPhone(p)){ showErr("رقم موبايل المخدوم مش صحيح"); return; }
+    }else if(!validPhone(p)){ showErr("رقم الموبايل مش صحيح"); return; }
+    Object.assign(data,{ name:n, gender:g, birthDate:$("birth").value||"", phone:p, guardianName:gn, guardianPhone:gp });
+    display = n;
+  }
+  if(!$("waSame").checked){ const wa=digits($("waOther").value); if(!validPhone(wa)){ showErr("اكتب رقم الواتساب صح أو علّم إن الرقم عليه واتساب"); return; } data.whatsapp = wa; }
+  else data.whatsapp = married ? data.phone : (data.phone || data.guardianPhone || "");
+  if(!rateOk()){ showErr("عملت تسجيلات كتير في وقت قصير، جرّب بعد شوية."); return; }
+  const btn=$("submit"); btn.disabled=true; btn.textContent="جاري التسجيل…";
+  try{
+    await addDoc(collection(db,"registrations"), data);
+    saveMe({byName, byPhone, address:data.address, guardName:data.guardianName||"", guardPhone:data.guardianPhone||""});
+    $("form").classList.add("hide"); $("done").classList.remove("hide"); $("doneName").textContent = display;
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(err){
+    console.error(err);
+    showErr("تعذر التسجيل — تأكد من النت وجرّب تاني. لو المشكلة مستمرة كلّم الخدمة.");
+  }finally{ btn.disabled=false; btn.textContent="✅ تسجيل"; }
+});
+
+$("again").addEventListener("click",()=>{
+  ["name","birth","phone","husband","wife","mPhone","wPhone","wedding","kids","notes","waOther"].forEach(i=>$(i).value="");
+  document.querySelectorAll('input[name="gender"]').forEach(x=>x.checked=false);
+  $("waSame").checked=true; $("waOther").classList.add("hide");
+  $("done").classList.add("hide"); $("form").classList.remove("hide"); loadMe(); sync();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+</script>
+</body>
+</html>
