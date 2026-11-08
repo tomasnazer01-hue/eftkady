@@ -2771,7 +2771,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v237</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v238</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3054,7 +3054,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v237</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v238</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4622,11 +4622,20 @@
               <option value="done">✅ اتصدّرت</option>
             </select>
           </div>
+          <div class="muted" id="regServantLine" style="margin-top:6px;font-size:12.5px"></div>
+          <details id="regServantsBox" style="margin-top:6px">
+            <summary style="font-weight:700;cursor:pointer;font-size:13px">👤 خادم كل مرحلة (اللي هتبعتله الشيت)</summary>
+            <div id="regServantsList" style="margin-top:6px"></div>
+          </details>
           <input id="regSearch" placeholder="دوّر بالاسم أو الرقم" style="margin-top:6px" />
           <div class="muted" id="regCount" style="margin:6px 0;font-size:12.5px"></div>
           <div class="row wrap" style="gap:6px;margin-bottom:6px">
             <button class="btn btn-sage btn-sm grow" id="btnRegExportNew">📥 تصدير الجديد بس</button>
             <button class="btn btn-outline btn-sm grow" id="btnRegExportAll">📥 تصدير اللي ظاهر</button>
+          </div>
+          <div class="row wrap" style="gap:6px;margin-bottom:6px">
+            <button class="btn btn-gold btn-sm grow" id="btnRegSendNew">📤 إرسال الجديد لخادم المرحلة</button>
+            <button class="btn btn-outline btn-sm grow" id="btnRegSendAll">📤 إرسال اللي ظاهر للخادم</button>
           </div>
           <div id="regList"></div>
         </div>
@@ -7301,7 +7310,7 @@ async function startAppListeners(churchCode){
   }));
 
   unsubscribers.push(onSnapshot(query(collection(db,"users"), where("churchCode","==",churchCode), where("status","==","approved")), snap=>{
-    churchServants = snap.docs.map(d=>{ const x = d.data(); return {id:d.id, ...x, rawName:x.name, name: (x.name && x.grade) ? `${x.name} - ${x.grade}` : x.name}; }).sort(servantCmp); try{ populateServantsHubGrade(); }catch(_){}
+    churchServants = snap.docs.map(d=>{ const x = d.data(); return {id:d.id, ...x, rawName:x.name, name: (x.name && x.grade) ? `${x.name} - ${x.grade}` : x.name}; }).sort(servantCmp); try{ populateServantsHubGrade(); }catch(_){} try{ renderRegServants(); }catch(_){}
     try{ rescopeContacts(); }catch(_){}
     servantsLoadedOnce = true;
     enrichServantPhones();
@@ -7330,6 +7339,7 @@ async function startAppListeners(churchCode){
       document.getElementById("nameSuffixInput").value = nameSuffix;
       msgOv = (d.msgOverrides && typeof d.msgOverrides==="object") ? d.msgOverrides : {};
       { const ns = d.servantScope==="class" ? "class" : "all"; const sel = document.getElementById("servantScopeSel"); if(sel) sel.value = ns; if(ns!==servantScope){ servantScope = ns; try{ rescopeContacts(); }catch(_){ } } }
+      { regStageServants = (d.regStageServants && typeof d.regStageServants==="object") ? d.regStageServants : {}; try{ renderRegServants(); }catch(_){ } }
       { apkUrl = (typeof d.apkUrl==="string") ? d.apkUrl : ""; const ai = document.getElementById("apkUrlInput"); if(ai && document.activeElement!==ai) ai.value = apkUrl; try{ refreshApkCard(); }catch(_){} }
       autoAssignOff = !!d.autoAssignOff; { const ck = document.getElementById("chkAutoAssignAll"); if(ck) ck.checked = !autoAssignOff; } scheduleAutoSweep();
       if(d.barcodeMessage) barcodeMessage = d.barcodeMessage;
@@ -27273,6 +27283,31 @@ document.getElementById("btnSaveApkUrl")?.addEventListener("click", async ()=>{
   catch(err){ console.error(err); toast("تعذر الحفظ"); }
 });
 // ===== التسجيل العام: رابط + QR + قايمة المسجلين + تصدير Excel =====
+let regStageServants = {};
+function regServantOf(stage){ const id = regStageServants[stage]; return id ? (churchServants.find(x=>x.id===id) || null) : null; }
+function regServantLabel(sv){ return sv ? ((sv.rawName||sv.name||sv.email||"") + (sv.grade?` - ${sv.grade}`:"")) : ""; }
+function renderRegServants(){
+  const box = document.getElementById("regServantsList"); if(!box) return;
+  const opts = '<option value="">— مفيش —</option>' + churchServants.map(sv=>`<option value="${cardEsc(sv.id)}">${cardEsc(regServantLabel(sv))}${sv.phone?"":" (من غير رقم)"}</option>`).join("");
+  box.innerHTML = REG_STAGES.map(([k,l])=>`<div class="row" style="gap:8px;align-items:center;margin:4px 0"><span style="flex:0 0 120px;font-size:13px">${cardEsc(l)}</span><select class="regSvSel grow" data-stage="${k}">${opts}</select></div>`).join("");
+  box.querySelectorAll(".regSvSel").forEach(sel=>{ sel.value = regStageServants[sel.dataset.stage] || ""; });
+  updateRegServantLine();
+}
+function updateRegServantLine(){
+  const el = document.getElementById("regServantLine"); if(!el) return;
+  const sf = document.getElementById("regStageFilter").value;
+  if(sf==="all"){ el.textContent = "اختار مرحلة عشان تبعت شيتها لخادمها."; return; }
+  const sv = regServantOf(sf);
+  el.textContent = sv ? `👤 خادم المرحلة: ${regServantLabel(sv)}${sv.phone?"":" (من غير رقم موبايل)"}` : "⚠️ مفيش خادم متحدد للمرحلة دي — حدده من \"خادم كل مرحلة\".";
+}
+document.addEventListener("change", async e=>{
+  const sel = e.target.closest && e.target.closest(".regSvSel"); if(!sel) return;
+  const st = sel.dataset.stage, v = sel.value;
+  try{
+    await setDoc(doc(db,"meta",myChurchCode), {regStageServants: {[st]: v || ""}}, {merge:true});
+    toast(v ? "✅ اتحدد خادم المرحلة" : "اتشال الخادم من المرحلة");
+  }catch(err){ console.error(err); toast("تعذر الحفظ"); }
+});
 const REG_STAGES = [["kg1","KG1"],["kg2","KG2"],["p1","أولى ابتدائي"],["p2","تانية ابتدائي"],["p3","تالتة ابتدائي"],["p4","رابعة ابتدائي"],["p5","خامسة ابتدائي"],["p6","سادسة ابتدائي"],
   ["prep1","أولى إعدادي"],["prep2","تانية إعدادي"],["prep3","تالتة إعدادي"],["sec1","أولى ثانوي"],["sec2","تانية ثانوي"],["sec3","تالتة ثانوي"],["uni","جامعة"],["grad","خريجين"],["married","متزوجين"]];
 let regs = [], regUnsub = null, regSubFor = "", regShown = 100;
@@ -27365,7 +27400,28 @@ async function downloadRegQr(){
   c.fillStyle = "#1B2A4A"; c.font = "700 24px Cairo, Tahoma, sans-serif"; c.fillText("امسح الكود بكاميرا الموبايل", W/2, H-46);
   cv.toBlob(b=>{ if(!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "qr-تسجيل-البيانات.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000); }, "image/png");
 }
-async function exportRegs(onlyNew){
+async function sendRegWorkbook(wb, fname, sv, n, stageLabel){
+  const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  const mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const msg = `سلام ونعمة يا ${regServantLabel(sv)} 🙏\nده شيت مخدومين ${stageLabel} (${n} اسم) من التسجيل العام.\nربنا يبارك خدمتك ✝️`;
+  try{
+    const file = new File([out], fname, {type:mime});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:fname, text:msg});
+      toast(`اختار ${regServantLabel(sv)} من واتساب وابعت ✅`);
+      return true;
+    }
+  }catch(err){
+    if(err && err.name==="AbortError"){ toast("اتلغى الإرسال"); return false; }
+    console.warn("share failed", err);
+  }
+  // fallback: download the file and open the servant's WhatsApp chat
+  downloadWorkbook(wb, fname);
+  if(sv.phone){ setTimeout(()=>{ window.open(waLink(sv.phone, msg), "_blank"); }, 600); toast("اتنزّل الشيت — ابعته للخادم في الشات اللي اتفتح 📎"); }
+  else toast("اتنزّل الشيت — الخادم ده مالوش رقم موبايل مسجّل، ابعته له يدوي");
+  return true;
+}
+async function exportRegs(onlyNew, send){
   let rows = regs.filter(regMatches).sort((a,b)=>String(a.name||"").arLocale(String(b.name||""),"ar"));
   if(onlyNew) rows = rows.filter(r=>!r.exportedAt);
   if(!rows.length){ toast(onlyNew ? "مفيش تسجيلات جديدة تتصدّر بالفلتر ده" : "مفيش تسجيلات تتصدّر"); return; }
@@ -27380,10 +27436,21 @@ async function exportRegs(onlyNew){
     "العنوان": r.address||"", "سجّله": regRelText(r), "موبايل المسجِّل": r.regByPhone||"", "ملاحظات": r.notes||"", "صورة": r.photo ? "✓" : "", "تاريخ التسجيل": fmt(r),
     "اتصدّر قبل كده": r.exportedAt ? "✓" : ""
   }));
+  let sendTo = null;
+  if(send){
+    const sf = document.getElementById("regStageFilter").value;
+    if(sf==="all"){ toast("اختار مرحلة الأول عشان تبعت شيتها لخادمها"); return; }
+    sendTo = regServantOf(sf);
+    if(!sendTo){ toast("حدد خادم المرحلة الأول من \"خادم كل مرحلة\""); return; }
+  }
   const ws = XLSX.utils.json_to_sheet(data); ws["!cols"] = Object.keys(data[0]).map(k=>({wch: Math.max(10, Math.min(34, k.length+8))}));
   const wb = XLSX.utils.book_new(); wb.Workbook = {Views:[{RTL:true}]};
   XLSX.utils.book_append_sheet(wb, ws, "التسجيلات");
-  downloadWorkbook(wb, `التسجيل-العام-${todayStr()}.xlsx`);
+  const fname = `التسجيل-العام-${todayStr()}.xlsx`;
+  if(send){
+    const ok = await sendRegWorkbook(wb, fname, sendTo, rows.length, (REG_STAGES.find(x=>x[0]===document.getElementById("regStageFilter").value)||[])[1]||"");
+    if(!ok) return;
+  } else downloadWorkbook(wb, fname);
   // علّم اللي اتصدّر ✅ جنب الاسم
   const fresh = rows.filter(r=>!r.exportedAt);
   try{
@@ -27397,13 +27464,15 @@ async function exportRegs(onlyNew){
   toast(`تم تصدير ${rows.length} اسم ✅` + (fresh.length ? ` وعلّمنا ${fresh.length} بعلامة ✓` : ""));
 }
 document.getElementById("adminRegDetails")?.addEventListener("toggle", e=>{ if(e.target.open) drawRegQr(); });
-["regStageFilter","regExportFilter"].forEach(id=>document.getElementById(id)?.addEventListener("change", ()=>{ regShown = 100; renderRegList(); }));
+["regStageFilter","regExportFilter"].forEach(id=>document.getElementById(id)?.addEventListener("change", ()=>{ regShown = 100; renderRegList(); updateRegServantLine(); }));
 document.getElementById("regSearch")?.addEventListener("input", ()=>{ regShown = 100; renderRegList(); });
 document.getElementById("btnRegCopy")?.addEventListener("click", async ()=>{ try{ await navigator.clipboard.writeText(regLinkUrl()); toast("اتنسخ الرابط ✅"); }catch(_){ const i = document.getElementById("regLink"); i.select(); document.execCommand("copy"); toast("اتنسخ الرابط ✅"); } });
 document.getElementById("btnRegWa")?.addEventListener("click", ()=>{ window.open("https://wa.me/?text=" + encodeURIComponent("سجّل بياناتك أو بيانات أولادك من هنا 👇\n" + regLinkUrl()), "_blank"); });
 document.getElementById("btnRegQrDl")?.addEventListener("click", downloadRegQr);
 document.getElementById("btnRegExportNew")?.addEventListener("click", ()=>exportRegs(true));
 document.getElementById("btnRegExportAll")?.addEventListener("click", ()=>exportRegs(false));
+document.getElementById("btnRegSendNew")?.addEventListener("click", ()=>exportRegs(true, true));
+document.getElementById("btnRegSendAll")?.addEventListener("click", ()=>exportRegs(false, true));
 document.getElementById("regList")?.addEventListener("click", async e=>{
   if(e.target.closest("#regMore")){ regShown += 100; renderRegList(); return; }
   const t = e.target.closest(".regToggle"), d = e.target.closest(".regDel");
@@ -27413,7 +27482,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "237"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "238"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
