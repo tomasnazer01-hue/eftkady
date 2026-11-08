@@ -2771,7 +2771,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v238</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v239</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3054,7 +3054,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v238</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v239</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4626,6 +4626,16 @@
           <details id="regServantsBox" style="margin-top:6px">
             <summary style="font-weight:700;cursor:pointer;font-size:13px">👤 خادم كل مرحلة (اللي هتبعتله الشيت)</summary>
             <div id="regServantsList" style="margin-top:6px"></div>
+            <div style="border-top:1.5px dashed var(--line);margin:10px 0 8px"></div>
+            <div style="font-weight:700;font-size:13px;margin-bottom:6px">➕ إضافة خادم من برا التطبيق</div>
+            <input id="extSvName" placeholder="اسم الخادم" />
+            <input id="extSvPhone" type="tel" dir="ltr" placeholder="رقم الموبايل (واتساب)" style="margin-top:6px" />
+            <div class="row wrap" style="gap:6px;margin-top:6px">
+              <select id="extSvRole" class="grow"><option>أمين خدمة</option><option>أمين مساعد</option><option>مشرف</option><option selected>خادم</option></select>
+              <select id="extSvStage" class="grow"><option>حضانة</option><option>ابتدائي</option><option>إعدادي</option><option>ثانوي</option><option>جامعة</option><option>خريجين</option><option>متزوجين</option></select>
+            </div>
+            <button class="btn btn-outline btn-sm btn-block" id="btnExtSvAdd" style="margin-top:6px">💾 حفظ الخادم</button>
+            <div id="extSvList" style="margin-top:8px"></div>
           </details>
           <input id="regSearch" placeholder="دوّر بالاسم أو الرقم" style="margin-top:6px" />
           <div class="muted" id="regCount" style="margin:6px 0;font-size:12.5px"></div>
@@ -7339,6 +7349,7 @@ async function startAppListeners(churchCode){
       document.getElementById("nameSuffixInput").value = nameSuffix;
       msgOv = (d.msgOverrides && typeof d.msgOverrides==="object") ? d.msgOverrides : {};
       { const ns = d.servantScope==="class" ? "class" : "all"; const sel = document.getElementById("servantScopeSel"); if(sel) sel.value = ns; if(ns!==servantScope){ servantScope = ns; try{ rescopeContacts(); }catch(_){ } } }
+      { extServants = Array.isArray(d.extServants) ? d.extServants.filter(x=>x && x.id && x.name) : []; try{ renderRegServants(); }catch(_){ } }
       { regStageServants = (d.regStageServants && typeof d.regStageServants==="object") ? d.regStageServants : {}; try{ renderRegServants(); }catch(_){ } }
       { apkUrl = (typeof d.apkUrl==="string") ? d.apkUrl : ""; const ai = document.getElementById("apkUrlInput"); if(ai && document.activeElement!==ai) ai.value = apkUrl; try{ refreshApkCard(); }catch(_){} }
       autoAssignOff = !!d.autoAssignOff; { const ck = document.getElementById("chkAutoAssignAll"); if(ck) ck.checked = !autoAssignOff; } scheduleAutoSweep();
@@ -27284,13 +27295,18 @@ document.getElementById("btnSaveApkUrl")?.addEventListener("click", async ()=>{
 });
 // ===== التسجيل العام: رابط + QR + قايمة المسجلين + تصدير Excel =====
 let regStageServants = {};
-function regServantOf(stage){ const id = regStageServants[stage]; return id ? (churchServants.find(x=>x.id===id) || null) : null; }
+let extServants = [];   // خدام من برا التطبيق: meta/{church}.extServants = [{id,name,phone,role,stage}]
+function extAsServant(x){ return {id:x.id, rawName:x.name, grade:`${x.role||"خادم"} ${x.stage||""}`.trim(), phone:x.phone||"", ext:true}; }
+function allRegServants(){ return [...churchServants, ...extServants.map(extAsServant)]; }
+function regServantOf(stage){ const id = regStageServants[stage]; return id ? (allRegServants().find(x=>x.id===id) || null) : null; }
 function regServantLabel(sv){ return sv ? ((sv.rawName||sv.name||sv.email||"") + (sv.grade?` - ${sv.grade}`:"")) : ""; }
 function renderRegServants(){
   const box = document.getElementById("regServantsList"); if(!box) return;
-  const opts = '<option value="">— مفيش —</option>' + churchServants.map(sv=>`<option value="${cardEsc(sv.id)}">${cardEsc(regServantLabel(sv))}${sv.phone?"":" (من غير رقم)"}</option>`).join("");
+  const opts = '<option value="">— مفيش —</option>' + allRegServants().map(sv=>`<option value="${cardEsc(sv.id)}">${cardEsc(regServantLabel(sv))}${sv.phone?"":" (من غير رقم)"}</option>`).join("");
   box.innerHTML = REG_STAGES.map(([k,l])=>`<div class="row" style="gap:8px;align-items:center;margin:4px 0"><span style="flex:0 0 120px;font-size:13px">${cardEsc(l)}</span><select class="regSvSel grow" data-stage="${k}">${opts}</select></div>`).join("");
   box.querySelectorAll(".regSvSel").forEach(sel=>{ sel.value = regStageServants[sel.dataset.stage] || ""; });
+  const el = document.getElementById("extSvList");
+  if(el) el.innerHTML = extServants.length ? extServants.map(x=>`<div class="row" style="gap:8px;align-items:center;margin:4px 0;font-size:13px"><span class="grow">${cardEsc(x.name)} <span class="muted">— ${cardEsc(extAsServant(x).grade)}${x.phone?` · <span dir="ltr">${cardEsc(x.phone)}</span>`:""}</span></span><button class="btn btn-ghost btn-sm extSvDel" data-id="${cardEsc(x.id)}" style="color:#B91C1C">🗑</button></div>`).join("") : '<div class="muted" style="font-size:12px">لسه ما ضفتش خدام من برا التطبيق.</div>';
   updateRegServantLine();
 }
 function updateRegServantLine(){
@@ -27307,6 +27323,30 @@ document.addEventListener("change", async e=>{
     await setDoc(doc(db,"meta",myChurchCode), {regStageServants: {[st]: v || ""}}, {merge:true});
     toast(v ? "✅ اتحدد خادم المرحلة" : "اتشال الخادم من المرحلة");
   }catch(err){ console.error(err); toast("تعذر الحفظ"); }
+});
+document.getElementById("btnExtSvAdd")?.addEventListener("click", async ()=>{
+  const name = document.getElementById("extSvName").value.replace(/\s+/g," ").trim();
+  const phone = document.getElementById("extSvPhone").value.trim();
+  if(name.length<2){ toast("اكتب اسم الخادم"); return; }
+  if(phone && normalizeDigits(phone).length<10){ toast("رقم الموبايل مش صحيح"); return; }
+  const x = {id:"ext:"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), name, phone, role:document.getElementById("extSvRole").value, stage:document.getElementById("extSvStage").value};
+  const next = [...extServants, x];
+  try{
+    await setDoc(doc(db,"meta",myChurchCode), {extServants: next}, {merge:true});
+    extServants = next; document.getElementById("extSvName").value = ""; document.getElementById("extSvPhone").value = "";
+    renderRegServants(); toast("✅ اتضاف الخادم — تقدر تختاره لأي مرحلة");
+  }catch(err){ console.error(err); toast("تعذر الحفظ"); }
+});
+document.addEventListener("click", async e=>{
+  const b = e.target.closest && e.target.closest(".extSvDel"); if(!b) return;
+  const id = b.dataset.id, x = extServants.find(v=>v.id===id); if(!x) return;
+  if(!confirm(`تمسح ${x.name} من الخدام؟`)) return;
+  const next = extServants.filter(v=>v.id!==id), stg = {};
+  Object.keys(regStageServants).forEach(k=>{ if(regStageServants[k]===id) stg[k] = ""; });
+  try{
+    await setDoc(doc(db,"meta",myChurchCode), {extServants: next, ...(Object.keys(stg).length ? {regStageServants: stg} : {})}, {merge:true});
+    extServants = next; renderRegServants(); toast("اتمسح");
+  }catch(err){ console.error(err); toast("تعذر المسح"); }
 });
 const REG_STAGES = [["kg1","KG1"],["kg2","KG2"],["p1","أولى ابتدائي"],["p2","تانية ابتدائي"],["p3","تالتة ابتدائي"],["p4","رابعة ابتدائي"],["p5","خامسة ابتدائي"],["p6","سادسة ابتدائي"],
   ["prep1","أولى إعدادي"],["prep2","تانية إعدادي"],["prep3","تالتة إعدادي"],["sec1","أولى ثانوي"],["sec2","تانية ثانوي"],["sec3","تالتة ثانوي"],["uni","جامعة"],["grad","خريجين"],["married","متزوجين"]];
@@ -27482,7 +27522,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "238"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "239"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
