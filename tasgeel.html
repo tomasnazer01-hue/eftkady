@@ -11,7 +11,7 @@
 <style>
   :root{--navy:#1B2A4A;--gold:#C9A227;--bg:#FAF7F0;--card:#fff;--ink:#1B2A4A;--muted:#6B7280;--line:#E7E1D1;--ok:#15803D;--err:#B91C1C}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  html,body{margin:0;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;-webkit-text-size-adjust:100%}
   .top{background:linear-gradient(135deg,#1B2A4A,#24365e);color:#fff;text-align:center;padding:22px 16px 26px;border-bottom:4px solid var(--gold)}
   .top img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#fff;border:2px solid var(--gold)}
   .top h1{margin:10px 0 2px;font-size:20px;font-weight:800}
@@ -35,7 +35,7 @@
   .btn[disabled]{opacity:.55}
   .hint{font-size:12.5px;color:var(--muted);margin:4px 0 0}
   .err{color:var(--err);font-weight:700;font-size:13.5px;margin:10px 0 0;display:none}
-  .hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+  .hp{position:absolute;top:0;left:0;opacity:0;height:1px;width:1px;overflow:hidden;pointer-events:none}
   .ok{text-align:center;padding:26px 10px}
   .ok .tick{font-size:56px}
   .hide{display:none !important}
