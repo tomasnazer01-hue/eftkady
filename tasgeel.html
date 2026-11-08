@@ -178,6 +178,7 @@
     <p id="doneName" style="font-weight:700"></p>
     <p class="hint">ربنا يبارك حياتكم 🙏</p>
     <button class="btn btn-navy" id="again" style="margin-top:12px">➕ سجّل شخص تاني</button>
+    <p class="hint">هتفضل بيانات ولي الأمر والعنوان واسمك زي ما هي، وتغيّر الاسم والباقي بس.</p>
   </div>
 </div>
 
@@ -340,7 +341,7 @@ $("form").addEventListener("submit", async e=>{
 });
 
 $("again").addEventListener("click",()=>{
-  ["name","birth","bd","bm","by","bldg","flat","phone","husband","wife","mPhone","wPhone","wedding","kids","notes","waOther"].forEach(i=>$(i).value="");
+  ["name","birth","bd","bm","by","phone","husband","wife","mPhone","wPhone","wedding","kids","notes","waOther"].forEach(i=>$(i).value="");
   document.querySelectorAll('input[name="gender"]').forEach(x=>x.checked=false); setPhoto("");
   $("waSame").checked=true; $("waOther").classList.add("hide");
   $("done").classList.add("hide"); $("form").classList.remove("hide"); loadMe(); sync();
