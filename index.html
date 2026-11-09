@@ -2219,8 +2219,7 @@
         <div class="row wrap" style="margin-top:10px">
           <button class="chip active" data-parents-tab="send">📤 إرسال</button>
           <button class="chip" data-parents-tab="care">🕊️ بابا يسوع وماما العدرا <span id="parentsCareCount"></span></button>
-          <button class="chip" data-parents-tab="table">📋 جدول سريع</button>
-          <button class="chip" data-parents-tab="import">📥 من إكسيل</button>
+          <button class="chip" data-parents-tab="data">⚙️ البيانات (جدول وإكسيل)</button>
         </div>
       </div>
 
@@ -2231,24 +2230,27 @@
               <label class="field-label">المجموعة</label>
               <select id="parentsGroupFilter"><option value="all">كل المجموعات</option></select>
             </div>
-            <div class="grow">
-              <label class="field-label">مين؟</label>
-              <select id="parentsTypeFilter">
-                <option value="auto">🤖 تلقائي: رسالة واحدة لكل طفل (الأم ← الأب ← رقم الطفل)</option>
-                <option value="all">الآباء والأمهات</option>
-                <option value="father">الآباء بس</option>
-                <option value="mother">الأمهات بس</option>
-              </select>
-            </div>
           </div>
           <div style="height:8px"></div>
-          <select id="parentsExtraFilter">
-            <option value="all">كل الحالات</option>
-            <option value="never">لسه ما اتبعتلهمش خالص</option>
-            <option value="today">ما اتبعتلهمش النهارده</option>
-          </select>
-          <div style="height:8px"></div>
           <input type="text" id="parentsSearch" placeholder="دوّر باسم الطفل أو ولي الأمر أو الرقم" />
+          <div class="muted" style="font-size:12px;margin-top:6px">🤖 الرسالة بتروح لكل طفل مرة واحدة: للأم، ولو مفيش فللأب، ولو مفيش فلرقم الطفل.</div>
+          <details style="margin-top:8px">
+            <summary style="cursor:pointer;font-weight:700;font-size:13px">⚙️ فلاتر إضافية</summary>
+            <div style="height:8px"></div>
+            <label class="field-label">مين؟</label>
+            <select id="parentsTypeFilter">
+              <option value="auto">🤖 تلقائي: رسالة واحدة لكل طفل (الأم ← الأب ← رقم الطفل)</option>
+              <option value="all">الآباء والأمهات</option>
+              <option value="father">الآباء بس</option>
+              <option value="mother">الأمهات بس</option>
+            </select>
+            <div style="height:8px"></div>
+            <select id="parentsExtraFilter">
+              <option value="all">كل الحالات</option>
+              <option value="never">لسه ما اتبعتلهمش خالص</option>
+              <option value="today">ما اتبعتلهمش النهارده</option>
+            </select>
+          </details>
           <div class="row wrap" style="margin-top:8px">
             <button class="btn btn-outline btn-sm" id="btnParentsSelectAll">✅ تحديد الكل</button>
             <button class="btn btn-ghost btn-sm" id="btnParentsClear">إلغاء التحديد</button>
@@ -2261,7 +2263,7 @@
         </div>
         <div class="card" id="parentsComposerCard">
           <h2>✉️ الرسالة</h2>
-          <div class="row wrap" style="margin-bottom:6px">
+          <details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;font-size:13px">➕ كلمات جاهزة (اسم الطفل، أستاذ/أستاذة...)</summary><div class="row wrap" style="margin-top:6px">
             <button class="chip" data-parent-ph="{أستاذ/أستاذة}">+ أستاذ/أستاذة</button>
             <button class="chip" data-parent-ph="{اسم_ولي_الأمر}">+ اسم ولي الأمر</button>
             <button class="chip" data-parent-ph="{ابنك/بنتك}">+ ابنك/بنتك</button>
@@ -2269,14 +2271,14 @@
             <button class="chip" data-parent-ph="{ولد|بنت}" title="الكلمة الأولى للولد والتانية للبنت، مثال: {غاب|غابت}">+ صيغة ولد|بنت</button>
             <button class="chip" data-parent-ph="{اسم_الأب_الأول}">+ اسم الأب</button>
             <button class="chip" data-parent-ph="{اسم_الأم_الأول}">+ اسم الأم</button>
-          </div>
+          </div></details>
           <select id="parentsTemplatePick" style="margin-bottom:6px"><option value="">— أو اختار رسالة محفوظة —</option></select>
           <div class="muted" style="font-size:11.5px;margin-bottom:6px">💡 اكتب بصيغة المذكر في رسالة الأولاد وبصيغة المؤنث في رسالة البنات واحفظهم منفصلين، أو استخدم <b>{غاب|غابت}</b> (الأولى للولد والتانية للبنت) في رسالة واحدة.</div>
           <textarea id="parentsMsgText" rows="4" placeholder="مثال: سلام ونعمة يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🙏 عايزين نطمن على {ابنك/بنتك} {اسم_الطفل_الأول}"></textarea>
-          <label class="row" style="gap:8px;cursor:pointer;margin-top:8px">
+          <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;color:var(--muted)">خيارات متقدمة</summary><label class="row" style="gap:8px;cursor:pointer;margin-top:8px">
             <input type="checkbox" id="parentsUseTemplates" style="width:auto" />
             <span style="font-size:13px">🔁 استخدم الرسايل المحفوظة بالتبادل (حسب وضع التبديل في تاب الرسائل) بدل النص ده</span>
-          </label>
+          </label></details>
           <div class="muted" id="parentsPreview" style="font-size:12px;margin:8px 0;white-space:pre-wrap"></div>
           <div class="row wrap" style="margin-bottom:8px;gap:6px">
             <select id="parentsSaveKind" class="grow"><option value="both">💾 تتحفظ لـ: الأولاد والبنات</option><option value="boy">💾 تتحفظ لـ: الأولاد بس 👦</option><option value="girl">💾 تتحفظ لـ: البنات بس 👧</option></select>
@@ -2771,7 +2773,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v239</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v240</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3054,7 +3056,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v239</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v240</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -10353,17 +10355,17 @@ function updateParentsCareBadge(){
 function setParentsTab(tab){
   parentsTab = tab;
   document.querySelectorAll("[data-parents-tab]").forEach(x=>x.classList.toggle("active", x.dataset.parentsTab===tab));
-  ["send","care","table","import"].forEach(t=>{
-    const el = document.getElementById("parentsPane" + t.charAt(0).toUpperCase() + t.slice(1));
-    if(el) el.style.display = (t===tab) ? "block" : "none";
-  });
+  if(tab==="table"||tab==="import") tab = parentsTab = "data";
+  document.querySelectorAll("[data-parents-tab]").forEach(x=>x.classList.toggle("active", x.dataset.parentsTab===tab));
+  const show = {parentsPaneSend:tab==="send", parentsPaneCare:tab==="care", parentsPaneTable:tab==="data", parentsPaneImport:tab==="data"};
+  Object.keys(show).forEach(id=>{ const el = document.getElementById(id); if(el) el.style.display = show[id] ? "block" : "none"; });
   renderParentsCurrent();
 }
 function renderParentsCurrent(){
   updateParentsCareBadge();
   if(parentsTab==="send") renderParentsList();
   else if(parentsTab==="care") renderParentsCare();
-  else if(parentsTab==="table") renderParentsTable();
+  else if(parentsTab==="data" || parentsTab==="table") renderParentsTable();
 }
 function refreshParentsViews(){
   if(document.getElementById("screen-parents")?.classList.contains("active")) renderParentsCurrent();
@@ -15675,6 +15677,7 @@ function renderGroups(){
     <div class="list-item">
       <div class="grow">
         <div class="item-name">${g.name} <span class="muted">(${count})</span></div>
+        ${(!isProtected && !g.special) ? (()=>{ let sv=[]; try{ sv = groupAutoServants(g.id); }catch(_){} return sv.length ? `<div class="item-sub" style="font-size:11.5px">👤 ${sv.slice(0,4).map(x=>cardEsc(x.rawName||x.name||"")).join("، ")}${sv.length>4?` +${sv.length-4}`:""}</div>` : `<div class="item-sub" style="font-size:11.5px;color:#B45309">⚠️ مفيش خادم مربوط بالفصل ده</div>`; })() : ""}
         ${isProtected ? `<div class="item-sub" style="font-size:11px">مجموعة أساسية بيروح ليها أي حد يتشال من مجموعته — مينفعش تتحذف</div>` : ''}
       </div>
       ${(!isProtected && !g.special) ? `<label class="row" style="gap:5px;cursor:pointer;font-size:12px;margin:0 6px"><input type="checkbox" data-autoassign="${g.id}" ${g.autoAssign!==false?"checked":""} style="width:auto"><span>🔀 توزيع تلقائي على خدام الفصل <span class="muted">(${groupAutoServants(g.id).length} خادم)</span></span></label>` : ""}
@@ -27522,7 +27525,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "239"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "240"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
