@@ -2794,7 +2794,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v242</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v243</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3077,7 +3077,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v242</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v243</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -13544,7 +13544,8 @@ function maVars(c, rec){
   const block = miss.map((m,i)=>`${ar(i+1)}_ ${m}`).join("\n");
   const nm = maMar() ? (rec.who==="wife" ? "أستاذة "+firstName(c.wifeName||"") : rec.who==="husband" ? "أستاذ "+firstName(c.husbandName||"") : familyLine(c)) : firstName(c.name||"");
   const who = rec.who==="mother"?"ماما":rec.who==="father"?"بابا":"ماما أو بابا";
-  return {block, link:personalLinkFor(c), sign, nm, who, vars:{"ماما/بابا":who, "الاسم":nm, "الناقص":block, "رابط_شخصي":personalLinkFor(c), "التوقيع":sign, "الكنيسة":CHURCH_SIGN_LINE}};
+  const pn = maMar() ? "" : firstName(rec.who==="mother" ? (c.motherName||"") : rec.who==="father" ? (c.fatherName||"") : "");
+  return {block, link:personalLinkFor(c), sign, nm, who, pn, vars:{"اسم_ولي_الأمر":pn, "ماما/بابا":who, "الاسم":nm, "الناقص":block, "رابط_شخصي":personalLinkFor(c), "التوقيع":sign, "الكنيسة":CHURCH_SIGN_LINE}};
 }
 function maKey(){ return maMar() ? "familyMissing" : maSec() ? "selfMissing" : "parentMissing"; }
 function maMsgFor(c, rec){
@@ -13558,6 +13559,7 @@ function maToTemplate(text, c, rec){
   sw(v.link,"{رابط_شخصي}"); sw(v.block,"{الناقص}"); sw(CHURCH_SIGN_LINE,"{الكنيسة}"); sw(v.sign,"{التوقيع}");
   if(maKey()==="parentMissing") sw("يا "+v.who, "يا {ماما/بابا}");
   sw(v.nm,"{الاسم}");
+  if(v.pn && v.pn!==v.nm) sw(v.pn,"{اسم_ولي_الأمر}");
   return t;
 }
 let maQueue = [], maIdx = 0, maSent = new Set();
@@ -27702,7 +27704,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "242"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "243"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
