@@ -2789,7 +2789,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v247</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v248</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3072,7 +3072,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v247</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v248</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5804,7 +5804,7 @@ const MSG_DEFS = {
   parentMissing: {label:"✉️ طلب البيانات الناقصة من الأب/الأم", chips:["{ماما/بابا}","{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
     hint:"الرسالة اللي بتتبعت لماما/بابا بالبيانات الناقصة بس. {الناقص} بيتحط مكانه القايمة مرقمة، و{التوقيع} اسمك، و{الكنيسة} اسم الكنيسة.",
     def:"مساء الخير يا {ماما/بابا} {الاسم}\n\nمحتاجين البيانات دي ل{الاسم}:\n{الناقص}\n\nلو عايز تسجل البيانات بنفسك:\n{رابط_شخصي}\n\n{التوقيع}\n{الكنيسة}"},
-  selfMissing: {label:"✉️ طلب البيانات الناقصة — ثانوي (للمخدوم نفسه)", chips:["{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
+  selfMissing: {label:"✉️ طلب البيانات الناقصة — إعدادي وثانوي (للمخدوم نفسه)", chips:["{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
     hint:"الرسالة اللي بتتبعت واحد ورا واحد للمخدوم في الثانوي بالبيانات الناقصة بس. {الناقص} بيتحط مكانه القايمة مرقمة.",
     def:"سلام ونعمة يا {الاسم} 🙏\nمحتاجين البيانات دي:\n{الناقص}\n\nتقدر تسجّلها بنفسك من هنا:\n{رابط_شخصي}\n\n{التوقيع}\n{الكنيسة}"},
   familyMissing: {label:"✉️ طلب البيانات الناقصة — متزوجين (للأسرة)", chips:["{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
@@ -11091,7 +11091,8 @@ const waKKind = c => c.gender==="female" ? "girl" : "boy";
 // نوع الرسالة حسب الخدمة: أطفال (أب/أم) · ثانوي (المخدوم نفسه) · متزوجين (الزوج/الزوجة)
 function waKMode(c){
   if(myService==="متزوجين" || isFamilyRecord(c)) return "married";
-  if((myService||c.service)==="ثانوي") return "self";
+  const svc = myService || c.service;
+  if(svc && svc!=="ابتدائي") return "self"; // إعدادي وثانوي وأي خدمة تانية: المخدوم نفسه — الأب والأم لابتدائي بس
   return "parents";
 }
 function waKRec(c){
@@ -11149,7 +11150,7 @@ function waKFill(text, c, r){
 function waKFillFilters(){
   populateGroupServantFilters("waKGroup","waKServant");
   document.getElementById("waKGroup").style.display = maMar() ? "none" : "";
-  const mode = myService==="متزوجين" ? "married" : myService==="ثانوي" ? "self" : "parents";
+  const mode = myService==="متزوجين" ? "married" : (myService && myService!=="ابتدائي") ? "self" : "parents";
   document.getElementById("waKIntro").textContent = WAK_INTRO[mode];
 }
 function waKRefresh(){
@@ -13688,7 +13689,7 @@ function missingRecipient(c){
   return null;
 }
 const maMar = ()=>myService==="متزوجين";
-const maSec = ()=>myService==="ثانوي";
+const maSec = ()=>myService==="ثانوي" || myService==="إعدادي";
 function maMiss(c){ return maMar() ? (c.forceDataComplete===true ? [] : missingFamilyFields(c)) : maSec() ? (c.forceDataComplete===true ? [] : contactMissingFields(c)) : parentMissingList(c); }
 function maRec(c){
   if(maSec()){
@@ -27918,7 +27919,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "247"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "248"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
