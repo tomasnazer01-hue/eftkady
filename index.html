@@ -1324,7 +1324,8 @@
     <div class="modal-overlay" id="modalHomeVisit">
       <div class="modal-sheet">
         <div class="modal-head"><h3>🏠 تسجيل افتقاد منزلي</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalHomeVisit')">✕</button></div>
-        <div class="item-name" id="homeVisitName" style="margin-bottom:8px"></div>
+        <div class="item-name" id="homeVisitName" style="margin-bottom:4px"></div>
+        <div class="muted" id="homeVisitBulkList" style="display:none;max-height:90px;overflow-y:auto;font-size:12px;margin-bottom:8px"></div>
         <label class="field-label">تاريخ الزيارة</label>
         <input type="date" id="homeVisitDate" />
         <label class="field-label" style="margin-top:10px">مين الخدام اللي نزلوا؟ (اختار كل اللي كانوا معاك)</label>
@@ -2621,7 +2622,8 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
         </div>
-        <p class="muted" style="margin-top:8px" id="visitMapLegend">🟢 تم الافتقاد · 🟡 بانتظار · 🔴 محتاج زيارة منزلية</p>
+        <p class="muted" style="margin-top:8px" id="visitMapLegend">🟢 تم الافتقاد · 🔴 محتاج زيارة منزلية</p>
+        <div class="row" style="gap:6px;align-items:center;margin-bottom:6px"><span style="font-size:12.5px;white-space:nowrap">⏱️ الأخضر يرجع أحمر بعد:</span><select id="hvResetSel" class="grow"><option value="0">لحد ما الكل يبقى أخضر</option><option value="7">أسبوع</option><option value="14">أسبوعين</option><option value="21">3 أسابيع</option><option value="30">شهر</option><option value="60">شهرين</option><option value="90">3 شهور</option><option value="custom">عدد أيام تاني…</option></select></div>
       </div>
       <div class="card" id="visitMapNotVisitedCard">
         <h2 style="margin:0 0 4px" id="visitMapNotVisitedTitle">🏠 لسه ما اتفتقدوش منزلي</h2>
@@ -2634,7 +2636,11 @@
         <div id="visitMapPickList" style="max-height:220px;overflow-y:auto;margin-top:8px"></div>
         <div class="row wrap" style="margin-top:10px">
           <span class="muted" id="visitMapSelectedCount">محدد: 0</span>
+          <button class="btn btn-ghost btn-sm" id="btnSelectAllMapPick">☑️ حدد كل الظاهرين</button>
           <button class="btn btn-ghost btn-sm" id="btnClearMapSelection">إلغاء التحديد</button>
+        </div>
+        <div class="row wrap" style="margin-top:6px">
+          <button class="btn btn-sage btn-block" id="btnBulkHomeVisit">🏠 سجّل الافتقاد المنزلي للمحددين</button>
         </div>
         <div style="height:10px"></div>
         <label class="field-label">هتتحرك إزاي؟</label>
@@ -2795,7 +2801,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v249</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v250</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3078,7 +3084,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v249</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v250</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -7382,6 +7388,8 @@ async function startAppListeners(churchCode){
       document.getElementById("nameSuffixInput").value = nameSuffix;
       msgOv = (d.msgOverrides && typeof d.msgOverrides==="object") ? d.msgOverrides : {};
       { const ns = d.servantScope==="class" ? "class" : "all"; const sel = document.getElementById("servantScopeSel"); if(sel) sel.value = ns; if(ns!==servantScope){ servantScope = ns; try{ rescopeContacts(); }catch(_){ } } }
+      { const nd = Math.max(0, parseInt(d.homeVisitResetDays,10)||0), nc = typeof d.homeVisitCycleStart==="string" ? d.homeVisitCycleStart : "";
+        if(nd!==hvResetDays || nc!==hvCycleStart){ hvResetDays = nd; hvCycleStart = nc; try{ hvSyncSel(); if(visitMapInstance) renderVisitMap(); renderVisitMapNotVisited(); }catch(_){ } } }
       { extServants = Array.isArray(d.extServants) ? d.extServants.filter(x=>x && x.id && x.name) : []; try{ renderRegServants(); }catch(_){ } }
       { regStageServants = (d.regStageServants && typeof d.regStageServants==="object") ? d.regStageServants : {}; try{ renderRegServants(); }catch(_){ } }
       { apkUrl = (typeof d.apkUrl==="string") ? d.apkUrl : ""; const ai = document.getElementById("apkUrlInput"); if(ai && document.activeElement!==ai) ai.value = apkUrl; try{ refreshApkCard(); }catch(_){} }
@@ -9232,7 +9240,7 @@ function renderVisitFilterChips(){
     <button class="chip ${flagFilter==='needsCall'?'active':''}" data-flag="needsCall">📞 محتاج اتصال (${needsCallCount})</button>
     <button class="chip ${flagFilter==='needsHomeVisit'?'active':''}" data-flag="needsHomeVisit">🚩 محتاج زيارة (${needsVisitCount})</button>
     <button class="chip ${recentSendFilter?'active':''}" data-v="recentsend">📤 اتبعتلهم آخر ٢٤ ساعة (${recentSendCount})</button>
-    <button class="chip ${homeNotVisitedFilter?'active':''}" data-v="homenot">🏠 لسه ما اتفتقدوش منزلي (${contacts.filter(c=>!_hvMapNow.has(c.id)).length})</button>
+    <button class="chip ${homeNotVisitedFilter?'active':''}" data-v="homenot">🏠 لسه ما اتفتقدوش منزلي (${contacts.filter(c=>!hvIsGreen(_hvMapNow.get(c.id))).length})</button>
   `;
   renderServantFilterChips();
   try{ applyMarriedLegacyFilters(); }catch(e){ console.warn(e); }
@@ -9299,9 +9307,9 @@ function getFilteredContacts(){
     if(flagFilter!=="all" && !c[flagFilter]) return false;
     if(recentSendFilter && !wasRecentlySent(c)) return false;
     if(assignedServantSet.size && !(assignedServantSet.has(c.assignedTo) || assignedServantSet.has(c.assignedHusbandUid) || assignedServantSet.has(c.assignedWifeUid))) return false;
-    if(homeNotVisitedFilter && _hvNow.has(c.id)) return false;
+    if(homeNotVisitedFilter && hvIsGreen(_hvNow.get(c.id))) return false;
     if(assignedFilterMine && c.assignedTo!==myUid && c.assignedHusbandUid!==myUid && c.assignedWifeUid!==myUid) return false;
-    if(q && !( (c.name||"").toLowerCase().arIncludes(q) || (c.phone||"").includes(q) )) return false;
+    if(q && !( (c.name||"").toLowerCase().arIncludes(q) || (c.phone||"").includes(q) || (c.address||"").toLowerCase().arIncludes(q) )) return false;
     return true;
   });
   out.sort((a,b)=>(a.name||"").arLocale(b.name||"","ar"));
@@ -19428,13 +19436,13 @@ function visitMapScope(list){
   if(visitMapServantFilter!=="all") list = list.filter(c=>c.assignedTo===visitMapServantFilter || c.assignedHusbandUid===visitMapServantFilter || c.assignedWifeUid===visitMapServantFilter);
   const q = vmNorm(visitMapStreetQ).replace(/^(شارع|ش) /,"");
   if(q) list = list.filter(c=>vmNorm(c.address).includes(q));
-  if(visitMapNotHome){ const hv = buildHomeVisitMap(); list = list.filter(c=>!hv.has(c.id)); }
+  if(visitMapNotHome){ const hv = buildHomeVisitMap(); list = list.filter(c=>!hvIsGreen(hv.get(c.id))); }
   return list;
 }
 function renderVisitMapNotVisited(){
   const box = document.getElementById("visitMapNotVisitedList"); if(!box) return;
   const hv = buildHomeVisitMap();
-  const list = visitMapScope(contacts.filter(c=>!hv.has(c.id))).sort((a,b)=>(groupName(a.group)||"").arLocale(groupName(b.group)||"",'ar')||(a.name||"").arLocale(b.name||"",'ar'));
+  const list = visitMapScope(contacts.filter(c=>!hvIsGreen(hv.get(c.id)))).sort((a,b)=>(groupName(a.group)||"").arLocale(groupName(b.group)||"",'ar')||(a.name||"").arLocale(b.name||"",'ar'));
   document.getElementById("visitMapNotVisitedTitle").textContent = `🏠 لسه ما اتفتقدوش منزلي (${list.length})`;
   if(!list.length){ box.innerHTML = `<div class="muted">مفيش — كله اتفتقد 🎉</div>`; return; }
   box.innerHTML = list.slice(0,200).map(c=>`<div class="list-item">
@@ -20022,15 +20030,16 @@ function renderVisitMap(){
       return;
     }
     const bounds = [];
+    hvMaybeReset(); hvSyncSel();
     const homeMap = buildHomeVisitMap();
     const legend = document.getElementById("visitMapLegend");
-    if(legend) legend.textContent = myService==="ابتدائي" ? "🟢 افتقاد منزلي آخر شهر · 🟡 عدّى عليه شهر · 🔴 لسه ما اتفتقدش منزلي · 🏠 تم افتقاده منزلي · الرقم = السنة (k1, k2, 1…6)" : "🟢 تم الافتقاد · 🟡 بانتظار · 🔴 محتاج زيارة منزلية · 🏠 تم افتقاده منزلي";
+    if(legend) legend.textContent = `🟢 اتفتقد منزلي ${hvResetDays>0?`(آخر ${hvResetDays} يوم)`:"(الدورة الحالية — يرجعوا أحمر لما الكل يبقى أخضر)"} · 🔴 لسه ما اتفتقدش منزلي${myService==="ابتدائي"?" · الرقم = السنة (k1, k2, 1…6)":""}`;
     const spreadItems = [];
     vmMarkers = {};
     located.forEach(c=>{
       const hv = homeMap.get(c.id);
       const primary = myService==="ابتدائي";
-      const color = primary ? homeVisitColor(hv) : (c.needsHomeVisit ? "#7A2E2E" : (c.visited ? "#4E7A5E" : "#C9A227"));
+      const color = homeVisitColor(hv);
       const label = primary ? (GRADE_MAP_LABEL[contactGradeKey(c)] || "") : "";
       const sz = primary ? 20 : 12;
       const icon = L.divIcon({
@@ -24823,21 +24832,87 @@ function buildHomeVisitMap(){
   return m;
 }
 const GRADE_MAP_LABEL = {"KG1":"k1","KG2":"k2","أولى":"1","تانية":"2","تالتة":"3","رابعة":"4","خامسة":"5","سادسة":"6"};
-function homeVisitColor(info){
-  if(!info) return "#B23B3B";                                  // لسه ما اتفتقدش منزلي
-  const days = Math.floor((new Date(todayStr()) - new Date(info.date))/86400000);
-  return days<=30 ? "#4E7A5E" : "#E0B23A";                     // آخر شهر = أخضر · عدّى شهر = أصفر
+function homeVisitColor(info){ return hvIsGreen(info) ? "#4E7A5E" : "#B23B3B"; }   // أخضر = اتفتقد في المدة · أحمر = لسه
+let homeVisitContactId = null, homeVisitBulkIds = [];
+// ---- وقت رجوع اللون الأخضر للأحمر (لكل خدمة): بمدة بالأيام، أو لحد ما الكل يبقى أخضر ----
+let hvResetDays = 0, hvCycleStart = "";
+function hvIsGreen(info){
+  if(!info) return false;
+  if(hvResetDays>0) return Math.floor((new Date(todayStr()) - new Date(info.date))/86400000) <= hvResetDays;
+  return !hvCycleStart || info.date >= hvCycleStart;
 }
-let homeVisitContactId = null;
+// من غير مدة: لو الكل بقى أخضر (وعدّى اليوم اللي خلص فيه) كله يرجع أحمر مرة واحدة
+function hvMaybeReset(){
+  if(hvResetDays>0 || !myChurchCode) return false;
+  const hv = buildHomeVisitMap(), U = contacts.filter(c=>!c.graduated && !c.pendingApproval && c.location && c.location.lat);
+  if(!U.length || !U.every(c=>hvIsGreen(hv.get(c.id)))) return false;
+  const last = U.reduce((m,c)=>{ const d = hv.get(c.id).date; return d>m ? d : m; }, "");
+  if(last >= todayStr()) return false;
+  hvCycleStart = todayStr();
+  setDoc(doc(db,"meta",myChurchCode), {homeVisitCycleStart: hvCycleStart}, {merge:true}).catch(e=>console.warn("hvCycle", e));
+  return true;
+}
+function hvSyncSel(){ const sel = document.getElementById("hvResetSel"); if(!sel) return;
+  const v = String(hvResetDays||0); if(![...sel.options].some(o=>o.value===v)){ const o = document.createElement("option"); o.value = v; o.textContent = v+" يوم"; sel.insertBefore(o, sel.lastElementChild); }
+  sel.value = v; }
+document.getElementById("hvResetSel").addEventListener("change", async e=>{
+  let v = e.target.value;
+  if(v==="custom"){ const n = parseInt(prompt("بعد كام يوم يرجع اللون من الأخضر للأحمر؟ (رقم بالأيام)", "10")||"",10); if(!(n>0)){ hvSyncSel(); return; } v = String(n); }
+  const n = Math.max(0, parseInt(v,10)||0);
+  try{ await setDoc(doc(db,"meta",myChurchCode), {homeVisitResetDays:n}, {merge:true}); hvResetDays = n; hvSyncSel(); toast(n ? `اللون هيرجع أحمر بعد ${n} يوم` : "الأخضر هيفضل لحد ما الكل يبقى أخضر"); try{ renderVisitMap(); renderVisitMapNotVisited(); }catch(_){} }
+  catch(err){ console.error(err); toast("تعذر الحفظ — محتاج صلاحية"); hvSyncSel(); }
+});
+document.getElementById("btnBulkHomeVisit").addEventListener("click", ()=>{
+  const list = [...visitMapSelectedIds].map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+  if(!list.length){ toast("حدد شخص واحد على الأقل الأول"); return; }
+  homeVisitContactId = null; homeVisitBulkIds = list.map(c=>c.id);
+  document.getElementById("homeVisitName").textContent = `${list.length} مخدوم`;
+  const bl = document.getElementById("homeVisitBulkList"); bl.style.display = ""; bl.textContent = list.map(c=>mapDisplayName(c)).join("، ");
+  document.getElementById("homeVisitDate").value = todayStr();
+  renderHomeServantsPicker("homeVisitServants");
+  openModal("modalHomeVisit");
+});
+document.getElementById("btnSelectAllMapPick").addEventListener("click", ()=>{
+  const list = visitMapScope(contacts).filter(c=>c.location && c.location.lat);
+  if(!list.length){ toast("مفيش حد ظاهر"); return; }
+  list.forEach(c=>visitMapSelectedIds.add(c.id));
+  document.getElementById("visitMapSelectedCount").textContent = `محدد: ${visitMapSelectedIds.size}`;
+  renderVisitMapPickList(); renderVisitMap();
+  toast(`اتحدد ${list.length}`);
+});
 window.openHomeVisitModal = (contactId)=>{
   const c = contacts.find(x=>x.id===contactId); if(!c) return;
-  homeVisitContactId = contactId;
+  homeVisitContactId = contactId; homeVisitBulkIds = [];
+  document.getElementById("homeVisitBulkList").style.display = "none";
   document.getElementById("homeVisitName").textContent = isFamilyRecord(c) ? familyLine(c) : c.name;
   document.getElementById("homeVisitDate").value = todayStr();
   renderHomeServantsPicker("homeVisitServants");
   openModal("modalHomeVisit");
 };
 document.getElementById("btnSaveHomeVisit").addEventListener("click", async ()=>{
+  if(homeVisitBulkIds.length){
+    const date = document.getElementById("homeVisitDate").value || todayStr();
+    const svs = readHomeServants("homeVisitServants");
+    if(!svs.servantUids.length){ toast("اختار خادم واحد على الأقل"); return; }
+    const btn = document.getElementById("btnSaveHomeVisit"); btn.disabled = true;
+    let ok = 0, skipped = 0;
+    try{
+      for(const id of homeVisitBulkIds){
+        const c = contacts.find(x=>x.id===id); if(!c) continue;
+        if(visitationLog.some(v=>v.contactId===id && v.date===date && v.method==="زيارة منزلية")){ skipped++; continue; }
+        await updateDoc(doc(db,"contacts",id), {visited:true, visitMethod:"زيارة منزلية", visitedAt: date===todayStr() ? serverTimestamp() : Timestamp.fromDate(new Date(date+"T12:00:00")), visitedBy: currentUserEmail||""});
+        await addDoc(colVisitationLog, {contactId:id, date, method:"زيارة منزلية", ...svs, churchCode:myChurchCode, recordedBy:currentUserEmail||null, createdAt:serverTimestamp()});
+        ok++;
+      }
+      logActivity("تسجيل افتقاد منزلي (جماعي)", `${ok} مخدوم — ${svs.servantNames.join("، ")}`);
+      visitMapSelectedIds.clear(); homeVisitBulkIds = [];
+      const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = "محدد: 0";
+      closeModal("modalHomeVisit"); showCelebration("🏠"); toast(`تم تسجيل الافتقاد لـ ${ok}${skipped?` (و${skipped} كانوا متسجلين النهارده)`:""} ✅`);
+      try{ renderVisitMapPickList(); renderVisitMap(); renderVisitMapNotVisited(); }catch(_){}
+    }catch(err){ console.error(err); toast(`وقف عند ${ok} — تأكد من الإنترنت وقواعد الأمان`); }
+    finally{ btn.disabled = false; }
+    return;
+  }
   const c = contacts.find(x=>x.id===homeVisitContactId); if(!c) return;
   const date = document.getElementById("homeVisitDate").value || todayStr();
   const svs = readHomeServants("homeVisitServants");
@@ -27947,7 +28022,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "249"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "250"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
