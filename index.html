@@ -2616,19 +2616,10 @@
           </button>
         </div>
         <p class="muted" style="margin-top:8px" id="visitMapLegend">🟢 تم الافتقاد · 🟡 بانتظار · 🔴 محتاج زيارة منزلية</p>
-        <label class="field-label">فلتر بالمجموعة (اختار وحدة أو أكتر)</label>
-        <div class="row wrap" id="visitMapGroupFilterBox"></div>
-        <label class="field-label" style="margin-top:8px">فلتر بالمنطقة</label>
-        <div class="row wrap" id="visitMapRegionFilterBox"></div>
-        <label class="field-label" style="margin-top:8px">فلتر بالخادم</label>
-        <select id="visitMapServantSel"></select>
-        <label class="field-label" style="margin-top:8px">🛣️ اكتب اسم الشارع (يظهر مخدومين الشارع ده بس)</label>
-        <input type="search" id="visitMapStreetQ" placeholder="مثال: فريد عبد العظيم" autocomplete="off" />
-        <label class="row" style="gap:6px;font-size:13px;margin-top:8px;cursor:pointer"><input type="checkbox" id="visitMapNotHomeChk" style="width:auto" /> 🏠 اللي لسه ما اتفتقدوش منزلي بس</label>
       </div>
       <div class="card" id="visitMapNotVisitedCard">
         <h2 style="margin:0 0 4px" id="visitMapNotVisitedTitle">🏠 لسه ما اتفتقدوش منزلي</h2>
-        <p class="muted" style="margin:0 0 6px;font-size:12px">بنفس الفلاتر اللي فوق (مجموعة / منطقة / خادم / شارع).</p>
+        <p class="muted" style="margin:0 0 6px;font-size:12px">بنفس فلاتر الخريطة اللي تحت (مجموعة / منطقة / خادم / بحث).</p>
         <div id="visitMapNotVisitedList" style="max-height:320px;overflow-y:auto"></div>
       </div>
       <div class="card">
@@ -2661,7 +2652,8 @@
         <div id="visitRouteResultBox" style="margin-top:10px"></div>
       </div>
       <div class="card" style="padding:8px">
-        <div class="row" style="gap:6px;margin-bottom:6px"><input type="search" id="visitStreetQ" placeholder="🔍 ابحث باسم الشارع (في الجزء المفتوح بس)" style="flex:1" /><button class="btn btn-gold btn-sm" id="visitStreetBtn">بحث</button></div><div id="visitStreetRes" style="max-height:150px;overflow-y:auto;margin-bottom:6px"></div>
+        <input type="search" id="visitMapQ" placeholder="🔍 ابحث باسم شارع أو اسم مخدوم" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:6px" />
+        <div id="visitMapQRes" style="display:none;max-height:180px;overflow-y:auto;margin-bottom:6px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;background:#fff"></div>
       <div class="row wrap" style="gap:6px;margin-bottom:6px">
           <button class="btn btn-gold btn-sm" id="btnVisitMapDraw">✏️ حدد منطقة بالرسم</button>
           <span id="visitDrawBar" style="display:none;gap:6px;flex-wrap:wrap;align-items:center">
@@ -2672,7 +2664,9 @@
         </div>
         <p class="muted" id="visitDrawHint" style="display:none;font-size:12px;margin:0 0 6px">دوس على الخريطة نقطة نقطة عشان ترسم الحدود (٣ نقط على الأقل). بعد كده تقدر تعدّل: اسحب أي نقطة بيضا لتحريكها، دوس على علامة + في نص الضلع عشان تزود نقطة، ودوس مرتين على نقطة لمسحها. وبعدين "✅ تم".</p>
         <div id="visitTourPanel" style="display:none;margin-bottom:8px;background:#fff;border:2px solid var(--gold);border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.15);padding:10px 12px"></div>
-        <div id="visitMapGroupTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 8px;-webkit-overflow-scrolling:touch"></div>
+        <div id="visitMapGroupTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
+        <div id="visitMapRegionTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
+        <div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><select id="visitMapServantSel" class="grow"></select><label class="row" style="gap:6px;font-size:12.5px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="visitMapNotHomeChk" style="width:auto" /> 🏠 لسه ما اتفتقدوش منزلي</label></div>
         <div id="visitMapContainer" style="height:65vh;border-radius:12px;overflow:hidden"></div>
       </div>
     </section>
@@ -2795,7 +2789,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v245</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v246</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3078,7 +3072,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v245</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v246</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -19354,44 +19348,25 @@ function getGroupFilteredLocatedContacts(){
   return located;
 }
 function renderVisitMapRegionFilterChips(){
-  const wrap = document.getElementById("visitMapRegionFilterBox"); if(!wrap) return;
-  const chip = (key,label)=>`<button class="chip ${visitMapRegionFilter===key?'active':''}" data-map-region="${key}">${label}</button>`;
-  wrap.innerHTML = chip("all","الكل") + chip("mine","🗺️ مناطقي") + regions.map(r=>chip(r.id, cardEsc(r.name))).join("") + chip("none","بدون منطقة");
-  wrap.querySelectorAll("[data-map-region]").forEach(ch=>ch.addEventListener("click", ()=>{
+  const tabs = document.getElementById("visitMapRegionTabs"); if(!tabs) return;
+  const chip = (key,label)=>`<button class="chip ${visitMapRegionFilter===key?'active':''}" data-map-region="${key}" style="flex:0 0 auto">${label}</button>`;
+  tabs.innerHTML = chip("all","📍 كل المناطق") + chip("mine","🗺️ مناطقي") + regions.map(r=>chip(r.id, cardEsc(r.name))).join("") + chip("none","بدون منطقة");
+  tabs.querySelectorAll("[data-map-region]").forEach(ch=>ch.addEventListener("click", ()=>{
     visitMapRegionFilter = ch.dataset.mapRegion;
     renderVisitMapRegionFilterChips(); renderVisitMapPickList(); renderVisitMap();
   }));
 }
 function renderVisitMapGroupFilterChips(){
   renderVisitMapRegionFilterChips();
-  const wrap = document.getElementById("visitMapGroupFilterBox");
-  if(!wrap) return;
-  wrap.innerHTML = `<button class="chip ${visitMapGroupFilter.size===0?'active':''}" data-map-group="__all__">الكل</button>` +
-    groups.map(g=>`<button class="chip ${visitMapGroupFilter.has(g.id)?'active':''}" data-map-group="${g.id}">${g.name}</button>`).join("");
-  const tabs = document.getElementById("visitMapGroupTabs");
-  if(tabs){
-    const one = visitMapGroupFilter.size===1 ? [...visitMapGroupFilter][0] : null;
-    tabs.innerHTML = `<button class="chip ${visitMapGroupFilter.size===0?'active':''}" data-map-tab="__all__" style="flex:0 0 auto">🗺️ الكل</button>` +
-      groups.map(g=>`<button class="chip ${one===g.id?'active':''}" data-map-tab="${g.id}" style="flex:0 0 auto">${cardEsc(g.name)}</button>`).join("");
-    tabs.querySelectorAll("[data-map-tab]").forEach(b=>b.addEventListener("click", ()=>{
-      visitMapGroupFilter.clear();
-      if(b.dataset.mapTab!=="__all__") visitMapGroupFilter.add(b.dataset.mapTab);
-      renderVisitMapGroupFilterChips(); renderVisitMapPickList(); renderVisitMap();
-    }));
-  }
-  wrap.querySelectorAll("[data-map-group]").forEach(ch=>{
-    ch.addEventListener("click", ()=>{
-      if(ch.dataset.mapGroup==="__all__"){
-        visitMapGroupFilter.clear();
-      } else {
-        if(visitMapGroupFilter.has(ch.dataset.mapGroup)) visitMapGroupFilter.delete(ch.dataset.mapGroup);
-        else visitMapGroupFilter.add(ch.dataset.mapGroup);
-      }
-      renderVisitMapGroupFilterChips();
-      renderVisitMapPickList();
-      renderVisitMap();
-    });
-  });
+  const tabs = document.getElementById("visitMapGroupTabs"); if(!tabs) return;
+  const one = visitMapGroupFilter.size===1 ? [...visitMapGroupFilter][0] : null;
+  tabs.innerHTML = `<button class="chip ${visitMapGroupFilter.size===0?'active':''}" data-map-tab="__all__" style="flex:0 0 auto">🗺️ كل المجموعات</button>` +
+    groups.map(g=>`<button class="chip ${one===g.id?'active':''}" data-map-tab="${g.id}" style="flex:0 0 auto">${cardEsc(g.name)}</button>`).join("");
+  tabs.querySelectorAll("[data-map-tab]").forEach(b=>b.addEventListener("click", ()=>{
+    visitMapGroupFilter.clear();
+    if(b.dataset.mapTab!=="__all__") visitMapGroupFilter.add(b.dataset.mapTab);
+    renderVisitMapGroupFilterChips(); renderVisitMapPickList(); renderVisitMap();
+  }));
 }
 function mapDisplayName(c){ return isFamilyRecord(c) ? familyLine(c) : (c.name||""); }
 function mapDisplayPhones(c){
@@ -19422,7 +19397,36 @@ function renderVisitMapPickList(){
 document.getElementById("visitMapSearch").addEventListener("input", renderVisitMapPickList);
 document.getElementById("visitMapServantSel").addEventListener("change", (e)=>{ visitMapServantFilter = e.target.value; renderVisitMap(); });
 document.getElementById("visitMapNotHomeChk").addEventListener("change", (e)=>{ visitMapNotHome = e.target.checked; renderVisitMap(); });
-{ let _t; document.getElementById("visitMapStreetQ").addEventListener("input", (e)=>{ visitMapStreetQ = e.target.value; clearTimeout(_t); _t = setTimeout(renderVisitMap, 350); }); }
+// بحث موحّد: اسم شارع ← مخدومين الشارع بس على الخريطة، واسم مخدوم ← مكانه على الخريطة
+function vmLocate(id){
+  const c = contacts.find(x=>x.id===id); if(!c) return;
+  if(!(c.location && c.location.lat)){ toast("المخدوم ده ملوش موقع على الخريطة"); return; }
+  const go = ()=>{ const m = vmMarkers[id]; if(!m || !visitMapInstance) return; visitMapInstance.setView([c.location.lat,c.location.lng], 18); setTimeout(()=>{ try{ m.openPopup(); }catch(_){} }, 350); };
+  try{ document.getElementById("visitMapContainer").scrollIntoView({block:"center", behavior:"smooth"}); }catch(_){}
+  if(visitMapScope([c]).length){ go(); return; }
+  visitMapGroupFilter.clear(); visitMapRegionFilter = "all"; visitMapServantFilter = "all"; visitMapNotHome = false; visitMapStreetQ = "";
+  const chk = document.getElementById("visitMapNotHomeChk"); if(chk) chk.checked = false;
+  renderVisitMap(); setTimeout(go, 750);
+}
+function vmSearchRun(){
+  const inp = document.getElementById("visitMapQ"), box = document.getElementById("visitMapQRes");
+  const q = vmNorm(inp.value).replace(/^(شارع|ش) /,"");
+  if(!q){ visitMapStreetQ = ""; box.style.display = "none"; box.innerHTML = ""; renderVisitMap(); return; }
+  const names = contacts.filter(c=>vmNorm(mapDisplayName(c)).includes(q));
+  const addr = contacts.filter(c=>vmNorm(c.address).includes(q));
+  const hasLoc = c=>c.location && c.location.lat;
+  visitMapStreetQ = addr.length ? inp.value.trim() : "";
+  let h = "";
+  if(addr.length) h += `<div style="font-size:12.5px;padding:4px 0">🛣️ <b>${addr.length}</b> مخدوم عنوانهم فيه «${cardEsc(inp.value.trim())}» — ${addr.filter(hasLoc).length} منهم على الخريطة (الباقي من غير موقع)</div>`;
+  if(names.length) h += `<div style="font-size:12px;color:#777;padding:2px 0">👤 مخدومين بالاسم ده (دوس عشان تروحله):</div>` + names.slice(0,12).map(c=>`<button class="btn btn-ghost btn-block btn-sm" style="text-align:right;margin:2px 0;white-space:normal" data-vm-loc="${c.id}">👤 ${cardEsc(mapDisplayName(c))} <span class="muted">· ${cardEsc(groupName(c.group)||"")} · ${hasLoc(c)?"📍 على الخريطة":"بدون موقع"}</span></button>`).join("") + (names.length>12?`<div class="muted" style="font-size:12px">… و${names.length-12} كمان — زوّد الحروف</div>`:"");
+  if(!h) h = `<div class="muted" style="padding:6px 0">مفيش مخدوم أو شارع بالاسم ده.</div>`;
+  box.innerHTML = h; box.style.display = "block";
+  renderVisitMap();
+  if(names.length===1 && !addr.length && hasLoc(names[0])) setTimeout(()=>vmLocate(names[0].id), 700);
+}
+{ let _t; document.getElementById("visitMapQ").addEventListener("input", ()=>{ clearTimeout(_t); _t = setTimeout(vmSearchRun, 400); });
+  document.getElementById("visitMapQ").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); clearTimeout(_t); vmSearchRun(); } });
+  document.getElementById("visitMapQRes").addEventListener("click", e=>{ const b = e.target.closest("[data-vm-loc]"); if(b) vmLocate(b.dataset.vmLoc); }); }
 document.getElementById("btnClearMapSelection").addEventListener("click", ()=>{
   visitMapSelectedIds.clear();
   document.getElementById("visitMapSelectedCount").textContent = "محدد: 0";
@@ -19952,7 +19956,7 @@ function renderVisitMap(){
       bounds.push([c.location.lat, c.location.lng]);
       spreadItems.push({m:marker, lat:c.location.lat, lng:c.location.lng});
     });
-    visitMapInstance.fitBounds(bounds, {padding:[30,30], maxZoom:15});
+    visitMapInstance.fitBounds(bounds, {padding:[30,30], maxZoom: visitMapStreetQ ? 18 : 15});
     spreadMarkers(visitMapInstance, spreadItems, myService==="ابتدائي" ? 20 : 12, "contacts");
     try{ vtDraw(false); vtRender(); vtDrawMe(); if(vtState.active) vtStartWatch(); }catch(e){ console.warn("tour redraw", e); }
   }, 200);
@@ -24504,7 +24508,6 @@ function setupStreetSearch(key, getMap, onPick){
   });
 }
 setupStreetSearch("picker", ()=>locationPickerMapInstance, null);
-setupStreetSearch("visit", ()=>visitMapInstance, null);
 
 
 // ---------------- زرار اتصال جنب خانات رقم الزوج/الزوجة ----------------
@@ -27831,7 +27834,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "245"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "246"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
