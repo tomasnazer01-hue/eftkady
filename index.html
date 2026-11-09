@@ -2218,6 +2218,12 @@
         </div>
         <p class="muted" id="waKIntro" style="margin:8px 0;font-size:12.5px"></p>
         <div class="row wrap" style="gap:6px"><select id="waKGroup" class="grow"></select><select id="waKServant" class="grow"></select></div>
+        <select id="waKSpouse" style="margin-top:6px;display:none">
+          <option value="auto">🤵👰 حسب نوعي (الخادم للزوج والتاسوني للزوجة)</option>
+          <option value="husband">🤵 الأزواج بس</option>
+          <option value="wife">👰 الزوجات بس</option>
+          <option value="both">👫 الزوج والزوجة (كل واحد لوحده)</option>
+        </select>
         <select id="waKStatus" style="margin-top:6px">
           <option value="today">اللي ما اتبعتلهمش النهارده</option>
           <option value="never">اللي لسه ما اتبعتلهمش خالص</option>
@@ -2789,7 +2795,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v248</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v249</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3072,7 +3078,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v248</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v249</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11095,13 +11101,13 @@ function waKMode(c){
   if(svc && svc!=="ابتدائي") return "self"; // إعدادي وثانوي وأي خدمة تانية: المخدوم نفسه — الأب والأم لابتدائي بس
   return "parents";
 }
-function waKRec(c){
+function waKRec(c, force){
   const mode = waKMode(c);
   if(mode==="married"){
     const me = churchServants.find(x=>x.id===myUid), g = me && me.gender;
     const H = c.husbandPhone ? {type:"husband", name:c.husbandName||"", phone:c.husbandPhone, label:"🤵 الزوج"} : null;
     const W = c.wifePhone ? {type:"wife", name:c.wifeName||"", phone:c.wifePhone, label:"👰 الزوجة"} : null;
-    const pick = g==="female" ? (W||H) : (H||W);
+    const pick = force==="husband" ? H : force==="wife" ? W : g==="female" ? (W||H) : (H||W);
     return pick ? {...pick, mode, child:c} : null;
   }
   if(mode==="self") return c.phone ? {type:"self", mode, name:c.name||"", phone:c.phone, label:"📱 المخدوم نفسه", child:c} : null;
@@ -11111,22 +11117,30 @@ function waKRec(c){
 const waKLast = (c,r)=> r.mode==="married" ? spouseLastSent(c, r.type) : parentLastSent(c, r.type);
 const waKField = r => r.mode==="married" ? "spouseMsgAt" : "parentMsgAt";
 const waKKindOf = (c,r)=> r.mode==="married" ? r.type : waKKind(c);
+function waKEntryParse(key){ const [id,f] = String(key).split("|"); const c = contacts.find(x=>x.id===id); return {c, r: c ? waKRec(c, f||undefined) : null}; }
+// قايمة الإرسال: [{key, c, r}] — في المتزوجين ممكن الأسرة تطلع مرتين (زوج وزوجة) لو اخترت «الاتنين»
 function waKBuildQueue(){
   const g = document.getElementById("waKGroup").value || "all", sv = document.getElementById("waKServant").value || "all", st = document.getElementById("waKStatus").value;
-  return contacts.filter(c=>{
-    if(c.graduated || c.pendingApproval || c.noWhatsapp || c.wrongNumber) return false;
+  const spf = document.getElementById("waKSpouse").value || "auto", out = [];
+  contacts.forEach(c=>{
+    if(c.graduated || c.pendingApproval || c.noWhatsapp || c.wrongNumber) return;
     const fam = isFamilyRecord(c);
-    if(myService==="متزوجين" ? !isActiveFamily(c) : fam) return false;
-    if(!maMar() && g!=="all" && c.group!==g) return false;
+    if(myService==="متزوجين" ? !isActiveFamily(c) : fam) return;
+    if(!maMar() && g!=="all" && c.group!==g) return;
     if(sv!=="all"){
       const uid = sv==="mine" ? myUid : sv;
-      if(fam ? !matchesServantFilter(c, uid) : c.assignedTo!==uid) return false;
+      if(fam ? !matchesServantFilter(c, uid) : c.assignedTo!==uid) return;
     }
-    const r = waKRec(c); if(!r) return false;
-    if(st==="today" && waKLast(c, r)===todayStr()) return false;
-    if(st==="never" && Object.keys((r.mode==="married" ? c.spouseMsgAt : c.parentMsgAt)||{}).length) return false;
-    return true;
+    const married = waKMode(c)==="married";
+    const forces = married ? (spf==="both" ? ["husband","wife"] : (spf==="husband"||spf==="wife") ? [spf] : [undefined]) : [undefined];
+    forces.forEach(f=>{
+      const r = waKRec(c, f); if(!r) return;
+      if(st==="today" && waKLast(c, r)===todayStr()) return;
+      if(st==="never" && waKLast(c, r)) return;
+      out.push({key: c.id + (f ? "|"+f : ""), c, r});
+    });
   });
+  return out;
 }
 function waKOptions(mode, kind){
   const defs = WAK_DEFAULTS[mode][kind] || [], labels = WAK_DEF_LABELS[mode];
@@ -11150,16 +11164,30 @@ function waKFill(text, c, r){
 function waKFillFilters(){
   populateGroupServantFilters("waKGroup","waKServant");
   document.getElementById("waKGroup").style.display = maMar() ? "none" : "";
+  document.getElementById("waKSpouse").style.display = maMar() ? "" : "none";
   const mode = myService==="متزوجين" ? "married" : (myService && myService!=="ابتدائي") ? "self" : "parents";
   document.getElementById("waKIntro").textContent = WAK_INTRO[mode];
+}
+function waKWhyEmpty(){
+  let all = 0, noPhone = 0, noWa = 0, sentToday = 0;
+  contacts.forEach(c=>{
+    if(c.graduated || c.pendingApproval) return;
+    const fam = isFamilyRecord(c);
+    if(myService==="متزوجين" ? !isActiveFamily(c) : fam) return;
+    all++;
+    if(c.noWhatsapp || c.wrongNumber){ noWa++; return; }
+    const r = waKRec(c); if(!r){ noPhone++; return; }
+    if(waKLast(c, r)===todayStr()) sentToday++;
+  });
+  return `مفيش حد مطابق للفلتر. (من ${all} سجل: ${noPhone} من غير رقم، ${noWa} مفيش واتساب أو رقم غلط، ${sentToday} اتبعتلهم النهارده)`;
 }
 function waKRefresh(){
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
-  q.forEach(c=>{ const r = waKRec(c); cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
+  q.forEach(({c,r})=>{ cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
   document.getElementById("waKSummary").textContent = q.length
     ? `هيتبعت لـ ${q.length}: ` + Object.entries(cnt).map(([l,n])=>`${n} ${l.replace(/^\S+\s/,"")}`).join("، ") + "." + (unk?` ⚠️ ${unk} منهم جنسهم مش متحدد (هياخدوا صيغة المذكر).`:"")
-    : "مفيش حد مطابق للفلتر (أو كلهم اتبعتلهم / من غير رقم / مفيش واتساب).";
+    : waKWhyEmpty();
   document.getElementById("btnWaKStart").disabled = !q.length;
 }
 function waKOpen(){
@@ -11177,10 +11205,10 @@ function waKRender(){
     if(waK.sent.size) logActivity("رسايل افتقاد واتس اب", `${waK.sent.size} رسالة`);
     return;
   }
-  const c = contacts.find(x=>x.id===waK.queue[waK.idx]);
-  const r = c && waKRec(c);
+  const key = waK.queue[waK.idx];
+  const {c, r} = waKEntryParse(key);
   if(!c || !r || c.noWhatsapp){ waK.idx++; waKRender(); return; }
-  const mode = r.mode, kind = waKKindOf(c, r), ck = mode+":"+kind, done = waK.sent.has(c.id);
+  const mode = r.mode, kind = waKKindOf(c, r), ck = mode+":"+kind, done = waK.sent.has(key);
   const gi = mode==="married" ? "💍" : c.gender==="female" ? "👧" : c.gender==="male" ? "👦" : "";
   const title = mode==="married" ? familyLine(c) : (c.name||"");
   const opts = waKOptions(mode, kind);
@@ -11225,7 +11253,7 @@ function waKRender(){
   const step = d=>{ const i = Math.max(0, sw.selectedIndex); sw.selectedIndex = (i+d+opts.length)%opts.length; sw.onchange(); };
   $("waKMNext").onclick = ()=>step(1); $("waKMPrev").onclick = ()=>step(-1);
   $("waKNew").onclick = ()=>{ ta.value = waKFill(WAK_BLANK[mode], c, r); ta.focus(); toast("اكتب الرسالة الجديدة ودوس 💾 احفظ كرسالة"); };
-  const markSent = ()=>{ if(waK.sent.has(c.id)) return; waK.sent.add(c.id); const f = waKField(r);
+  const markSent = ()=>{ if(waK.sent.has(key)) return; waK.sent.add(key); const f = waKField(r);
     c[f] = {...(c[f]||{}), [r.type]: todayStr()};
     setDoc(doc(db,"contacts",c.id), {[f]: {[r.type]: todayStr()}}, {merge:true}).catch(err=>console.error(f, err)); };
   $("waKSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, ta.value), "_blank"); markSent(); waK.idx++; waKRender(); };
@@ -11261,17 +11289,17 @@ async function waKSaveTemplate(text, kind, mode){
 function waKExit(){ waK.running = false; document.getElementById("waKRun").style.display = "none"; document.getElementById("waKSetup").style.display = "block"; waKRefresh(); }
 function waKFilterChanged(){
   if(waK.running){
-    waK.queue = waKBuildQueue().filter(c=>!waK.sent.has(c.id)).map(c=>c.id); waK.idx = 0; waKRender();
+    waK.queue = waKBuildQueue().filter(e=>!waK.sent.has(e.key)).map(e=>e.key); waK.idx = 0; waKRender();
   }
   waKRefresh();
 }
 document.getElementById("btnWaKStart").addEventListener("click", ()=>{
   const q = waKBuildQueue(); if(!q.length){ toast("مفيش حد يتبعتله"); return; }
-  waK.queue = q.map(c=>c.id); waK.idx = 0; waK.sent = new Set(); waK.running = true;
+  waK.queue = q.map(e=>e.key); waK.idx = 0; waK.sent = new Set(); waK.running = true;
   document.getElementById("waKSetup").style.display = "none"; document.getElementById("waKRun").style.display = "block";
   waKRender();
 });
-["waKGroup","waKServant","waKStatus"].forEach(id=>document.getElementById(id).addEventListener("change", waKFilterChanged));
+["waKGroup","waKServant","waKSpouse","waKStatus"].forEach(id=>document.getElementById(id).addEventListener("change", waKFilterChanged));
 document.getElementById("btnWaKBack").addEventListener("click", ()=>goToDashboard());
 (function(){
   const wa = document.getElementById("navWaBtn"), ms = document.getElementById("navMissBtn");
@@ -27919,7 +27947,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "248"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "249"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
