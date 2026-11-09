@@ -2672,6 +2672,7 @@
         </div>
         <p class="muted" id="visitDrawHint" style="display:none;font-size:12px;margin:0 0 6px">دوس على الخريطة نقطة نقطة عشان ترسم الحدود (٣ نقط على الأقل). بعد كده تقدر تعدّل: اسحب أي نقطة بيضا لتحريكها، دوس على علامة + في نص الضلع عشان تزود نقطة، ودوس مرتين على نقطة لمسحها. وبعدين "✅ تم".</p>
         <div id="visitTourPanel" style="display:none;margin-bottom:8px;background:#fff;border:2px solid var(--gold);border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.15);padding:10px 12px"></div>
+        <div id="visitMapGroupTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 8px;-webkit-overflow-scrolling:touch"></div>
         <div id="visitMapContainer" style="height:65vh;border-radius:12px;overflow:hidden"></div>
       </div>
     </section>
@@ -2794,7 +2795,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v244</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v245</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3077,7 +3078,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v244</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v245</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -13245,22 +13246,93 @@ document.getElementById("btnPickLocation").addEventListener("click", async ()=>{
     alert("حصلت مشكلة: "+err.message);
   }
 });
+// ---- أسماء الشوارع كبيرة ومتكررة على طول الشارع (من OpenStreetMap عبر Overpass) ----
+const stLblState = new WeakMap();
+let stLblWays = []; // آخر شوارع اتحملت (للتوزيع على الشارع)
+(function(){ const st = document.createElement("style");
+  st.textContent = ".stLblIn{position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;font:800 14px/1 Tajawal,Cairo,sans-serif;color:#7a1f3d;-webkit-text-stroke:3px #fff;paint-order:stroke fill;letter-spacing:.2px;transform-origin:0 0}";
+  document.head.appendChild(st); })();
+function stLblAttach(map){
+  if(!map || stLblState.has(map)) return;
+  const stt = {group:null, key:"", timer:null, ways:new Map()}; stLblState.set(map, stt);
+  const go = ()=>{ clearTimeout(stt.timer); stt.timer = setTimeout(()=>stLblLoad(map), 700); };
+  map.on("moveend", go); go();
+}
+async function stLblLoad(map){
+  const stt = stLblState.get(map); if(!stt || !window.L) return;
+  if(map.getZoom()<15){ if(stt.group){ map.removeLayer(stt.group); stt.group = null; stt.key = ""; } return; }
+  const b = map.getBounds(), r = x=>Math.round(x*100)/100;
+  const S=r(b.getSouth())-0.01, W=r(b.getWest())-0.01, N=r(b.getNorth())+0.01, E=r(b.getEast())+0.01;
+  const key = [S,W,N,E].join(",");
+  if(key!==stt.key){
+    let ways = stt.ways.get(key);
+    if(!ways){
+      const q = `[out:json][timeout:25];way["highway"]["name"](${S},${W},${N},${E});out tags geom 1500;`;
+      let j = null;
+      for(const ep of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://overpass.private.coffee/api/interpreter"]){
+        try{ const rs = await fetch(ep+"?data="+encodeURIComponent(q)); if(rs.ok){ j = await rs.json(); break; } }catch(_){}
+      }
+      if(!j) return;
+      ways = (j.elements||[]).map(el=>{ const t = el.tags||{}; const name = (t["name:ar"]||t.name||"").trim(); return (name && el.geometry && el.geometry.length>1) ? {name, pts:el.geometry.map(g=>[g.lat,g.lon])} : null; }).filter(Boolean);
+      stt.ways.set(key, ways); if(stt.ways.size>6) stt.ways.delete(stt.ways.keys().next().value);
+    }
+    stt.key = key; stLblWays = ways;
+    if(stt.group) map.removeLayer(stt.group);
+    stt.group = L.layerGroup().addTo(map);
+    const z = map.getZoom(), every = z>=18 ? 60 : z>=17 ? 90 : z>=16 ? 130 : 180;
+    let count = 0;
+    ways.forEach(w=>{
+      const k = Math.cos(w.pts[0][0]*Math.PI/180);
+      const seg = [0]; for(let i=1;i<w.pts.length;i++) seg.push(seg[i-1] + Math.hypot((w.pts[i][1]-w.pts[i-1][1])*k*111320, (w.pts[i][0]-w.pts[i-1][0])*110540));
+      const total = seg[seg.length-1]; if(total<35 || count>700) return;
+      const n = Math.max(1, Math.floor(total/every)); 
+      for(let m=0;m<n;m++){
+        const d = total*(m+0.5)/n; let i = 1; while(i<seg.length-1 && seg[i]<d) i++;
+        const f = (d-seg[i-1])/Math.max(seg[i]-seg[i-1],0.001);
+        const lat = w.pts[i-1][0]+(w.pts[i][0]-w.pts[i-1][0])*f, lng = w.pts[i-1][1]+(w.pts[i][1]-w.pts[i-1][1])*f;
+        let ang = Math.atan2(-(w.pts[i][0]-w.pts[i-1][0]), (w.pts[i][1]-w.pts[i-1][1])*k)*180/Math.PI;
+        if(ang>90) ang -= 180; else if(ang<-90) ang += 180;
+        const mk = L.marker([lat,lng], {interactive:false, keyboard:false, zIndexOffset:-100, icon:L.divIcon({className:"", iconSize:[0,0], html:`<div class="stLblIn" style="transform:rotate(${ang.toFixed(1)}deg) translate(-50%,-50%)">${cardEsc(w.name)}</div>`})});
+        mk._stLbl = true; mk.addTo(stt.group); count++;
+      }
+    });
+  }
+}
+// أقرب شارع من نقطة (إسقاط على الخط) ← {name, lat, lng, dx, dy اتجاه الشارع بالمتر}
+function stNearest(lat, lng){
+  const k = Math.cos(lat*Math.PI/180); let best = null;
+  stLblWays.forEach(w=>{
+    for(let i=1;i<w.pts.length;i++){
+      const ax=(w.pts[i-1][1]-lng)*k*111320, ay=(w.pts[i-1][0]-lat)*110540, bx=(w.pts[i][1]-lng)*k*111320, by=(w.pts[i][0]-lat)*110540;
+      const vx=bx-ax, vy=by-ay, L2=vx*vx+vy*vy||1e-6; let t = Math.max(0,Math.min(1, -(ax*vx+ay*vy)/L2));
+      const px=ax+vx*t, py=ay+vy*t, d=Math.hypot(px,py);
+      if(!best || d<best.d){ const len=Math.sqrt(L2); best={d, name:w.name, lat:lat+py/110540, lng:lng+px/(111320*k), dx:vx/len, dy:vy/len}; }
+    }
+  });
+  return best && best.d<60 ? best : null;
+}
+// يوزع n نقطة بمسافات متساوية (spacing متر) متمركزة على نقطة وعلى اتجاه الشارع
+function stSpread(n, c, spacing){
+  const k = Math.cos(c.lat*Math.PI/180);
+  return Array.from({length:n}, (_,i)=>{ const off=(i-(n-1)/2)*spacing; return {lat:c.lat+(c.dy*off)/110540, lng:c.lng+(c.dx*off)/(111320*k)}; });
+}
 let blLinePts = [], blLineLayer = null;
-function blLineOn(){ const b = document.getElementById("blLineMode"); return locationPickerTarget==="cluster-bulk" && b && b.checked; }
+function seqMulti(){ return seqActive && locationPickerTarget==="seq" && seqChecked.size>1; }
+function blLineOn(){ const b = document.getElementById("blLineMode"); return (locationPickerTarget==="cluster-bulk" || seqMulti()) && b && b.checked; }
 function blLineReset(){ blLinePts = []; if(blLineLayer && locationPickerMapInstance){ try{ locationPickerMapInstance.removeLayer(blLineLayer); }catch(_){} } blLineLayer = null; }
 function blLineClick(lat,lng){
   if(blLinePts.length>=2) blLineReset();
-  blLinePts.push({lat,lng});
+  blLinePts.push({lat,lng}); pendingLocation = blLinePts[0];
   if(locationPickerMarker){ locationPickerMapInstance.removeLayer(locationPickerMarker); locationPickerMarker = null; }
   if(blLineLayer) locationPickerMapInstance.removeLayer(blLineLayer);
   blLineLayer = L.layerGroup().addTo(locationPickerMapInstance);
   blLinePts.forEach((q,i)=>L.circleMarker([q.lat,q.lng],{radius:7,color:"#fff",weight:2,fillColor:i?"#b00020":"#2e7d32",fillOpacity:1}).bindTooltip(i?"النهاية":"البداية",{permanent:true,direction:"top"}).addTo(blLineLayer));
   if(blLinePts.length===2){
     L.polyline(blLinePts.map(q=>[q.lat,q.lng]),{color:"#d81b60",weight:4,dashArray:"6 6"}).addTo(blLineLayer);
-    const n = blTarget.ids.size; const k = Math.cos(lat*Math.PI/180);
+    const n = locationPickerTarget==="seq" ? seqChecked.size : blTarget.ids.size; const k = Math.cos(lat*Math.PI/180);
     const m = Math.hypot((blLinePts[1].lng-blLinePts[0].lng)*k*111320,(blLinePts[1].lat-blLinePts[0].lat)*110540);
     document.getElementById("blLineHint").innerHTML = `✅ طول الخط ~${Math.round(m)} متر · ${n} مخدوم (كل ~${(m/Math.max(n,1)).toFixed(1)} متر). دوس «تأكيد الموقع».`;
-  } else document.getElementById("blLineHint").innerHTML = "تمام — دوس دلوقتي على <b>نهاية</b> الشارع.";
+  } else document.getElementById("blLineHint").innerHTML = locationPickerTarget==="seq" ? "تمام — دوس على <b>نهاية</b> الشارع، أو دوس «تأكيد» وهيتوزعوا بمسافات حوالين النقطة دي على اتجاه الشارع." : "تمام — دوس دلوقتي على <b>نهاية</b> الشارع.";
 }
 (function(){
   const m = document.getElementById("modalLocationPicker");
@@ -13345,9 +13417,23 @@ document.getElementById("btnConfirmLocation").addEventListener("click", async ()
     const ids = [...seqChecked].filter(id=>(seqQueue[seqIdx]||[]).includes(id));
     if(!ids.length){ toast("اختار مخدوم واحد على الأقل (أو دوس تخطي)"); return; }
     const c = contacts.find(x=>x.id===ids[0]);
+    let upd;
+    if(ids.length>1 && blLineOn()){
+      const num = id=>{ const x = contacts.find(y=>y.id===id); const m = autoLocDigits(x?.address||"").match(/\d+/); return m ? parseInt(m[0],10) : 1e9; };
+      ids.sort((a,b)=>num(a)-num(b));
+      if(blLinePts.length>=2){
+        const A0 = blLinePts[0], B0 = blLinePts[1];
+        upd = new Map(ids.map((id,i)=>{ const t = (i+0.5)/ids.length; return [id,{location:{lat:A0.lat+(B0.lat-A0.lat)*t, lng:A0.lng+(B0.lng-A0.lng)*t}}]; }));
+      } else {
+        const near = stNearest(blLinePts[0].lat, blLinePts[0].lng);
+        if(!near){ toast("مش لاقي شارع قريب من النقطة — دوس على بداية الشارع ونهايته (نقطتين)"); return; }
+        const pts = stSpread(ids.length, near, 12);
+        upd = new Map(ids.map((id,i)=>[id,{location:pts[i]}]));
+      }
+    } else upd = new Map(ids.map(id=>[id,{location:{lat:pendingLocation.lat, lng:pendingLocation.lng}}]));
     try{
       recordUndo(`تحديد موقع «${c?.name||""}»${ids.length>1?` +${ids.length-1}`:""}`);
-      await commitContactUpdates(new Map(ids.map(id=>[id,{location:{lat:pendingLocation.lat, lng:pendingLocation.lng}}])));
+      await commitContactUpdates(upd);
       seqDone += ids.length;
     }catch(err){ console.error(err); toast("تعذر الحفظ — تأكد من الإنترنت والصلاحيات"); return; }
     seqNext();
@@ -19282,6 +19368,17 @@ function renderVisitMapGroupFilterChips(){
   if(!wrap) return;
   wrap.innerHTML = `<button class="chip ${visitMapGroupFilter.size===0?'active':''}" data-map-group="__all__">الكل</button>` +
     groups.map(g=>`<button class="chip ${visitMapGroupFilter.has(g.id)?'active':''}" data-map-group="${g.id}">${g.name}</button>`).join("");
+  const tabs = document.getElementById("visitMapGroupTabs");
+  if(tabs){
+    const one = visitMapGroupFilter.size===1 ? [...visitMapGroupFilter][0] : null;
+    tabs.innerHTML = `<button class="chip ${visitMapGroupFilter.size===0?'active':''}" data-map-tab="__all__" style="flex:0 0 auto">🗺️ الكل</button>` +
+      groups.map(g=>`<button class="chip ${one===g.id?'active':''}" data-map-tab="${g.id}" style="flex:0 0 auto">${cardEsc(g.name)}</button>`).join("");
+    tabs.querySelectorAll("[data-map-tab]").forEach(b=>b.addEventListener("click", ()=>{
+      visitMapGroupFilter.clear();
+      if(b.dataset.mapTab!=="__all__") visitMapGroupFilter.add(b.dataset.mapTab);
+      renderVisitMapGroupFilterChips(); renderVisitMapPickList(); renderVisitMap();
+    }));
+  }
   wrap.querySelectorAll("[data-map-group]").forEach(ch=>{
     ch.addEventListener("click", ()=>{
       if(ch.dataset.mapGroup==="__all__"){
@@ -19797,8 +19894,9 @@ function renderVisitMap(){
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors', maxZoom: 19
       }).addTo(visitMapInstance);
+      stLblAttach(visitMapInstance);
     } else {
-      visitMapInstance.eachLayer(layer=>{ if(layer instanceof L.Marker) visitMapInstance.removeLayer(layer); });
+      visitMapInstance.eachLayer(layer=>{ if(layer instanceof L.Marker && !layer._stLbl) visitMapInstance.removeLayer(layer); });
       if(visitRouteLayer){ visitMapInstance.removeLayer(visitRouteLayer); visitRouteLayer = null; document.getElementById("visitRouteResultBox").innerHTML = ""; }
       visitMapInstance.invalidateSize();
     }
@@ -25367,6 +25465,7 @@ async function blOpenPicker(ids, label){
         locationPickerMapInstance.on("click", e=>placeLocationMarker(e.latlng.lat, e.latlng.lng));
       } else { locationPickerMapInstance.invalidateSize(); locationPickerMapInstance.setView(start, located.length?14:11); }
       if(locationPickerMarker){ locationPickerMapInstance.removeLayer(locationPickerMarker); locationPickerMarker = null; }
+      stLblAttach(locationPickerMapInstance);
     }catch(err){ console.error(err); alert("حصلت مشكلة في عرض الخريطة: "+err.message); }
   }, 300);
 }
@@ -25392,7 +25491,10 @@ async function seqShow(){
   sl.style.display = grp.length>1 ? "" : "none";
   document.getElementById("seqSelRow").style.display = grp.length>1 ? "flex" : "none";
   document.getElementById("btnConfirmLocation").textContent = "✅ تأكيد وحفظ ← التالي";
-  pendingLocation = null;
+  pendingLocation = null; blLineReset();
+  { const bx = document.getElementById("blLineBox"); if(bx){ bx.style.display = grp.length>1 ? "" : "none"; document.getElementById("blLineMode").checked = true;
+    document.getElementById("blLineHint").innerHTML = "المخدومين دول في نفس الشارع: دوس على الشارع <b>مرة واحدة</b> (هيتوزعوا بمسافات على اتجاه الشارع)، أو دوس <b>بداية</b> و<b>نهاية</b> الشارع لو عايزهم على طول معين."; } }
+  stLblAttach(locationPickerMapInstance);
   autoLocAddr = c.address || "";
   const inp = document.getElementById("pickerStreetQ"); if(inp) inp.value = "";
   ["pickerGuessBox","pickerNearBox","pickerStreetRes"].forEach(id=>{ const e=document.getElementById(id); if(e){ e.innerHTML=""; e._list=null; e._all=null; e._guesses=null; } });
@@ -25412,7 +25514,7 @@ async function seqShow(){
     const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=eg&q=${encodeURIComponent(c.address+(hint?", "+hint:""))}`, {signal:ac.signal});
     clearTimeout(t);
     const j = await r.json();
-    if(seqActive && my===seqIdx && j && j[0]){ const lat=+j[0].lat, lng=+j[0].lon; m.setView([lat,lng], 17); placeLocationMarker(lat, lng); toast("📍 مكان مقترح من العنوان — غيّره بالضغط على الخريطة لو غلط"); }
+    if(seqActive && my===seqIdx && j && j[0]){ const lat=+j[0].lat, lng=+j[0].lon; m.setView([lat,lng], 17); if(grp.length<=1){ placeLocationMarker(lat, lng); toast("📍 مكان مقترح من العنوان — غيّره بالضغط على الخريطة لو غلط"); } else toast("🛣️ قرّبنا الخريطة على الشارع — دوس على الشارع"); }
   }catch(_){}
 }
 function seqNext(){
@@ -27729,7 +27831,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "244"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "245"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
