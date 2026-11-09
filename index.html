@@ -177,7 +177,7 @@
   .status-line{font-size:12px;color:#cfd6e6;margin-top:6px;position:relative;z-index:1;}
 
   main{flex:1 1 auto;overflow-y:auto;padding:14px 14px 145px;}
-  section.screen{display:none;opacity:0;transform:translateY(6px);}
+  section.screen{display:none;opacity:0;}
   section.screen.active{display:block;animation:screenIn var(--trans) forwards;}
   #screen-dashboard{
     background: radial-gradient(circle at 20% 10%, rgba(201,162,39,0.10) 0%, transparent 40%),
@@ -190,7 +190,7 @@
     0%{background-position:0% 0%;}
     100%{background-position:100% 100%;}
   }
-  @keyframes screenIn{to{opacity:1;transform:translateY(0)}}
+  @keyframes screenIn{to{opacity:1}}
   @keyframes marqueeScroll{
     0%{transform:translateX(-100%);}
     100%{transform:translateX(100%);}
@@ -2801,7 +2801,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v250</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v251</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3084,7 +3084,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v250</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v251</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -9562,6 +9562,7 @@ document.addEventListener("click", e=>{
 });
 function updateBulkBar(){
   document.getElementById("bulkBar").style.display = selectedIds.size>0 ? "block":"none";
+  try{ const nv = document.querySelector("nav.bottomnav"); if(nv) document.getElementById("bulkBar").style.bottom = (nv.offsetHeight + 24) + "px"; }catch(_){}
   document.body.classList.toggle("bulk-open", selectedIds.size>0);
   { const bc = document.getElementById("bulkCount"); if(bc) bc.textContent = selectedIds.size; }
   if(selectedIds.size===0){ const bb = document.getElementById("bulkBody"); if(bb) bb.style.display = "none"; document.body.classList.remove("bulk-expanded"); const t = document.getElementById("bulkToggle"); if(t) t.textContent = "⚙️ إجراءات ▲"; }
@@ -28022,7 +28023,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "250"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "251"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
