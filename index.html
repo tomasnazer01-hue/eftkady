@@ -2217,13 +2217,47 @@
           </button>
         </div>
         <div class="row wrap" style="margin-top:10px">
-          <button class="chip active" data-parents-tab="send">📤 إرسال</button>
+          <button class="chip active" data-parents-tab="wa">💬 واتس اب</button>
+          <button class="chip" data-parents-tab="send">📤 إرسال بالقايمة</button>
           <button class="chip" data-parents-tab="care">🕊️ بابا يسوع وماما العدرا <span id="parentsCareCount"></span></button>
           <button class="chip" data-parents-tab="data">⚙️ البيانات (جدول وإكسيل)</button>
         </div>
       </div>
 
-      <div id="parentsPaneSend">
+      <div id="parentsPaneWa">
+        <div id="waKSetup">
+          <div class="card">
+            <h2 style="margin-top:0">💬 رسايل الافتقاد على واتس اب</h2>
+            <p class="muted" style="margin:0 0 8px;font-size:12.5px">رسالة واحدة لكل طفل: للأم، ولو مفيش فللأب، ولو مفيش فلرقم الطفل نفسه ("يا مامت أو بابا اسم الطفل"). الولد بياخد رسالة الأولاد والبنت بتاخد رسالة البنات. وكل ما تبعت واحدة بيفتحلك اللي بعده.</p>
+            <label class="field-label">المجموعة</label>
+            <select id="waKGroup"><option value="all">كل المجموعات</option></select>
+            <div style="height:8px"></div>
+            <select id="waKStatus">
+              <option value="today">اللي ما اتبعتلهمش النهارده</option>
+              <option value="never">اللي لسه ما اتبعتلهمش خالص</option>
+              <option value="all">الكل</option>
+            </select>
+            <div class="muted" id="waKSummary" style="font-size:12.5px;margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <h2 style="margin-top:0">👦 رسالة الأولاد</h2>
+            <select id="waKBoyPick" style="margin-bottom:6px"></select>
+            <textarea id="waKBoyText" rows="6"></textarea>
+            <button class="btn btn-outline btn-sm" id="btnWaKSaveBoy" style="margin-top:6px">💾 احفظ كرسالة للأولاد</button>
+          </div>
+          <div class="card">
+            <h2 style="margin-top:0">👧 رسالة البنات</h2>
+            <select id="waKGirlPick" style="margin-bottom:6px"></select>
+            <textarea id="waKGirlText" rows="6"></textarea>
+            <button class="btn btn-outline btn-sm" id="btnWaKSaveGirl" style="margin-top:6px">💾 احفظ كرسالة للبنات</button>
+            <div class="muted" style="font-size:11.5px;margin-top:8px">الكلمات اللي بين أقواس زي {اسم_الطفل_الأول} و{اسم_ولي_الأمر} بتتبدل لوحدها. عدّل النص زي ما تحب.</div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btnWaKStart">▶️ ابدأ الإرسال</button>
+        </div>
+        <div class="card" id="waKRun" style="display:none"></div>
+      </div>
+
+      <div id="parentsPaneSend" style="display:none">
         <div class="card">
           <div class="row wrap">
             <div class="grow">
@@ -2773,7 +2807,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v240</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v241</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3056,7 +3090,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v240</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v241</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -10328,7 +10362,7 @@ function matchesFamilySearch(c, q){
 // ---- pure helpers END ----
 
 // ---- UI ----
-let parentsTab = "send";
+let parentsTab = "wa";
 let parentsSelected = new Set();
 let parentSendQueue = [], parentSendIdx = 0, parentSendSentCount = 0;
 let parentsPendingGender = {};
@@ -10357,13 +10391,14 @@ function setParentsTab(tab){
   document.querySelectorAll("[data-parents-tab]").forEach(x=>x.classList.toggle("active", x.dataset.parentsTab===tab));
   if(tab==="table"||tab==="import") tab = parentsTab = "data";
   document.querySelectorAll("[data-parents-tab]").forEach(x=>x.classList.toggle("active", x.dataset.parentsTab===tab));
-  const show = {parentsPaneSend:tab==="send", parentsPaneCare:tab==="care", parentsPaneTable:tab==="data", parentsPaneImport:tab==="data"};
+  const show = {parentsPaneWa:tab==="wa", parentsPaneSend:tab==="send", parentsPaneCare:tab==="care", parentsPaneTable:tab==="data", parentsPaneImport:tab==="data"};
   Object.keys(show).forEach(id=>{ const el = document.getElementById(id); if(el) el.style.display = show[id] ? "block" : "none"; });
   renderParentsCurrent();
 }
 function renderParentsCurrent(){
   updateParentsCareBadge();
-  if(parentsTab==="send") renderParentsList();
+  if(parentsTab==="wa") waKRefresh();
+  else if(parentsTab==="send") renderParentsList();
   else if(parentsTab==="care") renderParentsCare();
   else if(parentsTab==="data" || parentsTab==="table") renderParentsTable();
 }
@@ -11016,6 +11051,138 @@ document.getElementById("btnParentSendNow").addEventListener("click", ()=>{
   renderParentSendStep();
 });
 document.getElementById("btnParentSkip").addEventListener("click", ()=>{ parentSendIdx++; renderParentSendStep(); });
+
+
+// ==================================================================
+// 💬 تاب واتس اب — رسايل الافتقاد (أم ← أب ← رقم الطفل، وصيغة ولد/بنت)
+// ==================================================================
+const WAK_DEFAULTS = {
+  boy: [
+    "سلام ونعمة يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🙏\nوحشنا {اسم_الطفل_الأول} جدًا في الكنيسة. نفسنا يجي كل يوم جمعة في القداس ومدارس الأحد، لأنه بيفرّح كل اللي حواليه وبينمو في محبة ربنا.\nربنا يحفظه ويبارك حياتكم ✝️\nكنيسة العدرا ومارمرقس الطوابق",
+    "نعمة وسلام يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🌿\nعايزين نطمن على {اسم_الطفل_الأول}، ونفكّره بحب إن مدارس الأحد والقداس كل جمعة في انتظاره. وجوده بيفرق معانا كتير.\nلو في أي ظرف منعه إحنا جنبكم دايمًا 🙏"
+  ],
+  girl: [
+    "سلام ونعمة يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🙏\nوحشتنا {اسم_الطفل_الأول} جدًا في الكنيسة. نفسنا تيجي كل يوم جمعة في القداس ومدارس الأحد، لأنها بتفرّح كل اللي حواليها وبتنمو في محبة ربنا.\nربنا يحفظها ويبارك حياتكم ✝️\nكنيسة العدرا ومارمرقس الطوابق",
+    "نعمة وسلام يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🌿\nعايزين نطمن على {اسم_الطفل_الأول}، ونفكّرها بحب إن مدارس الأحد والقداس كل جمعة في انتظارها. وجودها بيفرق معانا كتير.\nلو في أي ظرف منعها إحنا جنبكم دايمًا 🙏"
+  ]
+};
+let waK = {queue:[], idx:0, sent:new Set(), boy:"", girl:""};
+function waKTodayDone(c, who){ return parentLastSent(c, who)===todayStr(); }
+function waKRec(c){ const m = missingRecipient(c); return m ? {type:m.who, child:c, name: m.who==="mother" ? (c.motherName||"") : m.who==="father" ? (c.fatherName||"") : "", phone:m.phone, label:m.label} : null; }
+function waKBuildQueue(){
+  const g = document.getElementById("waKGroup").value, st = document.getElementById("waKStatus").value;
+  return contacts.filter(c=>{
+    if(g!=="all" && c.group!==g) return false;
+    if(c.noWhatsapp || c.wrongNumber) return false;
+    const r = waKRec(c); if(!r) return false;
+    if(st==="today" && waKTodayDone(c, r.type)) return false;
+    if(st==="never" && Object.keys(c.parentMsgAt||{}).length) return false;
+    return true;
+  });
+}
+function waKFillPicks(){
+  const mk = (kind, defs)=>{
+    const saved = parentTplList().filter(t=>{ const k = parentTplKind(t); return k===kind || k==="both"; });
+    return '<option value="">— رسالة جاهزة —</option>' +
+      '<optgroup label="جاهزة">' + defs.map((_,i)=>`<option value="d:${i}">${cardEsc(["تشجيع على القداس ومدارس الأحد","اطمئنان وتذكير بحب"][i]||("رسالة "+(i+1)))}</option>`).join("") + '</optgroup>' +
+      (saved.length ? '<optgroup label="المحفوظة">' + saved.map(t=>`<option value="t:${cardEsc(t.id)}">${cardEsc((t.text||"").slice(0,45))}</option>`).join("") + '</optgroup>' : "");
+  };
+  const b = document.getElementById("waKBoyPick"), gl = document.getElementById("waKGirlPick");
+  const vb = b.value, vg = gl.value;
+  b.innerHTML = mk("boy", WAK_DEFAULTS.boy); gl.innerHTML = mk("girl", WAK_DEFAULTS.girl);
+  b.value = vb; gl.value = vg;
+}
+function waKPickText(sel, kind){
+  const v = sel.value; if(!v) return null;
+  if(v.startsWith("d:")) return WAK_DEFAULTS[kind][+v.slice(2)] || null;
+  const t = templates.find(x=>x.id===v.slice(2)); return t ? (t.text||"") : null;
+}
+function waKRefresh(){
+  fillGroupSelectKeepValue("waKGroup");
+  waKFillPicks();
+  const bt = document.getElementById("waKBoyText"), gt = document.getElementById("waKGirlText");
+  if(!bt.value.trim()) bt.value = WAK_DEFAULTS.boy[0];
+  if(!gt.value.trim()) gt.value = WAK_DEFAULTS.girl[0];
+  const q = waKBuildQueue();
+  const cnt = {mother:0, father:0, self:0}; let unk = 0;
+  q.forEach(c=>{ cnt[waKRec(c).type]++; if(c.gender!=="male" && c.gender!=="female") unk++; });
+  document.getElementById("waKSummary").textContent = q.length
+    ? `هيتبعت لـ ${q.length} طفل: ${cnt.mother} للأم، ${cnt.father} للأب، ${cnt.self} لرقم الطفل نفسه.${unk?` ⚠️ ${unk} منهم جنسهم مش متحدد (هياخدوا رسالة الأولاد) — حدده من "⚙️ البيانات".`:""}`
+    : "مفيش حد مطابق للفلتر (أو كلهم اتبعتلهم / من غير رقم / مفيش واتساب).";
+}
+function waKText(c, r){
+  const base = (c.gender==="female" ? document.getElementById("waKGirlText").value : document.getElementById("waKBoyText").value);
+  return fillParentMessage(base, r);
+}
+function waKRender(){
+  const box = document.getElementById("waKRun");
+  if(waK.idx >= waK.queue.length){
+    box.innerHTML = `<div style="text-align:center;padding:14px"><div style="font-size:42px">🎉</div><b>خلصت القايمة</b><div class="muted" style="margin-top:6px">اتبعت لـ ${waK.sent.size} من ${waK.queue.length}</div><button class="btn btn-primary" id="waKDone" style="margin-top:12px">رجوع</button></div>`;
+    box.querySelector("#waKDone").onclick = waKExit;
+    if(waK.sent.size) logActivity("رسايل افتقاد واتس اب", `${waK.sent.size} رسالة`);
+    return;
+  }
+  const c = contacts.find(x=>x.id===waK.queue[waK.idx]);
+  const r = c && waKRec(c);
+  if(!c || !r || c.noWhatsapp){ waK.idx++; waKRender(); return; }
+  const done = waK.sent.has(c.id), gi = c.gender==="female" ? "👧" : c.gender==="male" ? "👦" : "";
+  const btn = "display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit";
+  box.innerHTML = `
+    <div class="row" style="justify-content:space-between;align-items:center"><b>${waK.idx+1} من ${waK.queue.length}</b><span class="muted" style="font-size:12px">اتبعت: ${waK.sent.size}</span></div>
+    <div style="font-weight:800;font-size:16px;margin:6px 0 2px">${gi} ${cardEsc(c.name||"")}</div>
+    <div style="margin:8px 0;font-size:13px">هيتبعت لـ: <b>${r.label}</b> ${r.name?cardEsc(r.name)+" ":""}<span dir="ltr">${cardEsc(r.phone)}</span></div>
+    <textarea id="waKMsg" style="width:100%;min-height:170px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;box-sizing:border-box;font-family:inherit">${cardEsc(waKText(c, r))}</textarea>
+    <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="waKSend" style="${btn};background:#25D366;color:#fff;flex:1">📤 ابعت واتساب ← وانقل للتالي</button></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" id="waKSave" style="${btn};background:#FFF4D6;color:#8a6a00;flex:1">💾 احفظ التعديل ${c.gender==="female"?"لرسايل البنات":"لرسايل الأولاد"}</button>
+      <button type="button" id="waKNoWa" style="${btn};background:#FBE4E4;color:#B23B3B;flex:1">🚫 مفيش واتس اب</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" id="waKPrev" style="${btn};background:#E7EEF9;color:#1B2A4A" ${waK.idx===0?"disabled":""}>⬅️ السابق</button>
+      <button type="button" id="waKNext" style="${btn};background:#1B2A4A;color:#fff;flex:1">${done?"➡️ التالي":"✅ اتبعت — التالي"}</button>
+      <button type="button" id="waKSkip" style="${btn};background:#eee;color:#333">⏭️ تخطي</button>
+    </div>
+    <div style="text-align:center;margin-top:10px"><button type="button" id="waKExit" style="${btn};background:#FBE4E4;color:#B23B3B;padding:6px 14px">✖ خروج</button></div>`;
+  const $ = id=>box.querySelector("#"+id);
+  const markSent = ()=>{ if(waK.sent.has(c.id)) return; waK.sent.add(c.id); c.parentMsgAt = {...(c.parentMsgAt||{}), [r.type]: todayStr()};
+    setDoc(doc(db,"contacts",c.id), {parentMsgAt: {[r.type]: todayStr()}}, {merge:true}).catch(err=>console.error("parentMsgAt", err)); };
+  $("waKSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, $("waKMsg").value), "_blank"); markSent(); waK.idx++; waKRender(); };
+  $("waKNext").onclick = ()=>{ if(!done) markSent(); waK.idx++; waKRender(); };
+  $("waKSkip").onclick = ()=>{ waK.idx++; waKRender(); };
+  $("waKPrev").onclick = ()=>{ if(waK.idx>0){ waK.idx--; waKRender(); } };
+  $("waKExit").onclick = waKExit;
+  $("waKNoWa").onclick = async ()=>{ try{ await updateDoc(doc(db,"contacts",c.id), {noWhatsapp:true}); c.noWhatsapp = true; toast("اتسجّل إنه مفيش واتساب وهيتخطّى"); waK.idx++; waKRender(); }catch(e){ console.warn(e); toast("تعذر الحفظ"); } };
+  $("waKSave").onclick = async ()=>{
+    let t = $("waKMsg").value.trim(); if(!t){ toast("الرسالة فاضية"); return; }
+    const kid = firstName(c.name||""); if(kid) t = t.split(kid).join("{اسم_الطفل_الأول}");
+    if(r.name){ const pn = firstName(r.name); if(pn) t = t.split(pn).join("{اسم_ولي_الأمر}"); }
+    const kind = c.gender==="female" ? "girl" : "boy";
+    (kind==="girl" ? document.getElementById("waKGirlText") : document.getElementById("waKBoyText")).value = t;
+    await waKSaveTemplate(t, kind);
+  };
+}
+async function waKSaveTemplate(text, kind){
+  text = (text||"").trim(); if(!text){ toast("اكتب الرسالة الأول"); return; }
+  if(templates.some(t=>(t.text||"").trim()===text && parentTplKind(t)===kind && !t.spKind)){ toast("الرسالة دي محفوظة قبل كده"); return; }
+  try{
+    await addDoc(colTemplates, {text, category:"عام", kidKind:kind, order: templates.length, churchCode: myChurchCode, createdAt: serverTimestamp()});
+    logActivity("حفظ رسالة افتقاد", kind==="girl"?"بنات":"أولاد");
+    toast(kind==="girl" ? "اتحفظت في رسايل البنات ✅" : "اتحفظت في رسايل الأولاد ✅");
+  }catch(err){ console.error("waKSave", err); toast("تعذر حفظ الرسالة — تأكد من الاتصال والصلاحيات"); }
+}
+function waKExit(){ document.getElementById("waKRun").style.display = "none"; document.getElementById("waKSetup").style.display = "block"; waKRefresh(); }
+document.getElementById("btnWaKStart").addEventListener("click", ()=>{
+  if(!document.getElementById("waKBoyText").value.trim() || !document.getElementById("waKGirlText").value.trim()){ toast("اكتب رسالة الأولاد ورسالة البنات"); return; }
+  const q = waKBuildQueue(); if(!q.length){ toast("مفيش حد يتبعتله"); return; }
+  waK = {queue:q.map(c=>c.id), idx:0, sent:new Set()};
+  document.getElementById("waKSetup").style.display = "none"; document.getElementById("waKRun").style.display = "block";
+  waKRender();
+});
+["waKGroup","waKStatus"].forEach(id=>document.getElementById(id).addEventListener("change", waKRefresh));
+document.getElementById("waKBoyPick").addEventListener("change", e=>{ const t = waKPickText(e.target,"boy"); if(t!=null) document.getElementById("waKBoyText").value = t; });
+document.getElementById("waKGirlPick").addEventListener("change", e=>{ const t = waKPickText(e.target,"girl"); if(t!=null) document.getElementById("waKGirlText").value = t; });
+document.getElementById("btnWaKSaveBoy").addEventListener("click", ()=>waKSaveTemplate(document.getElementById("waKBoyText").value, "boy"));
+document.getElementById("btnWaKSaveGirl").addEventListener("click", ()=>waKSaveTemplate(document.getElementById("waKGirlText").value, "girl"));
 
 
 // ==================================================================
@@ -27525,7 +27692,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "240"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "241"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
