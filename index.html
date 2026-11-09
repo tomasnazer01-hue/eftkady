@@ -2794,7 +2794,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v243</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v244</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3077,7 +3077,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v243</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v244</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -9940,6 +9940,7 @@ function fillParentMessage(text, r){
   let t = (text||"")
     .replace(/\{أستاذ\/أستاذة\}/g, parentTitle(r.type))
     .replace(/\{ابنك\/بنتك\}/g, childWord(r.child))
+    .replace(/\{اسم_الخادم\}/g, myServantSign())
     .replace(/\{اسم_ولي_الأمر\}/g, r.type==="self" ? firstName(r.child.name||"") : parentFirst);
   t = t.replace(/\{([^{}|]+)\|([^{}|]+)\}/g, (m,a,b)=> r.child.gender==="female" ? b : r.child.gender==="male" ? a : a+"/"+b);
   t = fillTemplate(t, r.child);
@@ -11125,6 +11126,7 @@ function waKRender(){
       <select id="waKSw" style="flex:1;min-width:0">${opts.map(o=>`<option value="${cardEsc(o.v)}">${cardEsc(o.label)}</option>`).join("")}</select>
       <button type="button" id="waKMNext" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:8px 10px" title="الرسالة التالية">◀</button>
     </div>
+    ${shortcutBarHtml(true)}
     <textarea id="waKMsg" style="width:100%;min-height:170px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;box-sizing:border-box;font-family:inherit"></textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button type="button" id="waKNew" style="${btn};background:#E8F5E9;color:#2E7D32;flex:1">➕ رسالة جديدة</button>
@@ -11144,6 +11146,7 @@ function waKRender(){
   const sw = $("waKSw"), ta = $("waKMsg");
   const load = ()=>{ sw.value = waK.cur[kind]; if(sw.value!==waK.cur[kind]){ sw.selectedIndex = 0; waK.cur[kind] = sw.value; } ta.value = fillParentMessage(waKBase(kind), r); };
   load();
+  wireShortcuts(box, ta, {parent: r.type==="self" ? "مامت أو بابا" : (firstName(r.name||"") || parentTitle(r.type)), kid: firstName(c.name||""), servant: myServantSign()});
   sw.onchange = ()=>{ waK.cur[kind] = sw.value; load(); };
   const step = d=>{ const i = Math.max(0, sw.selectedIndex); sw.selectedIndex = (i+d+opts.length)%opts.length; sw.onchange(); };
   $("waKMNext").onclick = ()=>step(1); $("waKMPrev").onclick = ()=>step(-1);
@@ -11160,6 +11163,7 @@ function waKRender(){
     let t = ta.value.trim(); if(!t){ toast("الرسالة فاضية"); return; }
     const kid = firstName(c.name||""); if(kid) t = t.split(kid).join("{اسم_الطفل_الأول}");
     if(r.name){ const pn = firstName(r.name); if(pn) t = t.split(pn).join("{اسم_ولي_الأمر}"); }
+    { const sg = myServantSign(); if(sg) t = t.split(sg).join("{اسم_الخادم}"); }
     await waKSaveTemplate(t, kind);
   };
 }
@@ -13553,6 +13557,25 @@ function maMsgFor(c, rec){
   return msgFill(maKey(), maVars(c, rec).vars);
 }
 // يرجّع النص المعدّل لقالب فيه المتغيّرات (عشان يتحفظ في الضبط)
+// ---- أزرار اختصارات الرسايل (ولي الأمر / اسم المخدوم / اسم الخادم) ----
+function myServantSign(){ return servantSignOff(churchServants.find(x=>x.id===myUid)) || ""; }
+function insertAtCursor(ta, txt){
+  const a = ta.selectionStart==null ? ta.value.length : ta.selectionStart, b = ta.selectionEnd==null ? a : ta.selectionEnd;
+  ta.value = ta.value.slice(0,a) + txt + ta.value.slice(b);
+  const p = a + txt.length; ta.focus(); try{ ta.setSelectionRange(p,p); }catch(_){}
+}
+function shortcutBarHtml(withParent){
+  const st = "padding:6px 10px;border-radius:999px;border:1px solid #d9dfec;background:#F3F6FC;color:#1B2A4A;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit";
+  return `<div class="sc-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><span class="muted" style="font-size:11.5px;align-self:center">اختصارات:</span>` +
+    (withParent ? `<button type="button" class="sc-btn" data-sc="parent" style="${st}">👪 ولي الأمر</button>` : "") +
+    `<button type="button" class="sc-btn" data-sc="kid" style="${st}">🧒 اسم المخدوم</button><button type="button" class="sc-btn" data-sc="servant" style="${st}">🙋 اسم الخادم</button></div>`;
+}
+function wireShortcuts(box, ta, vals){
+  box.querySelectorAll(".sc-btn").forEach(b=>{
+    b.addEventListener("mousedown", e=>e.preventDefault());
+    b.onclick = ()=>{ const v = vals[b.dataset.sc]; if(!v){ toast(b.dataset.sc==="servant" ? "اسمك مش متسجل في الخدام" : "الاسم مش متسجل"); return; } insertAtCursor(ta, v); };
+  });
+}
 function maToTemplate(text, c, rec){
   const v = maVars(c, rec); let t = text;
   const sw = (a,b)=>{ if(a) t = t.split(a).join(b); };
@@ -13625,6 +13648,7 @@ function maRender(){
     <div class="muted" style="font-size:12.5px">${cardEsc(maSub(c))}</div>
     <div style="margin:8px 0;font-size:13px">هيتبعت لـ: <b>${rec.label}</b> <span dir="ltr">${cardEsc(rec.phone)}</span></div>
     <div style="font-size:12.5px;margin-bottom:6px">الناقص: <b>${miss.join(" · ")}</b></div>
+    ${shortcutBarHtml(maKey()==="parentMissing")}
     <textarea id="maMsg" style="width:100%;min-height:150px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;box-sizing:border-box;font-family:Tajawal,sans-serif">${cardEsc(msg)}</textarea>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button type="button" id="maOpenWa" style="${btn};background:#25D366;color:#fff;flex:1">📤 ابعت واتساب ← وانقل للتالي</button>
@@ -13640,6 +13664,7 @@ function maRender(){
     </div>
     <div style="text-align:center;margin-top:10px"><button type="button" id="maExit" style="${btn};background:#FBE4E4;color:#B23B3B;padding:6px 14px">✖ خروج</button></div>`;
   const $ = id=>box.querySelector("#"+id);
+  { const v = maVars(c, rec); wireShortcuts(box, $("maMsg"), {parent: v.pn || v.who, kid: v.nm, servant: v.sign}); }
   $("maOpenWa").onclick = ()=>{ ensureDirectAccess(c); window.open(waLink(rec.phone, $("maMsg").value), "_blank"); $("maNext").click(); };
   $("maSaveTpl").onclick = ()=>{ const t = maToTemplate($("maMsg").value, c, rec); if(!t.trim()){ toast("الرسالة فاضية"); return; } saveMsgOv(maKey(), t); };
   $("maNoWa").onclick = async ()=>{
@@ -27704,7 +27729,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "243"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "244"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
