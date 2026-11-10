@@ -2809,7 +2809,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v259</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v260</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -2859,7 +2859,8 @@
           <span class="row" style="gap:6px"><button type="button" class="btn btn-gold btn-sm" id="bulkToggle">⚙️ إجراءات ▲</button><button type="button" class="btn btn-ghost btn-sm" id="bulkClear">✖ إلغاء التحديد</button></span>
         </div>
         <div id="bulkBody" style="display:none;margin-top:8px"><div class="row wrap">
-          <button class="btn btn-sage btn-sm" id="btnBulkSend">إرسال 💬</button>
+          <button class="btn btn-sage btn-sm" id="btnBulkSend">واتس اب 💬</button>
+          <button class="btn btn-gold btn-sm" id="btnBulkMissing">📝 بيانات ناقصة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkMove">نقل لمجموعة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkVcf">📇 تصدير كجهات اتصال</button>
           <button class="btn btn-outline btn-sm" id="btnBulkBoy">👦 ولد</button>
@@ -3092,7 +3093,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v259</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v260</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -13879,7 +13880,9 @@ function maBuild(){
   const g = document.getElementById("maGroup").value || "all", sv = document.getElementById("maServant").value || "all";
   const skipRecent = document.getElementById("maSkipRecent").checked;
   let list;
-  if(maMar()){
+  if(maOnly){
+    list = contacts.filter(c=>maOnly.has(c.id) && !c.graduated);
+  } else if(maMar()){
     list = contacts.filter(c=>isActiveFamily(c));
     if(sv==="mine") list = list.filter(c=>matchesServantFilter(c, myUid));
     else if(sv!=="all") list = list.filter(c=>matchesServantFilter(c, sv));
@@ -13904,9 +13907,12 @@ function maBuild(){
 function maRefreshSummary(){
   const r = maBuild();
   document.getElementById("maSummary").innerHTML = `من ${r.total} مخدوم: <b>${r.withMissing}</b> ناقص بياناتهم · هيتبعت لـ <b>${r.q.length}</b>` + (r.noPhone?` · ${r.noPhone} بدون أي رقم (مش هيتبعتلهم)`:"") + (r.noWa?` · 🚫 ${r.noWa} مفيش عندهم واتس اب (اتستبعدوا)`:"") + (r.recent?` · ${r.recent} اتبعتلهم قريب`:"");
+  if(maOnly) document.getElementById("maSummary").innerHTML = `📌 للمحددين بس (${maOnly.size}) — ` + document.getElementById("maSummary").innerHTML;
   document.getElementById("btnMaStart").disabled = !r.q.length;
 }
-function openMissingAsk(){
+let maOnly = null; // لو جاي من المحددين في قايمة المخدومين
+function openMissingAsk(only){
+  maOnly = (only instanceof Set && only.size) ? only : null;
   populateGroupServantFilters("maGroup","maServant");
   document.getElementById("maGroup").style.display = maMar() ? "none" : "";
   document.getElementById("maGender").style.display = maSec() ? "" : "none";
@@ -17415,6 +17421,14 @@ document.getElementById("btnBulkSend").addEventListener("click", ()=>{
   if(msgs.length>0) toast(`تم استبعاد: ${msgs.join(" · ")}`);
   if(ignoreGuard && eligible.length>0) toast("⚠️ وضع تجاهل حد الـ٢٤ ساعة مفعّل لجلسة الإرسال دي");
   startSending();
+});
+
+document.getElementById("btnBulkMissing").addEventListener("click", ()=>{
+  const ids = new Set(selectedIds);
+  if(!ids.size){ toast("محدش متحدد"); return; }
+  const withMiss = [...ids].filter(id=>{ const c = contacts.find(x=>x.id===id); return c && maMiss(c).length; }).length;
+  if(!withMiss){ toast("المحددين بياناتهم كاملة ✅"); return; }
+  openMissingAsk(ids);
 });
 
 let sendPreferCategory = null;
@@ -28118,7 +28132,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "259"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "260"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
