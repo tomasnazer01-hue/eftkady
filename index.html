@@ -2227,6 +2227,7 @@
           <option value="both">👫 الزوج والزوجة (كل واحد لوحده)</option>
         </select>
         <select id="waKStatus" style="margin-top:6px">
+          <option value="week" selected>اللي ما اتبعتلهمش الأسبوع ده (من السبت للخميس)</option>
           <option value="today">اللي ما اتبعتلهمش النهارده</option>
           <option value="never">اللي لسه ما اتبعتلهمش خالص</option>
           <option value="all">الكل</option>
@@ -2802,7 +2803,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v254</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v255</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3085,7 +3086,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v254</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v255</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11100,7 +11101,7 @@ const WAK_BLANK = {parents:"سلام ونعمة يا {أستاذ/أستاذة} {
 const WAK_INTRO = {
   parents:"خدمة الأطفال: الرسالة بتروح للأم، ولو مفيش فللأب، ولو مفيش فلرقم الطفل نفسه (\"يا مامت أو بابا ...\"). الولد بياخد صيغة المذكر والبنت المؤنث. كل ما تبعت واحدة بيفتحلك اللي بعده.",
   self:"الرسالة بتروح للمخدوم نفسه على رقمه، بصيغة المذكر أو المؤنث حسب جنسه. كل ما تبعت واحدة بيفتحلك اللي بعده.",
-  married:"الرسالة بتروح للزوج أو الزوجة (حسب نوعك: الخادم للزوج والتاسوني للزوجة، ولو رقمه مش موجود بتروح للتاني). كل ما تبعت واحدة بيفتحلك اللي بعده."
+  married:"الرسالة بتروح للزوج أو الزوجة (حسب نوعك: الخادم للزوج والتاسوني للزوجة بس). كل ما تبعت واحدة بيفتحلك اللي بعده."
 };
 let waK = {queue:[], idx:0, sent:new Set(), cur:{}, running:false};
 const waKKind = c => c.gender==="female" ? "girl" : "boy";
@@ -11129,6 +11130,11 @@ const waKField = r => r.mode==="married" ? "spouseMsgAt" : "parentMsgAt";
 const waKKindOf = (c,r)=> r.mode==="married" ? r.type : waKKind(c);
 function waKEntryParse(key){ const [id,f] = String(key).split("|"); const c = contacts.find(x=>x.id===id); return {c, r: c ? waKRec(c, f||undefined) : null}; }
 // قايمة الإرسال: [{key, c, r}] — في المتزوجين ممكن الأسرة تطلع مرتين (زوج وزوجة) لو اخترت «الاتنين»
+// بداية الأسبوع = آخر سبت (الأسبوع من السبت للخميس)
+function waKWeekStart(){ const d = new Date(); d.setDate(d.getDate() - ((d.getDay() - 6 + 7) % 7)); return todayStr(d); }
+// الخادم اللي هيتحدد نوعه: المختار في الفلتر، أو أنا لو «الكل/أنا»
+function waKSenderUid(){ const sv = (document.getElementById("waKServant")||{}).value || "all"; return (sv==="all"||sv==="mine") ? myUid : sv; }
+function waKSenderGender(){ const u = churchServants.find(x=>x.id===waKSenderUid()); return u && (u.gender==="female"||u.gender==="male") ? u.gender : null; }
 function waKBuildQueue(){
   const g = document.getElementById("waKGroup").value || "all", sv = document.getElementById("waKServant").value || "all", st = document.getElementById("waKStatus").value;
   const spf = document.getElementById("waKSpouse").value || "auto", out = [];
@@ -11142,10 +11148,12 @@ function waKBuildQueue(){
       if(fam ? !matchesServantFilter(c, uid) : c.assignedTo!==uid) return;
     }
     const married = waKMode(c)==="married";
-    const forces = married ? (spf==="both" ? ["husband","wife"] : (spf==="husband"||spf==="wife") ? [spf] : [undefined]) : [undefined];
+    const sg = waKSenderGender();
+    const forces = married ? (spf==="both" ? ["husband","wife"] : (spf==="husband"||spf==="wife") ? [spf] : (sg ? [sg==="female" ? "wife" : "husband"] : [])) : [undefined];
     forces.forEach(f=>{
       const r = waKRec(c, f); if(!r) return;
       if(st==="today" && waKLast(c, r)===todayStr()) return;
+      if(st==="week" && (waKLast(c, r)||"") >= waKWeekStart()) return;
       if(st==="never" && waKLast(c, r)) return;
       out.push({key: c.id + (f ? "|"+f : ""), c, r});
     });
@@ -11191,7 +11199,20 @@ function waKWhyEmpty(){
   });
   return `مفيش حد مطابق للفلتر. (من ${all} سجل: ${noPhone} من غير رقم، ${noWa} مفيش واتساب أو رقم غلط، ${sentToday} اتبعتلهم النهارده)`;
 }
+function waKGenderPrompt(){
+  const box = document.getElementById("waKSummary");
+  const u = churchServants.find(x=>x.id===waKSenderUid()), nm = u ? (u.rawName||u.name||"") : "";
+  box.innerHTML = `<div style="background:#FFF4D6;border-radius:10px;padding:10px"><b>اختار ${waKSenderUid()===myUid ? "إنت" : cardEsc(nm)} أنكل ولا تاسوني؟</b> <span class="muted">(هيتحفظ وهيبعت للزوج أو الزوجة حسب النوع)</span><div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="btn btn-outline btn-sm" data-wak-g="male">👨 أنكل (للأزواج)</button><button type="button" class="btn btn-outline btn-sm" data-wak-g="female">👩 تاسوني (للزوجات)</button></div></div>`;
+  box.querySelectorAll("[data-wak-g]").forEach(b=>b.onclick = async ()=>{
+    const uid = waKSenderUid(), g = b.dataset.wakG;
+    try{ await updateDoc(doc(db,"users",uid), {gender:g}); const x = churchServants.find(y=>y.id===uid); if(x) x.gender = g; toast("اتحفظ ✅"); waKRefresh(); }
+    catch(err){ console.error(err); toast("تعذر حفظ النوع" + (err&&err.code ? " ("+err.code+")" : "")); }
+  });
+}
 function waKRefresh(){
+  if(myService==="متزوجين" && (document.getElementById("waKSpouse").value||"auto")==="auto" && !waKSenderGender()){
+    waKGenderPrompt(); document.getElementById("btnWaKStart").disabled = true; return;
+  }
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
   q.forEach(({c,r})=>{ cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
@@ -11314,6 +11335,7 @@ function waKFilterChanged(){
   waKRefresh();
 }
 document.getElementById("btnWaKStart").addEventListener("click", ()=>{
+  if(myService==="متزوجين" && (document.getElementById("waKSpouse").value||"auto")==="auto" && !waKSenderGender()){ waKGenderPrompt(); return; }
   const q = waKBuildQueue(); if(!q.length){ toast("مفيش حد يتبعتله"); return; }
   waK.queue = q.map(e=>e.key); waK.idx = 0; waK.sent = new Set(); waK.running = true;
   document.getElementById("waKSetup").style.display = "none"; document.getElementById("waKRun").style.display = "block";
@@ -28055,7 +28077,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "254"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "255"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
