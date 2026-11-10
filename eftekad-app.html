@@ -2802,7 +2802,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v253</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v254</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3085,7 +3085,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v253</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v254</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11281,20 +11281,30 @@ function waKRender(){
     } else if(mode==="self"){
       const kid = firstName(c.name||""); if(kid) t = t.split(kid).join("{اسم_الطفل_الأول}");
     } else { const pn = firstName(r.name||""); if(pn) t = t.split(pn).join("{اسمه/ها}"); }
-    await waKSaveTemplate(t, kind, mode);
+    const ok = await waKSaveTemplate(t, kind, mode);
+    if(ok){ // حدّث القايمة في مكانها من غير ما نمسح اللي مكتوب
+      const o2 = waKOptions(mode, kind);
+      sw.innerHTML = o2.map(o=>`<option value="${cardEsc(o.v)}">${cardEsc(o.label)}</option>`).join("");
+      sw.value = waK.cur[ck];
+      opts.length = 0; o2.forEach(o=>opts.push(o));
+    }
   };
 }
 async function waKSaveTemplate(text, kind, mode){
   text = (text||"").trim(); if(!text){ toast("اكتب الرسالة الأول"); return; }
   const ex = waKOptions(mode, kind).find(o=>o.v.startsWith("t:") && (o.text||"").trim()===text);
-  if(ex){ waK.cur[mode+":"+kind] = ex.v; toast("الرسالة دي محفوظة قبل كده"); return; }
+  if(ex){ waK.cur[mode+":"+kind] = ex.v; toast("الرسالة دي محفوظة قبل كده"); return true; }
   const tag = mode==="married" ? {spKind:kind} : mode==="self" ? {kidKind:kind, waMode:"self"} : {kidKind:kind};
   try{
     const ref = await addDoc(colTemplates, {text, category:"عام", ...tag, order: templates.length, churchCode: myChurchCode, createdAt: serverTimestamp()});
-    if(ref && ref.id) waK.cur[mode+":"+kind] = "t:"+ref.id;
+    if(ref && ref.id){
+      waK.cur[mode+":"+kind] = "t:"+ref.id;
+      if(!templates.some(t=>t.id===ref.id)) templates.push({id:ref.id, text, category:"عام", ...tag, order:templates.length, churchCode:myChurchCode});
+    }
     logActivity("حفظ رسالة افتقاد", mode+"/"+kind);
     toast("اتحفظت ✅");
-  }catch(err){ console.error("waKSave", err); toast("تعذر حفظ الرسالة — تأكد من الاتصال والصلاحيات"); }
+    return true;
+  }catch(err){ console.error("waKSave", err); toast("تعذر حفظ الرسالة" + (err&&err.code ? " ("+err.code+")" : "") + " — تأكد من الاتصال والصلاحيات"); return false; }
 }
 function waKExit(){ waK.running = false; document.getElementById("waKRun").style.display = "none"; document.getElementById("waKSetup").style.display = "block"; waKRefresh(); }
 function waKFilterChanged(){
@@ -28045,7 +28055,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "253"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "254"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
