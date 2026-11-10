@@ -2809,7 +2809,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v256</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v257</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3092,7 +3092,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v256</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v257</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3583,7 +3583,15 @@
     </div>
   </nav>
 
-  <button class="fab-install" id="btnInstall">⬇ تثبيت التطبيق</button>
+  <div id="installBanner" style="display:none;position:fixed;left:10px;right:10px;bottom:12px;z-index:9000;background:#1B2A4A;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 12px 32px rgba(0,0,0,.35);font-size:13px;line-height:1.7">
+  <div id="installBannerMsg" style="margin-bottom:8px"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button type="button" id="ibInstall" class="btn btn-gold btn-sm" style="display:none">📲 تثبيت التطبيق</button>
+    <button type="button" id="ibNotif" class="btn btn-gold btn-sm" style="display:none">🔔 تفعيل التنبيهات</button>
+    <button type="button" id="ibLater" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none">لاحقاً</button>
+  </div>
+</div>
+<button class="fab-install" id="btnInstall">⬇ تثبيت التطبيق</button>
 
   <div class="toast-wrap" id="toastWrap"></div>
   <div id="printArea"></div>
@@ -7598,12 +7606,22 @@ document.getElementById("loginFormEl").addEventListener("submit", async (e)=>{
   const errBox = document.getElementById("loginError");
   errBox.textContent = "";
   if(!email || !password){ errBox.textContent = "اكتب البريد وكلمة المرور"; return; }
+  const subBtn = document.getElementById("btnLogin"); if(subBtn) subBtn.disabled = true;
+  errBox.style.color = "#555"; errBox.textContent = "جاري الدخول…";
   try{
     await signInWithEmailAndPassword(auth, email, password);
+    // الدخول نجح — لو الشاشة فضلت زي ما هي يبقى المشكلة في تحميل بيانات الحساب
+    setTimeout(()=>{ try{
+      if(auth.currentUser && document.getElementById("loginScreen").style.display!=="none"){
+        errBox.style.color = "#B23B3B";
+        errBox.textContent = "الدخول تم لكن تعذر تحميل بيانات حسابك" + (window.__lastAuthErr ? " ("+window.__lastAuthErr+")" : "") + " — اقفل التطبيق وافتحه تاني، ولو فضل كده ابعتلي الكود.";
+      } }catch(_){} }, 9000);
   }catch(err){
-    errBox.textContent = authErrorArabic(err.code);
-  }
+    errBox.style.color = "#B23B3B";
+    errBox.textContent = authErrorArabic(err.code) + (err && err.code ? " ("+err.code+")" : "");
+  }finally{ if(subBtn) subBtn.disabled = false; }
 });
+window.addEventListener("unhandledrejection", e=>{ try{ window.__lastAuthErr = (e.reason&&(e.reason.code||e.reason.message))||"error"; }catch(_){} });
 
 function randomChurchCode(){
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -8238,6 +8256,8 @@ onAuthStateChanged(auth, (user)=>{
     checkPendingSend();
   }, err=>{
     console.error("تعذرت قراءة بيانات الحساب", err);
+    window.__lastAuthErr = (err && (err.code||err.message)) || "error";
+    try{ const eb = document.getElementById("loginError"); if(eb){ eb.style.color="#B23B3B"; eb.textContent = "تعذر قراءة بيانات حسابك ("+window.__lastAuthErr+")"; } }catch(_){}
   });
 });
 
@@ -15240,6 +15260,13 @@ document.getElementById("globalSearchInput").addEventListener("input", (e)=>{
 // ==================================================================
 // BROWSER NOTIFICATIONS (best-effort reminders while the app is open)
 // ==================================================================
+// تنبيه بيشتغل على أندرويد/الموبايل (لازم عن طريق الـ service worker — new Notification بيتجاهله الموبايل)
+async function appNotify(title, body){
+  if(!("Notification" in window) || Notification.permission!=="granted") return false;
+  const opts = {body, icon:"./icon-192.png", badge:"./icon-192.png", dir:"rtl", lang:"ar", tag:"waznty-"+title};
+  try{ const reg = await navigator.serviceWorker.getRegistration(); if(reg){ await reg.showNotification(title, opts); return true; } }catch(_){}
+  try{ new Notification(title, opts); return true; }catch(_){ return false; }
+}
 function updateNotifStatusText(){
   const el = document.getElementById("notifStatusText");
   if(!("Notification" in window)){ el.textContent = "المتصفح ده مش بيدعم التنبيهات"; return; }
@@ -15251,7 +15278,8 @@ document.getElementById("btnEnableNotifications").addEventListener("click", asyn
   if(!("Notification" in window)){ toast("المتصفح ده مش بيدعم التنبيهات"); return; }
   const perm = await Notification.requestPermission();
   updateNotifStatusText();
-  if(perm==="granted") toast("تم تفعيل التنبيهات ✅");
+  if(perm==="granted"){ toast("تم تفعيل التنبيهات ✅"); appNotify("waznty 🔔", "التنبيهات شغالة على موبايلك"); }
+  try{ refreshInstallBanner(); }catch(_){}
 });
 updateNotifStatusText();
 
@@ -15360,7 +15388,7 @@ setInterval(()=>{
     const key = `${m.id}_${today}`;
     if(firedReminders.has(key)) return;
     firedReminders.add(key);
-    try{ new Notification("تذكير ميعاد ⛪", {body:`ميعاد "${m.name}" دلوقتي`}); }catch(_){}
+    appNotify("تذكير ميعاد ⛪", `ميعاد "${m.name}" دلوقتي`);
   });
 }, 20000);
 
@@ -18464,7 +18492,7 @@ function checkUpcomingEventReminders(){
       if(firedEventReminders.has(key)) return;
       firedEventReminders.add(key);
       const body = diffDays===0 ? `${ev.title} النهارده 🎉` : `${ev.title} بعد ${diffDays} ${diffDays===1?'يوم':'أيام'}`;
-      try{ new Notification("تذكير عيد/مناسبة 🎉", {body}); }catch(_){}
+      appNotify("تذكير عيد/مناسبة 🎉", body);
     }
   });
 }
@@ -28083,7 +28111,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "256"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "257"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28193,6 +28221,49 @@ document.getElementById("btnInstall").addEventListener("click", async ()=>{
   try{ renderMarriedTab = wrap(renderMarriedTab); }catch(_){}
   try{ renderContacts = wrap(renderContacts); }catch(_){}
 })();
+
+// v257: رسالة تثبيت التطبيق + تفعيل التنبيهات لأي حد مش مثبّت/مش مفعّل
+function refreshInstallBanner(){
+  const bar = document.getElementById("installBanner"); if(!bar) return;
+  try{
+    const isMember = /[?&](memberDirect|memberApp)=/.test(location.search);
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"");
+    const mobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent||"");
+    let snooze = 0; try{ snooze = +localStorage.getItem("ibSnooze")||0; }catch(_){}
+    if(isMember || !mobile || Date.now()<snooze){ bar.style.display="none"; return; }
+    const needInstall = !standalone;
+    const needNotif = ("Notification" in window) && Notification.permission==="default" && (standalone || !isIOS) && !!auth.currentUser;
+    if(!needInstall && !needNotif){ bar.style.display="none"; return; }
+    const msg = document.getElementById("installBannerMsg");
+    const bi = document.getElementById("ibInstall"), bn = document.getElementById("ibNotif");
+    bi.style.display = needInstall && settingsInstallEvent ? "" : "none";
+    bn.style.display = needNotif && !needInstall ? "" : "none";
+    if(needInstall){
+      msg.innerHTML = settingsInstallEvent ? "📲 <b>ثبّت التطبيق على موبايلك</b> علشان يفتح بضغطة من الشاشة الرئيسية وتوصلك التنبيهات."
+        : isIOS ? "📲 <b>ثبّت التطبيق:</b> دوس زرار المشاركة ⬆️ وبعدين «إضافة إلى الشاشة الرئيسية»."
+        : "📲 <b>ثبّت التطبيق:</b> من قايمة كروم ⋮ اختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».";
+    } else msg.innerHTML = "🔔 <b>فعّل التنبيهات</b> علشان توصلك تذكيرات المواعيد والأعياد على موبايلك.";
+    bar.style.display = "block";
+  }catch(_){}
+}
+document.getElementById("ibInstall")?.addEventListener("click", async ()=>{
+  if(!settingsInstallEvent) return;
+  settingsInstallEvent.prompt(); try{ await settingsInstallEvent.userChoice; }catch(_){}
+  settingsInstallEvent = null; refreshInstallBanner(); try{ refreshSettingsInstall(); }catch(_){}
+});
+document.getElementById("ibNotif")?.addEventListener("click", async ()=>{
+  try{ const p = await Notification.requestPermission(); if(p==="granted"){ toast("تم تفعيل التنبيهات ✅"); appNotify("waznty 🔔","التنبيهات شغالة على موبايلك"); } try{ updateNotifStatusText(); }catch(_){} }catch(_){}
+  refreshInstallBanner();
+});
+document.getElementById("ibLater")?.addEventListener("click", ()=>{
+  try{ localStorage.setItem("ibSnooze", String(Date.now()+24*3600*1000)); }catch(_){}
+  document.getElementById("installBanner").style.display = "none";
+});
+window.addEventListener("beforeinstallprompt", ()=>setTimeout(refreshInstallBanner,50));
+window.addEventListener("appinstalled", ()=>setTimeout(refreshInstallBanner,50));
+onAuthStateChanged(auth, ()=>setTimeout(refreshInstallBanner, 800));
+setTimeout(refreshInstallBanner, 1500);
 </script>
 </body>
 </html>
