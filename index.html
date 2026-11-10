@@ -911,6 +911,12 @@
   <main>
     <!-- ===================== SCREEN: DASHBOARD ===================== -->
     <section class="screen active" id="screen-dashboard">
+      <div class="card" id="svInstallCard" style="display:none;border:2px solid var(--gold,#C9A227)">
+        <h2 style="margin:0 0 6px">📲 نزّل التطبيق على موبايلك</h2>
+        <p class="muted" style="margin:0 0 10px">علشان تفتح وزنتي من الشاشة الرئيسية بضغطة، من غير ما تدوّر على الرابط كل يوم.</p>
+        <button class="btn btn-gold btn-block" id="btnSvInstall">📲 تنزيل التطبيق</button>
+        <p class="muted" id="svInstallHelp" style="margin:8px 0 0;font-size:12.5px;line-height:1.8"></p>
+      </div>
       <div class="card">
         <h2><span class="nav-label" data-label-key="dashboard">نظرة عامة</span><button class="help-icon" data-help-title="🏠 الرئيسية" data-help-text="دي شاشتك الأولى، فيها كارت لكل أداة في التطبيق — دوس على أي كارت يفتحلك شاشته. تقدر ترتّب الكروت زي ما يريحك من زرار «ترتيب» فوق، والكروت اللي بتحتاجها كل يوم حطها فوق.">?</button></h2>
         <div class="row wrap" id="dashStatsRow" style="gap:10px"></div>
@@ -2803,7 +2809,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v255</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v256</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3086,7 +3092,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v255</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v256</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -28077,7 +28083,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "255"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "256"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28113,7 +28119,25 @@ updatePwaIcons("#1B2A4A", "waznty", null); // default before church data loads
 let settingsInstallEvent = null;
 window.addEventListener("beforeinstallprompt", (e)=>{ settingsInstallEvent = e; refreshSettingsInstall(); });
 window.addEventListener("appinstalled", ()=>{ settingsInstallEvent = null; refreshSettingsInstall(); });
+function refreshSvInstallCard(){
+  const card = document.getElementById("svInstallCard"); if(!card) return;
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if(standalone || /[?&](memberDirect|memberApp)=/.test(location.search)){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  const btn = document.getElementById("btnSvInstall"), help = document.getElementById("svInstallHelp");
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || "");
+  if(settingsInstallEvent){ btn.style.display = "block"; help.textContent = "دوس الزرار وهيتثبّت على شاشة موبايلك زي أي تطبيق."; }
+  else if(isIOS){ btn.style.display = "none"; help.innerHTML = "من سفاري: دوس على زرار المشاركة ⬆️ تحت، وبعدين اختار <b>«إضافة إلى الشاشة الرئيسية»</b>."; }
+  else { btn.style.display = "none"; help.innerHTML = "من كروم: دوس على القايمة ⋮ فوق، وبعدين <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>."; }
+}
+document.getElementById("btnSvInstall")?.addEventListener("click", async ()=>{
+  if(!settingsInstallEvent) return;
+  settingsInstallEvent.prompt();
+  try{ await settingsInstallEvent.userChoice; }catch(_){}
+  settingsInstallEvent = null; refreshSettingsInstall();
+});
 function refreshSettingsInstall(){
+  try{ refreshSvInstallCard(); }catch(_){}
   const btn = document.getElementById("btnSettingsInstall"), help = document.getElementById("settingsInstallHelp");
   if(!btn) return;
   const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
