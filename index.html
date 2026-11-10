@@ -2809,7 +2809,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v258</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v259</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3092,7 +3092,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v258</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v259</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4720,6 +4720,13 @@
         <summary style="font-weight:700;cursor:pointer;padding:6px 0">🔔 تفضيلات الإشعارات</summary>
         <button class="btn btn-outline btn-block" id="btnEnableNotifications">تفعيل تنبيهات المتصفح للمواعيد</button>
         <p class="muted" id="notifStatusText" style="margin-top:8px"></p>
+        <div style="margin-top:10px;padding:10px;border-radius:12px;background:var(--bg)">
+          <label class="row" style="gap:8px;cursor:pointer"><input type="checkbox" id="chkDailyRem" style="width:auto" checked /> 🫶 تذكير يومي بالافتقاد</label>
+          <div class="row" style="gap:8px;margin:8px 0 0;align-items:center"><span class="muted" style="font-size:12.5px">الساعة:</span><input type="time" id="dailyRemTime" value="18:00" style="width:auto" /></div>
+          <div class="muted" style="font-size:12px;margin-top:6px">«ولادك مستنين افتقادك، حافظ على وزنتك ♥️🫶»</div>
+          <label class="row" style="gap:8px;cursor:pointer;margin-top:10px"><input type="checkbox" id="chkBdayRem" style="width:auto" checked /> 🎂 تنبيه أعياد ميلاد المخدومين (كل يوم الصبح)</label>
+          <button class="btn btn-outline btn-sm" id="btnTestDailyRem" style="margin-top:10px">🔔 جرّب التنبيه دلوقتي</button>
+        </div>
         <div style="height:10px;border-top:1.5px dashed var(--line);margin-top:8px"></div>
         <label class="row" style="gap:8px;cursor:pointer;margin-top:10px">
           <input type="checkbox" id="chkSoundMaster" style="width:auto" checked /> 🔊 تفعيل الصوت مع التنبيهات
@@ -28111,7 +28118,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "258"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "259"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28264,6 +28271,66 @@ window.addEventListener("beforeinstallprompt", ()=>setTimeout(refreshInstallBann
 window.addEventListener("appinstalled", ()=>setTimeout(refreshInstallBanner,50));
 onAuthStateChanged(auth, ()=>setTimeout(refreshInstallBanner, 800));
 setTimeout(refreshInstallBanner, 1500);
+
+// v259: تذكير يومي بالافتقاد + تنبيه أعياد ميلاد المخدومين (بيشتغل لما التطبيق مفتوح أو شغّال في الخلفية)
+(function(){
+  const LS = (k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(_){ return null; } };
+  const DAILY_MSG = "ولادك مستنين افتقادك، حافظ على وزنتك ♥️🫶";
+  const chkD = document.getElementById("chkDailyRem"), tm = document.getElementById("dailyRemTime"), chkB = document.getElementById("chkBdayRem");
+  if(chkD) chkD.checked = LS("remDaily")!=="0";
+  if(chkB) chkB.checked = LS("remBday")!=="0";
+  if(tm) tm.value = LS("remDailyTime") || "18:00";
+  chkD?.addEventListener("change", ()=>LS("remDaily", chkD.checked?"1":"0"));
+  chkB?.addEventListener("change", ()=>LS("remBday", chkB.checked?"1":"0"));
+  tm?.addEventListener("change", ()=>{ LS("remDailyTime", tm.value||"18:00"); LS("remDailyLast",""); });
+  const ymd = d=>todayStr(d||new Date());
+  function bdayText(){
+    const names = [];
+    try{
+      const t = new Date(), tm1 = new Date(t.getFullYear(), t.getMonth(), t.getDate()+1);
+      const md = d=>`${d.getMonth()}-${d.getDate()}`, T = md(t), N = md(tm1);
+      const today = [], tomorrow = [];
+      (contacts||[]).forEach(c=>{
+        if(c.graduated || c.pendingApproval || !c.birthday) return;
+        if(typeof isFamilyRecord==="function" && isFamilyRecord(c)) return;
+        const p = String(c.birthday).split("-").map(Number); if(p.length<3) return;
+        const k = `${p[1]-1}-${p[2]}`;
+        if(k===T) today.push(firstName(c.name||"")); else if(k===N) tomorrow.push(firstName(c.name||""));
+      });
+      if(myService==="متزوجين" && typeof getMarriedBirthdayMatches==="function"){
+        const m = getMarriedBirthdayMatches(1);
+        m.today.forEach(e=>today.push(firstName(e.name||""))); m.upcoming.filter(e=>e.diffDays===1).forEach(e=>tomorrow.push(firstName(e.name||"")));
+      }
+      const cut = a=>a.length>6 ? a.slice(0,6).join("، ")+` و${a.length-6} كمان` : a.join("، ");
+      if(today.length) names.push(`🎂 النهارده عيد ميلاد: ${cut(today)}`);
+      if(tomorrow.length) names.push(`🎁 بكرة عيد ميلاد: ${cut(tomorrow)}`);
+    }catch(e){ console.warn("bday text", e); }
+    return names.join("\n");
+  }
+  async function tick(force){
+    try{
+      if(!auth.currentUser || !myChurchCode || !("Notification" in window) || Notification.permission!=="granted") return;
+      const now = new Date(), today = ymd(now);
+      const hhmm = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+      if(LS("remDaily")!=="0" && LS("remDailyLast")!==today && hhmm >= (LS("remDailyTime")||"18:00")){
+        LS("remDailyLast", today); await appNotify("وزنتك 🫶", DAILY_MSG);
+      }
+      if(LS("remBday")!=="0" && LS("remBdayLast")!==today && now.getHours()>=8 && (contacts||[]).length){
+        const txt = bdayText(); LS("remBdayLast", today);
+        if(txt) await appNotify("أعياد ميلاد المخدومين 🎂", txt);
+      }
+    }catch(e){ console.warn("reminders", e); }
+  }
+  document.getElementById("btnTestDailyRem")?.addEventListener("click", async ()=>{
+    if(!("Notification" in window)){ toast("المتصفح ده مش بيدعم التنبيهات"); return; }
+    if(Notification.permission!=="granted"){ const p = await Notification.requestPermission(); try{ updateNotifStatusText(); }catch(_){} if(p!=="granted"){ toast("لازم تسمح بالتنبيهات الأول"); return; } }
+    await appNotify("وزنتك 🫶", DAILY_MSG);
+    const b = bdayText(); if(b) await appNotify("أعياد ميلاد المخدومين 🎂", b); else toast("مفيش أعياد ميلاد النهارده أو بكرة");
+  });
+  setInterval(tick, 60000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) tick(); });
+  setTimeout(tick, 5000);
+})();
 </script>
 </body>
 </html>
