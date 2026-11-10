@@ -400,6 +400,7 @@
     #printArea th, #printArea td{ border:1px solid #999; padding:6px 8px; text-align:right; font-size:13px; }
     #printArea th{ background:#eee; }
   }
+  html,body,.screen,#marriedTabBody,#contactsList{overflow-anchor:none}
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -2801,7 +2802,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v252</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v253</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3084,7 +3085,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v252</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v253</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -28044,7 +28045,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "252"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "253"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28115,6 +28116,27 @@ document.getElementById("btnInstall").addEventListener("click", async ()=>{
   deferredPrompt = null;
   document.getElementById("btnInstall").classList.remove("show");
 });
+
+// v253: تثبيت السكرول وقت تحديد الأسماء وإعادة رسم القوائم (كل الخدمات)
+(function(){
+  let lock=null;
+  const hold=(ms)=>{
+    const y=window.scrollY; const t0=performance.now(); lock=t0;
+    const tick=()=>{ if(lock!==t0) return;
+      if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
+      if(performance.now()-t0<ms) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  };
+  const isChk=e=>{const t=e.target; return t&&t.tagName==="INPUT"&&t.type==="checkbox";};
+  document.addEventListener("pointerdown",e=>{ if(isChk(e)) hold(700); },true);
+  document.addEventListener("change",e=>{ if(isChk(e)) hold(500); },true);
+  // أي إعادة رسم للقوائم تحافظ على مكان السكرول
+  const wrap=f=>function(){ const y=window.scrollY; const r=f.apply(this,arguments);
+    if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
+    requestAnimationFrame(()=>{ if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y); }); return r; };
+  try{ renderMarriedTab = wrap(renderMarriedTab); }catch(_){}
+  try{ renderContacts = wrap(renderContacts); }catch(_){}
+})();
 </script>
 </body>
 </html>
