@@ -4,7 +4,7 @@
 // أوفلاين منفصلة ومفعّلة بالفعل جوه التطبيق (enableIndexedDbPersistence) — الملف ده
 // بس مسؤول عن تحميل التطبيق نفسه (الشكل والكود) من غير إنترنت.
 
-const CACHE_VERSION = "eftekad-shell-v2";
+const CACHE_VERSION = "eftekad-shell-v3";
 const APP_SHELL_URLS = [
   "./",
   "./index.html",
@@ -49,6 +49,9 @@ self.addEventListener("activate", (event) => {
 // ولو فشلت (مفيش نت) ارجع للنسخة المخزنة.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  // v258: طلبات Firebase/جوجل (تسجيل الدخول وقاعدة البيانات) تروح مباشرة من غير ما الـ service worker يتدخل
+  { const u = new URL(event.request.url);
+    if (u.origin !== self.location.origin && !APP_SHELL_URLS.includes(event.request.url)) return; }
 
   event.respondWith(
     fetch(event.request)
