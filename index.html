@@ -406,6 +406,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
     #printArea th{ background:#eee; }
   }
   html,body,.screen,#marriedTabBody,#contactsList{overflow-anchor:none}
+  #groupFilterChips .chip,#regionFilterChips .chip{flex:0 0 auto;white-space:nowrap}
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -2809,27 +2810,27 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <input type="text" id="searchBox" class="grow" placeholder="بحث بالاسم أو الرقم" />
           <button class="btn btn-gold btn-sm" id="btnAddPersonManual">+ إضافة شخص</button>
         </div>
+        <div class="row" style="margin-bottom:10px"><input type="search" id="streetSearchQ" class="grow" placeholder="🛣️ بحث باسم الشارع" autocomplete="off" /></div>
         <div class="row wrap" id="streetFilterRow" style="margin-bottom:8px;gap:6px">
-          <button class="btn btn-outline btn-sm" id="btnStreetFilter">🛣️ فلتر باسم الشارع</button>
+          <button class="btn btn-outline btn-sm" id="btnStreetFilter" style="display:none">🛣️ فلتر باسم الشارع</button>
           <button class="btn btn-ghost btn-sm" id="btnStreetRename" style="display:none">✏️ تغيير اسم شارع</button>
           <button class="btn btn-outline btn-sm" id="btnNoAddressFilter">🏠 بدون عنوان</button>
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v263</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v264</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
         </div>
         <div id="contactFiltersBox" style="display:block">
-        <details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;padding:6px 0">🎓 السنة الدراسية</summary>
-        <div class="row wrap" id="groupFilterChips" style="margin-bottom:8px"></div></details>
+        <div id="groupFilterChips" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
         <details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;padding:6px 0">⏳ الحالة</summary>
         <div class="row wrap" id="visitFilterChips" style="margin-bottom:8px"></div></details>
         <details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;padding:6px 0">🧑‍🤝‍🧑 الخدام <span id="servantFilterCount" class="muted"></span></summary>
         <div class="row wrap" id="servantFilterChips" style="margin-bottom:8px"></div></details>
-        <details style="margin-bottom:6px"><summary style="cursor:pointer;font-weight:700;padding:6px 0">🗺️ المناطق</summary>
-        <div class="row wrap" id="regionFilterChips" style="margin-bottom:8px"></div></details>
+        <div id="regionFilterChips" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
+        <div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><select id="contactServantSel" class="grow"></select></div>
         <label class="row" style="gap:8px;cursor:pointer;padding:6px 0;font-weight:700"><input type="checkbox" id="chkNotHomeVisited" style="width:auto" /> 🏠 لسه ما تمش افتقاده منزلي</label>
         </div>
         <div class="card" id="dataStatusCard" data-hide-married style="margin-bottom:8px">
@@ -3102,7 +3103,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v263</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v264</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -9259,6 +9260,12 @@ function renderServantFilterChips(){
   w.innerHTML = `<button class="chip ${assignedServantSet.size?'':'active'}" data-sv="all">👥 كل الخدام</button>` +
     churchServants.map(sv=>`<button class="chip ${assignedServantSet.has(sv.id)?'active':''}" data-sv="${sv.id}">${cardEsc(sv.name||sv.email||"")} (${cnt(sv.id)})</button>`).join("");
   const c = document.getElementById("servantFilterCount"); if(c) c.textContent = assignedServantSet.size ? `(${assignedServantSet.size} مختار)` : "";
+  const sel = document.getElementById("contactServantSel");
+  if(sel){
+    sel.innerHTML = `<option value="all">👥 كل الخدام</option>` + churchServants.map(sv=>`<option value="${sv.id}">${cardEsc(sv.name||sv.email||"")} (${cnt(sv.id)})</option>`).join("");
+    sel.value = assignedServantSet.size===1 ? [...assignedServantSet][0] : "all";
+    sel.onchange = ()=>{ assignedServantSet.clear(); if(sel.value!=="all") assignedServantSet.add(sel.value); renderServantFilterChips(); renderContacts(); };
+  }
   w.querySelectorAll("[data-sv]").forEach(ch=>ch.addEventListener("click", ()=>{
     const id = ch.dataset.sv;
     if(id==="all") assignedServantSet.clear(); else if(assignedServantSet.has(id)) assignedServantSet.delete(id); else assignedServantSet.add(id);
@@ -25498,11 +25505,23 @@ document.getElementById("streetFilterResult").addEventListener("change", e=>{
   ba.disabled = bl.disabled = !sfPicked.size; bl.textContent = `📍 حدد موقع واحد للمحددين (${sfPicked.size})`;
   const all = document.getElementById("sfAll"); if(all) all.checked = sfPicked.size===sfHits.length;
 });
+let ssT = null;
+document.getElementById("streetSearchQ").addEventListener("input", ()=>{
+  clearTimeout(ssT);
+  ssT = setTimeout(()=>{
+    const q = document.getElementById("streetSearchQ").value.trim(), words = sfWords(q);
+    if(!words.length){ if(streetGeoFilter && streetGeoFilter.fromSearch){ streetGeoFilter = null; renderStreetFilterBadge(); renderContacts(); } return; }
+    const hits = contacts.filter(c=>{ const ad = autoLocNorm(autoLocDigits(c.address||"")); return ad && words.every(x=>ad.includes(x)); });
+    streetGeoFilter = {name:q, ids:new Set(hits.map(c=>c.id)), fromSearch:true};
+    renderStreetFilterBadge(); renderContacts();
+    if(!hits.length) toast("مفيش مخدومين عنوانهم فيه الاسم ده");
+  }, 300);
+});
 function renderStreetFilterBadge(){
   const el = document.getElementById("streetFilterActive"); if(!el) return;
   el.innerHTML = streetGeoFilter ? `<button class="chip active" id="btnStreetFilterX">🛣️ ${cardEsc(streetGeoFilter.name)} (${streetGeoFilter.ids.size}) ✕</button>` : "";
   const x = document.getElementById("btnStreetFilterX");
-  if(x) x.addEventListener("click", ()=>{ streetGeoFilter = null; renderStreetFilterBadge(); renderContacts(); });
+  if(x) x.addEventListener("click", ()=>{ streetGeoFilter = null; const ssq = document.getElementById("streetSearchQ"); if(ssq) ssq.value = ""; renderStreetFilterBadge(); renderContacts(); });
 }
 function applyMissingFilter(kind){
   const scoped = myRole==="supervisor" ? contacts.filter(c=>mySupervisedGroups.includes(c.group)) : contacts;
@@ -28178,7 +28197,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "263"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "264"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
