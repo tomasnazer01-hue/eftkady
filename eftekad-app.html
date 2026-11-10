@@ -1333,6 +1333,8 @@
         <div class="modal-head"><h3>🏠 تسجيل افتقاد منزلي</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalHomeVisit')">✕</button></div>
         <div class="item-name" id="homeVisitName" style="margin-bottom:4px"></div>
         <div class="muted" id="homeVisitBulkList" style="display:none;max-height:90px;overflow-y:auto;font-size:12px;margin-bottom:8px"></div>
+        <div id="homeVisitMethodWrap" style="display:none"><label class="field-label">وسيلة الافتقاد</label>
+          <select id="homeVisitMethod"><option>زيارة منزلية</option><option>مكالمة هاتفية</option><option>واتساب</option><option>أخرى</option></select></div>
         <label class="field-label">تاريخ الزيارة</label>
         <input type="date" id="homeVisitDate" />
         <label class="field-label" style="margin-top:10px">مين الخدام اللي نزلوا؟ (اختار كل اللي كانوا معاك)</label>
@@ -2809,7 +2811,7 @@
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v260</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v261</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -2861,6 +2863,7 @@
         <div id="bulkBody" style="display:none;margin-top:8px"><div class="row wrap">
           <button class="btn btn-sage btn-sm" id="btnBulkSend">واتس اب 💬</button>
           <button class="btn btn-gold btn-sm" id="btnBulkMissing">📝 بيانات ناقصة</button>
+          <button class="btn btn-sage btn-sm" id="btnBulkToTour">🧭 ضيف للجولة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkMove">نقل لمجموعة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkVcf">📇 تصدير كجهات اتصال</button>
           <button class="btn btn-outline btn-sm" id="btnBulkBoy">👦 ولد</button>
@@ -3093,7 +3096,7 @@
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v260</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v261</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4212,7 +4215,7 @@
       <p class="muted" style="margin-top:0;font-size:12.5px">اكتب اسم الشارع (أو جزء منه) وهتظهرلك كل المخدومين اللي عنوانهم فيه الاسم ده.</p>
       <input id="streetNameQ" placeholder="مثال: فريد عبد العظيم" autocomplete="off" style="width:100%;margin-bottom:6px">
       <select id="streetNameGroup" style="width:100%;margin-bottom:6px"><option value="all">كل المجموعات</option></select>
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:6px"><input type="checkbox" id="streetNoLocOnly" checked style="width:auto"> 📍 اللي ملهمش لوكيشن بس</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:6px"><input type="checkbox" id="streetNoLocOnly" style="width:auto"> 📍 اللي ملهمش لوكيشن بس</label>
       <button class="btn btn-outline btn-block btn-sm" id="btnStreetMapToggle" style="margin-bottom:6px">🗺️ اختار الشارع من الخريطة (بتظهر أسماء الشوارع)</button>
       <div id="streetMapWrap" style="display:none;margin-bottom:6px">
         <div id="streetFilterStatus" class="muted" style="font-size:12px;margin-bottom:4px"></div>
@@ -14038,9 +14041,19 @@ async function bulkSetFlag(flagName, label){
   selectedIds.clear(); renderContacts();
 }
 
-document.getElementById("btnBulkVisited").addEventListener("click", async ()=>{
-  const method = prompt("وسيلة الافتقاد (زيارة منزلية / مكالمة هاتفية / واتساب / أخرى):", "زيارة منزلية");
-  if(!method) return;
+document.getElementById("btnBulkVisited").addEventListener("click", ()=>{
+  const list = [...selectedIds].map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
+  if(!list.length){ toast("حدد شخص واحد على الأقل"); return; }
+  homeVisitContactId = null; homeVisitBulkIds = list.map(c=>c.id); homeVisitFromContacts = true;
+  document.getElementById("homeVisitName").textContent = `${list.length} مخدوم`;
+  const bl = document.getElementById("homeVisitBulkList"); bl.style.display = ""; bl.textContent = list.map(c=>isFamilyRecord(c) ? familyLine(c) : c.name).join("، ");
+  document.getElementById("homeVisitMethodWrap").style.display = "";
+  document.getElementById("homeVisitDate").value = todayStr();
+  renderHomeServantsPicker("homeVisitServants");
+  openModal("modalHomeVisit");
+});
+document.getElementById("btnBulkVisitedOld")?.addEventListener("click", async ()=>{
+  const method = "زيارة منزلية";
   const before = [...selectedIds].map(id=>{
     const c = contacts.find(x=>x.id===id);
     return {id, visited: c?.visited||false, visitMethod: c?.visitMethod||null, visitedAt: c?.visitedAt||null, visitedBy: c?.visitedBy||null};
@@ -17423,6 +17436,13 @@ document.getElementById("btnBulkSend").addEventListener("click", ()=>{
   startSending();
 });
 
+document.getElementById("btnBulkToTour").addEventListener("click", ()=>{
+  const ids = [...selectedIds]; if(!ids.length){ toast("محدش متحدد"); return; }
+  ids.forEach(id=>visitMapSelectedIds.add(id));
+  const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = `محدد: ${visitMapSelectedIds.size}`;
+  try{ renderVisitMapPickList(); }catch(_){}
+  toast(`🧭 اتضافوا للجولة (${ids.length}) — الإجمالي ${visitMapSelectedIds.size}. افتح «الخريطة» وابدأ الجولة.`);
+});
 document.getElementById("btnBulkMissing").addEventListener("click", ()=>{
   const ids = new Set(selectedIds);
   if(!ids.size){ toast("محدش متحدد"); return; }
@@ -24972,10 +24992,12 @@ document.getElementById("hvResetSel").addEventListener("change", async e=>{
   try{ await setDoc(doc(db,"meta",myChurchCode), {homeVisitResetDays:n}, {merge:true}); hvResetDays = n; hvSyncSel(); toast(n ? `اللون هيرجع أحمر بعد ${n} يوم` : "الأخضر هيفضل لحد ما الكل يبقى أخضر"); try{ renderVisitMap(); renderVisitMapNotVisited(); }catch(_){} }
   catch(err){ console.error(err); toast("تعذر الحفظ — محتاج صلاحية"); hvSyncSel(); }
 });
+let homeVisitFromContacts = false;
 document.getElementById("btnBulkHomeVisit").addEventListener("click", ()=>{
   const list = [...visitMapSelectedIds].map(id=>contacts.find(c=>c.id===id)).filter(Boolean);
   if(!list.length){ toast("حدد شخص واحد على الأقل الأول"); return; }
-  homeVisitContactId = null; homeVisitBulkIds = list.map(c=>c.id);
+  homeVisitContactId = null; homeVisitBulkIds = list.map(c=>c.id); homeVisitFromContacts = false;
+  document.getElementById("homeVisitMethodWrap").style.display = "none"; document.getElementById("homeVisitMethod").value = "زيارة منزلية";
   document.getElementById("homeVisitName").textContent = `${list.length} مخدوم`;
   const bl = document.getElementById("homeVisitBulkList"); bl.style.display = ""; bl.textContent = list.map(c=>mapDisplayName(c)).join("، ");
   document.getElementById("homeVisitDate").value = todayStr();
@@ -24992,7 +25014,8 @@ document.getElementById("btnSelectAllMapPick").addEventListener("click", ()=>{
 });
 window.openHomeVisitModal = (contactId)=>{
   const c = contacts.find(x=>x.id===contactId); if(!c) return;
-  homeVisitContactId = contactId; homeVisitBulkIds = [];
+  homeVisitContactId = contactId; homeVisitBulkIds = []; homeVisitFromContacts = false;
+  document.getElementById("homeVisitMethodWrap").style.display = "none"; document.getElementById("homeVisitMethod").value = "زيارة منزلية";
   document.getElementById("homeVisitBulkList").style.display = "none";
   document.getElementById("homeVisitName").textContent = isFamilyRecord(c) ? familyLine(c) : c.name;
   document.getElementById("homeVisitDate").value = todayStr();
@@ -25009,14 +25032,19 @@ document.getElementById("btnSaveHomeVisit").addEventListener("click", async ()=>
     try{
       for(const id of homeVisitBulkIds){
         const c = contacts.find(x=>x.id===id); if(!c) continue;
-        if(visitationLog.some(v=>v.contactId===id && v.date===date && v.method==="زيارة منزلية")){ skipped++; continue; }
-        await updateDoc(doc(db,"contacts",id), {visited:true, visitMethod:"زيارة منزلية", visitedAt: date===todayStr() ? serverTimestamp() : Timestamp.fromDate(new Date(date+"T12:00:00")), visitedBy: currentUserEmail||""});
-        await addDoc(colVisitationLog, {contactId:id, date, method:"زيارة منزلية", ...svs, churchCode:myChurchCode, recordedBy:currentUserEmail||null, createdAt:serverTimestamp()});
+        const bmethod = document.getElementById("homeVisitMethod").value || "زيارة منزلية";
+        if(visitationLog.some(v=>v.contactId===id && v.date===date && v.method===bmethod)){ skipped++; continue; }
+        const wasVisited = !!c.visited;
+        if(homeVisitFromContacts && !wasVisited){ try{ logAfeqadEntry(id, bmethod); }catch(_){} }
+        await updateDoc(doc(db,"contacts",id), {visited:true, visitMethod:bmethod, visitedAt: date===todayStr() ? serverTimestamp() : Timestamp.fromDate(new Date(date+"T12:00:00")), visitedBy: currentUserEmail||""});
+        await addDoc(colVisitationLog, {contactId:id, date, method:bmethod, ...svs, churchCode:myChurchCode, recordedBy:currentUserEmail||null, createdAt:serverTimestamp()});
         ok++;
       }
       logActivity("تسجيل افتقاد منزلي (جماعي)", `${ok} مخدوم — ${svs.servantNames.join("، ")}`);
-      visitMapSelectedIds.clear(); homeVisitBulkIds = [];
-      const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = "محدد: 0";
+      if(homeVisitFromContacts){ selectedIds.clear(); homeVisitFromContacts = false; try{ renderContacts(); }catch(_){} showEncouragementMessage(); }
+      else visitMapSelectedIds.clear();
+      homeVisitBulkIds = [];
+      const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = "محدد: " + visitMapSelectedIds.size;
       closeModal("modalHomeVisit"); showCelebration("🏠"); toast(`تم تسجيل الافتقاد لـ ${ok}${skipped?` (و${skipped} كانوا متسجلين النهارده)`:""} ✅`);
       try{ renderVisitMapPickList(); renderVisitMap(); renderVisitMapNotVisited(); }catch(_){}
     }catch(err){ console.error(err); toast(`وقف عند ${ok} — تأكد من الإنترنت وقواعد الأمان`); }
@@ -25441,7 +25469,15 @@ function sfRender(){
   ba.disabled = !sfPicked.size; bl.disabled = !sfPicked.size;
   bl.textContent = `📍 حدد موقع واحد للمحددين (${sfPicked.size})`;
 }
-document.getElementById("streetNameQ").addEventListener("input", sfCompute);
+let sfLiveT = null;
+document.getElementById("streetNameQ").addEventListener("input", ()=>{
+  sfCompute();
+  clearTimeout(sfLiveT);
+  sfLiveT = setTimeout(()=>{ // يفلتر قايمة المخدومين فوراً وانت بتكتب
+    if(sfQuery && sfHits.length){ streetGeoFilter = {name: sfQuery, ids: new Set(sfHits.map(c=>c.id))}; renderStreetFilterBadge(); renderContacts(); }
+    else if(!sfQuery && streetGeoFilter){ streetGeoFilter = null; renderStreetFilterBadge(); renderContacts(); }
+  }, 350);
+});
 document.getElementById("streetNameGroup").addEventListener("change", sfCompute);
 document.getElementById("streetNoLocOnly").addEventListener("change", sfCompute);
 document.getElementById("streetFilterResult").addEventListener("change", e=>{
@@ -28132,7 +28168,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "260"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "261"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
