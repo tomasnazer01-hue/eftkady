@@ -2818,7 +2818,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v265</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v266</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3100,7 +3100,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v265</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v266</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4719,7 +4719,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div class="muted" style="font-size:12px;margin:4px 0 8px">بيتحدد من هنا هل كل خادم يشوف مخدومين فصله بس، ولا كل المخدومين، وبيتطبق على كل الشاشات (القايمة والحضور والتقارير والخريطة وغيرها). الأمين بيشوف الكل في الحالتين. الخادم اللي ما اتحددلوش فصل بيشوف الكل، واللي متوزع عليه مخدومين بيشوفهم حتى لو من فصل تاني.</div>
         <select id="servantScopeSel">
           <option value="all">👥 كل المخدومين</option>
-          <option value="class">🧸 مخدومين فصله بس</option>
+          <option value="class">🧸 مخدومين وخدام فصله بس</option>
         </select>
         </div>
       </details>
@@ -7393,7 +7393,8 @@ async function startAppListeners(churchCode){
   }));
 
   unsubscribers.push(onSnapshot(query(collection(db,"users"), where("churchCode","==",churchCode), where("status","==","approved")), snap=>{
-    churchServants = snap.docs.map(d=>{ const x = d.data(); return {id:d.id, ...x, rawName:x.name, name: (x.name && x.grade) ? `${x.name} - ${x.grade}` : x.name}; }).sort(servantCmp); try{ populateServantsHubGrade(); }catch(_){} try{ renderRegServants(); }catch(_){}
+    churchServantsRaw = snap.docs.map(d=>{ const x = d.data(); return {id:d.id, ...x, rawName:x.name, name: (x.name && x.grade) ? `${x.name} - ${x.grade}` : x.name}; }).sort(servantCmp);
+    churchServants = churchServantsRaw.filter(servantVisibleToMe); try{ populateServantsHubGrade(); }catch(_){} try{ renderRegServants(); }catch(_){}
     try{ rescopeContacts(); }catch(_){}
     servantsLoadedOnce = true;
     enrichServantPhones();
@@ -7421,7 +7422,7 @@ async function startAppListeners(churchCode){
       document.getElementById("namePrefixInput").value = namePrefix;
       document.getElementById("nameSuffixInput").value = nameSuffix;
       msgOv = (d.msgOverrides && typeof d.msgOverrides==="object") ? d.msgOverrides : {};
-      { const ns = d.servantScope==="class" ? "class" : "all"; const sel = document.getElementById("servantScopeSel"); if(sel) sel.value = ns; if(ns!==servantScope){ servantScope = ns; try{ rescopeContacts(); }catch(_){ } } }
+      { const ns = d.servantScope==="class" ? "class" : "all"; const sel = document.getElementById("servantScopeSel"); if(sel) sel.value = ns; if(ns!==servantScope){ servantScope = ns; try{ rescopeContacts(); }catch(_){ } try{ rescopeServants(); }catch(_){} } }
       { const nd = Math.max(0, parseInt(d.homeVisitResetDays,10)||0), nc = typeof d.homeVisitCycleStart==="string" ? d.homeVisitCycleStart : "";
         if(nd!==hvResetDays || nc!==hvCycleStart){ hvResetDays = nd; hvCycleStart = nc; try{ hvSyncSel(); if(visitMapInstance) renderVisitMap(); renderVisitMapNotVisited(); }catch(_){ } } }
       { extServants = Array.isArray(d.extServants) ? d.extServants.filter(x=>x && x.id && x.name) : []; try{ renderRegServants(); }catch(_){ } }
@@ -9327,6 +9328,26 @@ function contactAgeYears(c){
   return (age>=0 && age<130) ? age : null;
 }
 let servantScope = "all";   // meta.servantScope: "all" | "class"
+let churchServantsRaw = [];
+// لما الإعداد «فصله بس» يبقى شغال: الخادم يشوف خدام فصله بس (نفس قاعدة المخدومين)
+function servantVisibleToMe(sv){
+  if(servantScope!=="class") return true;
+  if(!myRole || myRole==="admin" || myRole==="member" || myRole==="specialist") return true;
+  if(myService==="متزوجين") return true;
+  if(sv.id===myUid) return true;
+  const me = churchServantsRaw.find(x=>x.id===myUid);
+  if(!me || !me.grade) return true;
+  if(myRole==="supervisor") return true;
+  if(!sv.grade) return false;
+  const ck = gradeKeyOfText(sv.grade), sk = gradeKeyOfText(me.grade);
+  return sv.grade===me.grade || (!!ck && ck===sk);
+}
+function rescopeServants(){
+  const next = churchServantsRaw.filter(servantVisibleToMe);
+  if(next.length===churchServants.length && next.every((x,i)=>x===churchServants[i])) return;
+  churchServants = next;
+  try{ renderServantFilterChips(); renderVisitFilterChips(); renderContacts(); }catch(_){}
+}
 function contactVisibleToMe(c){
   if(servantScope!=="class") return true;
   if(!myRole || myRole==="admin" || myRole==="member" || myRole==="specialist") return true;
@@ -9339,6 +9360,7 @@ function contactVisibleToMe(c){
   return gn===me.grade || (!!ck && ck===sk);
 }
 function rescopeContacts(){
+  try{ rescopeServants(); }catch(_){}
   const next = contactsRaw.filter(contactVisibleToMe);
   if(next.length===contacts.length && next.every((c,i)=>c===contacts[i])) return;
   contacts = next;
@@ -9545,7 +9567,7 @@ document.getElementById("servantScopeSel")?.addEventListener("change", async e=>
   const v = e.target.value==="class" ? "class" : "all";
   try{
     await setDoc(doc(db,"meta",myChurchCode), {servantScope: v}, {merge:true});
-    servantScope = v; try{ rescopeContacts(); }catch(_){}
+    servantScope = v; try{ rescopeContacts(); }catch(_){} try{ rescopeServants(); }catch(_){}
     toast(v==="class" ? "✅ كل خادم هيشوف مخدومين فصله بس" : "✅ كل الخدام هيشوفوا كل المخدومين");
   }catch(err){ console.error(err); toast("تعذر الحفظ"); }
 });
@@ -28194,7 +28216,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "265"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "266"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
