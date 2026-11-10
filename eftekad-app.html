@@ -2818,7 +2818,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v266</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v267</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -2868,10 +2868,11 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-sage btn-sm" id="btnBulkSend">واتس اب 💬</button>
           <button class="btn btn-gold btn-sm" id="btnBulkMissing">📝 بيانات ناقصة</button>
           <button class="btn btn-sage btn-sm" id="btnBulkToTour">🧭 ضيف للجولة</button>
+          <button class="btn btn-gold btn-sm" id="btnBulkStartTour">▶ ابدأ الجولة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkMove">نقل لمجموعة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkVcf">📇 تصدير كجهات اتصال</button>
-          <button class="btn btn-outline btn-sm" id="btnBulkBoy">👦 ولد</button>
-          <button class="btn btn-outline btn-sm" id="btnBulkGirl">👧 بنت</button>
+          <button class="btn btn-outline btn-sm" id="btnBulkBoy" style="display:none">👦 ولد</button>
+          <button class="btn btn-outline btn-sm" id="btnBulkGirl" style="display:none">👧 بنت</button>
           <button class="btn btn-maroon btn-sm" id="btnBulkWrong">رقم غلط</button>
           <button class="btn btn-outline btn-sm" id="btnBulkNoWa">مفيش واتساب</button>
           <button class="btn btn-outline btn-sm" id="btnBulkVisited">✅ تم الافتقاد</button>
@@ -3100,7 +3101,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v266</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v267</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -17479,6 +17480,20 @@ document.getElementById("btnBulkToTour").addEventListener("click", ()=>{
   try{ renderVisitMapPickList(); }catch(_){}
   toast(`🧭 اتضافوا للجولة (${ids.length}) — الإجمالي ${visitMapSelectedIds.size}. افتح «الخريطة» وابدأ الجولة.`);
 });
+document.getElementById("btnBulkStartTour").addEventListener("click", ()=>{
+  const ids = [...selectedIds]; if(!ids.length){ toast("محدش متحدد"); return; }
+  const noLoc = ids.filter(id=>{ const c = contacts.find(x=>x.id===id); return !(c && c.location && typeof c.location.lat==="number"); }).length;
+  if(noLoc===ids.length){ toast("المحددين ملهمش لوكيشن — حدد مواقعهم الأول"); return; }
+  visitMapSelectedIds.clear(); ids.forEach(id=>visitMapSelectedIds.add(id));
+  const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = `محدد: ${visitMapSelectedIds.size}`;
+  selectedIds.clear(); try{ renderContacts(); }catch(_){}
+  document.getElementById("btnOpenVisitMap").click();
+  setTimeout(()=>{ try{
+    renderVtServantsPicker();
+    document.getElementById("btnStartVisitTour").click();
+    if(noLoc) toast(`${noLoc} من المحددين ملهمش لوكيشن وهيتخطوا`);
+  }catch(e){ console.warn(e); } }, 900);
+});
 document.getElementById("btnBulkMissing").addEventListener("click", ()=>{
   const ids = new Set(selectedIds);
   if(!ids.size){ toast("محدش متحدد"); return; }
@@ -28216,7 +28231,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "266"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "267"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
