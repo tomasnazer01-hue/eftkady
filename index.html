@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v273</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v274</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v273</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v274</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11316,6 +11316,26 @@ function waKFillFilters(){
   document.getElementById("waKSpouse").style.display = maMar() ? "" : "none";
   const mode = myService==="متزوجين" ? "married" : (myService && myService!=="ابتدائي") ? "self" : "parents";
   document.getElementById("waKIntro").textContent = WAK_INTRO[mode];
+  waKServiceBadge();
+}
+// الخدمة اللي الرسايل بتتحدد على أساسها = خدمة الكنيسة (إعدادات الكنيسة). بنعرضها هنا وتتغيّر بضغطة (للأدمن)
+function waKServiceBadge(){
+  let box = document.getElementById("waKSvcBadge");
+  if(!box){ box = document.createElement("div"); box.id = "waKSvcBadge"; box.style.cssText = "margin:6px 0 10px;padding:8px 10px;border-radius:10px;background:#EEF3FB;font-size:13px"; document.getElementById("waKIntro").after(box); }
+  const cur = myService || "غير محددة";
+  const hint = /ثانوي|ثانوى/.test(myChurchName||"") ? "ثانوي" : /اعدادي|إعدادي/.test(myChurchName||"") ? "إعدادي" : "";
+  const mismatch = hint && myService!==hint;
+  box.style.background = mismatch ? "#FFF0D6" : "#EEF3FB";
+  const canEdit = myRole==="admin" && myService!=="متزوجين";
+  box.innerHTML = `🏷️ <b>الخدمة:</b> ${cardEsc(cur)}` + (mismatch ? ` <span style="color:#B26A00">⚠️ اسم الكنيسة بيقول «${hint}» والرسايل بتتحدد على الخدمة المضبوطة</span>` : "")
+    + (canEdit ? `<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${["ابتدائي","إعدادي","ثانوي"].map(x=>`<button type="button" class="chip ${x===myService?"active":""}" data-wak-svc="${x}">${x}</button>`).join("")}</div>` : "");
+  box.querySelectorAll("[data-wak-svc]").forEach(b=>b.onclick = async ()=>{
+    if(b.dataset.wakSvc===myService) return;
+    if(!confirm(`تغيّر خدمة الكنيسة لـ «${b.dataset.wakSvc}»؟ الرسايل هتتغيّر على حسبها.`)) return;
+    try{ await updateDoc(doc(db,"churches",myChurchCode), {service:b.dataset.wakSvc, serviceCustomName:"", isMarriedService:false});
+      myService = b.dataset.wakSvc; toast("اتغيّرت الخدمة ✅"); waK.running = false; document.getElementById("waKRun").style.display = "none"; document.getElementById("waKSetup").style.display = "block"; waKFillFilters(); waKRefresh(); }
+    catch(err){ console.error(err); toast("تعذر التغيير" + (err&&err.code ? " ("+err.code+")" : "") + " — لازم تكون أدمن"); }
+  });
 }
 function waKWhyEmpty(){
   let all = 0, noPhone = 0, noWa = 0, sentToday = 0;
@@ -28378,7 +28398,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "273"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "274"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
