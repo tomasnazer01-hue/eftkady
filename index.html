@@ -2836,7 +2836,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v283</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v284</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -2847,6 +2847,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div id="servantFilterChips" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
         <div id="regionFilterChips" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
         <label class="row" style="gap:8px;cursor:pointer;padding:6px 0;font-weight:700"><input type="checkbox" id="chkNotHomeVisited" style="width:auto" /> 🏠 لسه ما تمش افتقاده منزلي</label>
+        <label class="row" style="gap:8px;cursor:pointer;padding:6px 0;font-weight:700"><input type="checkbox" id="chkInTour" style="width:auto" /> 🧭 اللي في الجولة <span class="muted" id="inTourCnt" style="font-weight:600"></span></label>
         </div>
         <div class="card" id="dataStatusCard" data-hide-married style="margin-bottom:8px">
           <h2 style="margin:0">📋 بيانات المخدومين (ناقصة / مكتملة) <span id="dataStatusCount" class="muted" style="font-size:12px"></span></h2>
@@ -3120,7 +3121,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v283</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v284</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5939,8 +5940,9 @@ let recentSendFilter = false;
 let assignedFilterMine = false;
 let assignedServantFilter = "all";
 const assignedServantSet = new Set();
-let homeNotVisitedFilter = false;
+let homeNotVisitedFilter = false, inTourFilter = false;
 document.addEventListener("change", e=>{
+  if(e.target && e.target.id==="chkInTour"){ inTourFilter = e.target.checked; renderContacts(); return; }
   if(e.target && e.target.id==="chkNotHomeVisited"){ homeNotVisitedFilter = e.target.checked; try{ renderVisitFilterChips(); }catch(_){} renderContacts(); }
 });
 let churchServants = [];
@@ -9408,6 +9410,7 @@ function getFilteredContacts(){
     if(recentSendFilter && !wasRecentlySent(c)) return false;
     if(assignedServantSet.size && !(assignedServantSet.has(c.assignedTo) || assignedServantSet.has(c.assignedHusbandUid) || assignedServantSet.has(c.assignedWifeUid))) return false;
     if(homeNotVisitedFilter && hvIsGreen(_hvNow.get(c.id))) return false;
+    if(inTourFilter && !visitMapSelectedIds.has(c.id)) return false;
     if(assignedFilterMine && c.assignedTo!==myUid && c.assignedHusbandUid!==myUid && c.assignedWifeUid!==myUid) return false;
     if(q && !( (c.name||"").toLowerCase().arIncludes(q) || (c.phone||"").includes(q) || (c.address||"").toLowerCase().arIncludes(q) )) return false;
     return true;
@@ -9480,6 +9483,9 @@ function updateContactFiltersBadge(){
     if(assignedFilterMine) n++;
     if(assignedServantSet.size) n++;
     if(homeNotVisitedFilter) n++;
+    if(inTourFilter) n++;
+    const ic = document.getElementById("inTourCnt"); if(ic) ic.textContent = `(${visitMapSelectedIds.size})`;
+    const ik = document.getElementById("chkInTour"); if(ik) ik.checked = inTourFilter;
   }catch(_){}
   const el = document.getElementById("contactFiltersBadge"); if(el) el.textContent = n ? `(${n} شغّالة)` : "";
 }
@@ -28517,7 +28523,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "283"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "284"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
