@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v276</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v277</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v276</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v277</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11251,6 +11251,8 @@ const waKKindOf = (c,r)=> r.mode==="married" ? r.type : waKKind(c);
 function waKEntryParse(key){ const [id,f] = String(key).split("|"); const c = contacts.find(x=>x.id===id); return {c, r: c ? waKRec(c, f||undefined) : null}; }
 // قايمة الإرسال: [{key, c, r}] — في المتزوجين ممكن الأسرة تطلع مرتين (زوج وزوجة) لو اخترت «الاتنين»
 // بداية الأسبوع = آخر سبت (الأسبوع من السبت للخميس)
+// اتبعتله رسالة واتس الأسبوع ده (من أي خادم — التاريخ متسجل على المخدوم نفسه)
+const waKSentWeek = (c,r)=> (waKLast(c,r)||"") >= waKWeekStart();
 function waKWeekStart(){ const d = new Date(); d.setDate(d.getDate() - ((d.getDay() - 6 + 7) % 7)); return todayStr(d); }
 // الخادم اللي هيتحدد نوعه: المختار في الفلتر، أو أنا لو «الكل/أنا»
 function waKSenderUid(){ const sv = (document.getElementById("waKServant")||{}).value || "all"; return (sv==="all"||sv==="mine") ? myUid : sv; }
@@ -11284,7 +11286,7 @@ function waKBuildQueue(){
     forces.forEach(f=>{
       const r = waKRec(c, f); if(!r) return;
       if(st==="today" && waKLast(c, r)===todayStr()) return;
-      if(st==="week" && (waKLast(c, r)||"") >= waKWeekStart()) return;
+      if(waKSentWeek(c, r)) return;
       if(st==="never" && waKLast(c, r)) return;
       out.push({key: c.id + (f ? "|"+f : ""), c, r});
     });
@@ -11395,7 +11397,10 @@ function waKRender(){
   }
   const key = waK.queue[waK.idx];
   const {c, r} = waKEntryParse(key);
-  if(!c || !r || c.noWhatsapp){ waK.idx++; waKRender(); return; }
+  if(!c || !r || c.noWhatsapp || (!waKOnly && !waK.sent.has(key) && waKSentWeek(c, r))){
+    if(waK.dir===-1 && waK.idx>0) waK.idx--; else { waK.dir = 1; waK.idx++; }
+    waKRender(); return; }
+  waK.dir = 1;
   waKSvc = waKSvcOf(c);
   const mode = r.mode, kind = waKKindOf(c, r), ck = waKSvc+":"+mode+":"+kind, done = waK.sent.has(key);
   const gi = mode==="married" ? "💍" : c.gender==="female" ? "👧" : c.gender==="male" ? "👦" : "";
@@ -11458,7 +11463,7 @@ function waKRender(){
   $("waKSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, ta.value), "_blank"); markSent(); waK.idx++; waKRender(); };
   $("waKNext").onclick = ()=>{ if(!done) markSent(); waK.idx++; waKRender(); };
   $("waKSkip").onclick = ()=>{ waK.idx++; waKRender(); };
-  $("waKPrev").onclick = ()=>{ if(waK.idx>0){ waK.idx--; waKRender(); } };
+  $("waKPrev").onclick = ()=>{ if(waK.idx>0){ waK.dir = -1; waK.idx--; waKRender(); } };
   $("waKExit").onclick = waKExit;
   $("waKNoWa").onclick = async ()=>{ try{ await updateDoc(doc(db,"contacts",c.id), {noWhatsapp:true}); c.noWhatsapp = true; toast("اتسجّل إنه مفيش واتساب وهيتخطّى"); waK.idx++; waKRender(); }catch(e){ console.warn(e); toast("تعذر الحفظ"); } };
   const toTpl = ()=>{
@@ -28421,7 +28426,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "276"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "277"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
