@@ -2836,7 +2836,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v285</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v286</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3121,7 +3121,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v285</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v286</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -20303,6 +20303,7 @@ function vtRender(){
       ${phones.length ? phones.map(ph=>`<div style="display:flex;gap:6px;align-items:center"><span style="font-size:13px;flex:1" dir="ltr">${cardEsc(ph.label)} ${cardEsc(ph.num)}</span><a href="tel:+${normalizeDigits(ph.num)}" style="${btn};background:#E1EEE3;color:#4E7A5E">📞 اتصال</a><a href="${waLink(ph.num,'')}" target="_blank" style="${btn};background:#DCF8C6;color:#1c8a47">💬</a>${ph.role?`<button type="button" data-ask-missing="${ph.role}" style="${btn};background:#FFF4DB;color:#8a6d15" title="ابعت البيانات الناقصة">✉️ ناقص</button>`:""}</div>`).join("") : `<div class="muted" style="font-size:12.5px">مفيش رقم تليفون</div>`}
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      ${phones.map(ph=>{ const em = ph.role==="father" ? "👨" : ph.role==="mother" ? "👩" : (ph.label||"").includes("الزوج") && !(ph.label||"").includes("الزوجة") ? "🤵" : (ph.label||"").includes("الزوجة") ? "👰" : "📞"; return `<a href="tel:+${normalizeDigits(ph.num)}" title="اتصال ${cardEsc(ph.label)}" style="${btn};background:#E1EEE3;color:#2E7D32;font-size:15px">${em} اتصال</a>`; }).join("")}
       ${loc ? `<a href="https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}" target="_blank" style="${btn};background:#FBE9C6;color:#8a6d15">📍 اللوكيشن</a><a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}&travelmode=${visitRouteTravelMode}" target="_blank" style="${btn};background:#E7EEF9;color:#1B2A4A">🧭 وصّلني</a>` : `<span class="muted" style="font-size:12.5px">مفيش لوكيشن محدد</span>`}
       <button type="button" id="vtHomeBtn" style="${btn};background:#4E7A5E;color:#fff">🏠 سجّل افتقاد</button>
       <button type="button" id="vtEditBtn" style="${btn};background:#F1E4B8;color:#8a6d15">✏️ بياناته</button>
@@ -28527,7 +28528,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "285"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "286"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
