@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v275</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v276</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v275</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v276</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11407,7 +11407,9 @@ function waKRender(){
     <div class="row" style="justify-content:space-between;align-items:center"><b>${waK.idx+1} من ${waK.queue.length}</b><span class="muted" style="font-size:12px">اتبعت: ${waK.sent.size}</span></div>
     <div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px"><div style="font-weight:800;font-size:16px;flex:1">${gi} ${cardEsc(title)}</div><button type="button" id="waKEdit" title="تعديل بيانات المخدوم" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:7px 10px">✏️</button></div>
     <div style="margin:8px 0;font-size:13px">هيتبعت لـ: <b>${r.label}</b> ${r.name && r.type!=="self" ? cardEsc(r.name)+" " : ""}<span dir="ltr">${cardEsc(r.phone)}</span></div>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+    <div style="font-size:12px;color:#666;margin:4px 0">اختار الرسالة اللي عايزها تتبعت:</div>
+    <div id="waKList" style="display:flex;flex-direction:column;gap:6px;max-height:230px;overflow:auto;margin-bottom:8px">${opts.map(o=>`<button type="button" data-v="${cardEsc(o.v)}" style="text-align:right;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font:inherit;font-size:12.5px;cursor:pointer"><b>${cardEsc(o.label)}</b><div style="color:#666;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cardEsc((o.text||"").replace(/\s+/g," ").slice(0,70))}</div></button>`).join("")}</div>
+    <div style="display:none;gap:6px;align-items:center;margin-bottom:6px">
       <button type="button" id="waKMPrev" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:8px 10px" title="الرسالة السابقة">▶</button>
       <select id="waKSw" style="flex:1;min-width:0">${opts.map(o=>`<option value="${cardEsc(o.v)}">${cardEsc(o.label)}</option>`).join("")}</select>
       <button type="button" id="waKMNext" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:8px 10px" title="الرسالة التالية">◀</button>
@@ -11443,7 +11445,10 @@ function waKRender(){
     parent: mode==="parents" ? (r.type==="self" ? "مامت أو بابا" : (first || parentTitle(r.type))) : (first || (r.type==="wife" ? "الزوجة" : "الزوج")),
     kid: mode==="married" ? familyLine(c) : firstName(c.name||""),
     servant: myServantSign()});
-  sw.onchange = ()=>{ waK.cur[ck] = sw.value; load(); };
+  const paint = ()=>{ box.querySelectorAll("#waKList [data-v]").forEach(b=>{ const on = b.dataset.v===sw.value; b.style.borderColor = on ? "#25D366" : ""; b.style.background = on ? "#E8F8EE" : "#fff"; }); };
+  sw.onchange = ()=>{ waK.cur[ck] = sw.value; load(); paint(); };
+  box.querySelectorAll("#waKList [data-v]").forEach(b=>b.onclick = ()=>{ sw.value = b.dataset.v; sw.onchange(); });
+  paint();
   const step = d=>{ const i = Math.max(0, sw.selectedIndex); sw.selectedIndex = (i+d+opts.length)%opts.length; sw.onchange(); };
   $("waKMNext").onclick = ()=>step(1); $("waKMPrev").onclick = ()=>step(-1);
   $("waKNew").onclick = ()=>{ ta.value = waKFill(WAK_BLANK[mode], c, r); ta.focus(); toast("اكتب الرسالة الجديدة ودوس 💾 احفظ كرسالة"); };
@@ -28416,7 +28421,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "275"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "276"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
