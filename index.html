@@ -1334,6 +1334,23 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <button class="btn btn-primary btn-block" id="btnPhoneGateSave">💾 حفظ ومتابعة</button>
       </div>
     </div>
+    <div class="modal-overlay" id="modalTourSetup">
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>▶ ابدأ الجولة</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalTourSetup')">✕</button></div>
+        <div class="item-name" id="tsCount" style="margin-bottom:8px"></div>
+        <label class="field-label">هتتحرك إزاي؟</label>
+        <div class="row wrap"><button type="button" class="chip" data-ts-travel="walking">🚶 ماشي</button><button type="button" class="chip" data-ts-travel="driving">🚗 عربية</button></div>
+        <div style="height:10px"></div>
+        <label class="field-label">ترتيب الزيارات</label>
+        <div class="row wrap"><button type="button" class="chip" data-ts-order="near">📍 الأقرب لموقعي (بالشوارع)</button><button type="button" class="chip" data-ts-order="pick">🔢 بالترتيب اللي حددته</button></div>
+        <div class="muted" style="font-size:12px;margin:4px 0 10px">الترتيب بيتحسب على الطرق الفعلية (الشوارع اللي تتمشي أو تتسوق فيها) مش بالخط المستقيم.</div>
+        <label class="field-label">👥 الخدام اللي معاك</label>
+        <div id="tourSetupServants" style="max-height:170px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:2px 10px"></div>
+        <label class="row" style="gap:8px;cursor:pointer;margin:8px 0 4px"><input type="checkbox" id="tsShare" checked style="width:auto" /><span style="font-size:13px">📡 شارك الجولة مع الخدام المختارين</span></label>
+        <label class="row" style="gap:8px;cursor:pointer;margin:4px 0 10px"><input type="checkbox" id="tsAutoReg" checked style="width:auto" /><span style="font-size:13px">سجّل الافتقاد المنزلي تلقائي بالخدام دول لما تخلص كل زيارة</span></label>
+        <button class="btn btn-gold btn-block" id="btnTourSetupGo">▶ ابدأ الجولة</button>
+      </div>
+    </div>
     <div class="modal-overlay" id="modalHomeVisit">
       <div class="modal-sheet">
         <div class="modal-head"><h3>🏠 تسجيل افتقاد منزلي</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalHomeVisit')">✕</button></div>
@@ -2818,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v267</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v268</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3101,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v267</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v268</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -20161,7 +20178,36 @@ new MutationObserver(()=>{
     }, 1800);
   }, 700);
 })();
-document.getElementById("btnStartVisitTour").addEventListener("click", async ()=>{
+function openTourSetup(){
+  if(!visitMapSelectedIds.size){ toast("حدد شخص واحد على الأقل (من القايمة أو من الخريطة)"); return; }
+  const m = document.getElementById("modalTourSetup");
+  document.getElementById("tsCount").textContent = `${visitMapSelectedIds.size} مخدوم في الجولة`;
+  m.querySelectorAll("[data-ts-travel]").forEach(b=>b.classList.toggle("active", b.dataset.tsTravel===visitRouteTravelMode));
+  m.querySelectorAll("[data-ts-order]").forEach(b=>b.classList.toggle("active", b.dataset.tsOrder===vtOrderMode));
+  const pre = vtState.servants?.servantUids?.length ? vtState.servants.servantUids : undefined;
+  renderHomeServantsPicker("tourSetupServants", pre);
+  openModal("modalTourSetup");
+}
+document.querySelectorAll("[data-ts-travel]").forEach(b=>b.addEventListener("click", ()=>{ document.querySelectorAll("[data-ts-travel]").forEach(x=>x.classList.toggle("active", x===b)); }));
+document.querySelectorAll("[data-ts-order]").forEach(b=>b.addEventListener("click", ()=>{ document.querySelectorAll("[data-ts-order]").forEach(x=>x.classList.toggle("active", x===b)); }));
+document.getElementById("btnTourSetupGo").addEventListener("click", ()=>{
+  const m = document.getElementById("modalTourSetup");
+  const trv = m.querySelector("[data-ts-travel].active")?.dataset.tsTravel || "walking";
+  const ord = m.querySelector("[data-ts-order].active")?.dataset.tsOrder || "near";
+  const svs = readHomeServants("tourSetupServants");
+  const ar = document.getElementById("tsAutoReg").checked;
+  if(ar && !svs.servantUids.length){ toast("اختار الخدام اللي معاك الأول (أو شيل التسجيل التلقائي)"); return; }
+  visitRouteTravelMode = trv; vtOrderMode = ord;
+  document.querySelectorAll("[data-travel-mode]").forEach(x=>x.classList.toggle("active", x.dataset.travelMode===trv));
+  document.querySelectorAll("[data-tour-order]").forEach(x=>x.classList.toggle("active", x.dataset.tourOrder===ord));
+  renderHomeServantsPicker("visitTourServants", svs.servantUids);
+  document.getElementById("visitTourShare").checked = document.getElementById("tsShare").checked;
+  document.getElementById("visitTourAutoReg").checked = ar;
+  closeModal("modalTourSetup");
+  vtDoStart();
+});
+document.getElementById("btnStartVisitTour").addEventListener("click", openTourSetup);
+async function vtDoStart(){
   let list = [...visitMapSelectedIds].map(id=>contacts.find(c=>c.id===id)).filter(c=>c);
   if(!list.length){ toast("حدد شخص واحد على الأقل (من القايمة أو من الخريطة)"); return; }
   if(vtOrderMode==="near"){
@@ -20180,7 +20226,7 @@ document.getElementById("btnStartVisitTour").addEventListener("click", async ()=
   if(visitRouteLayer && visitMapInstance){ try{ visitMapInstance.removeLayer(visitRouteLayer); }catch(_){} visitRouteLayer = null; }
   vtHidden = false; vtStartWatch(); vtDraw(true); vtRender();
   setTimeout(()=>{ try{ document.getElementById("visitTourPanel").scrollIntoView({block:"start", behavior:"smooth"}); }catch(_){} }, 200);
-});
+}
 function renderVtServantsPicker(){
   const box = document.getElementById("visitTourServants"); if(!box) return;
   const cur = [...box.querySelectorAll(".homeSvChk:checked")].map(i=>i.value);
@@ -28231,7 +28277,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "267"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "268"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
