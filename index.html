@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v272</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v273</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v272</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v273</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11188,6 +11188,33 @@ const WAK_DEFAULTS = {
   }
 };
 const WAK_DEF_LABELS = {parents:["تشجيع على القداس ومدارس الأحد","اطمئنان وتذكير بحب"], self:["تشجيع على القداس والاجتماع","اطمئنان وتذكير"], married:["تشجيع على حضور الاجتماع","اطمئنان وتذكير"]};
+// رسايل كل خدمة على حسب سن مخدوميها (إعدادي/ثانوي ليهم نصوص خاصة — مش نفس رسايل الأطفال)
+const WAK_SVC_DEFAULTS = {
+  "إعدادي": {
+    boy: [
+      "سلام ونعمة يا {اسم_الطفل_الأول} 🙏\nافتقدناك في اجتماع الإعدادي يا بطل، ومكانك ناقص من غيرك! نستناك الجمعة في القداس وبعدها الاجتماع، هنقضي وقت حلو مع إخواتك ونتعلم حاجات جديدة.\nربنا يحفظك ويبارك حياتك ✝️\n{اسم_الخادم}\nكنيسة العدرا ومارمرقس الطوابق",
+      "نعمة وسلام يا {اسم_الطفل_الأول} 🌿\nعايزين نطمن عليك، ونفكّرك إن إخواتك في الإعدادي مستنيينك. لو في أي ظرف منعك من الحضور، قولّنا وإحنا جنبك دايمًا 🙏\n{اسم_الخادم}"
+    ],
+    girl: [
+      "سلام ونعمة يا {اسم_الطفل_الأول} 🙏\nافتقدناكي في اجتماع الإعدادي، ومكانك ناقص من غيرك! نستناكي الجمعة في القداس وبعدها الاجتماع، هنقضي وقت حلو مع صحابك ونتعلم حاجات جديدة.\nربنا يحفظك ويبارك حياتك ✝️\n{اسم_الخادم}\nكنيسة العدرا ومارمرقس الطوابق",
+      "نعمة وسلام يا {اسم_الطفل_الأول} 🌿\nعايزين نطمن عليكي، ونفكّرك إن صحابك في الإعدادي مستنيينك. لو في أي ظرف منعك من الحضور، قولّنا وإحنا جنبك دايمًا 🙏\n{اسم_الخادم}"
+    ]
+  },
+  "ثانوي": {
+    boy: [
+      "سلام ونعمة يا {اسم_الطفل_الأول} 🙏\nوحشتنا في اجتماع الثانوي. عارفين إن الدراسة والدروس واخدة وقتك، بس وجودك في القداس والاجتماع بيفرق معانا ومعاك، ومكانك محفوظ دايمًا.\nربنا يحفظك ويوفقك ويبارك حياتك ✝️\n{اسم_الخادم}\nكنيسة العدرا ومارمرقس الطوابق",
+      "نعمة وسلام يا {اسم_الطفل_الأول} 🌿\nحبينا نطمن عليك، ونقولك إن الاجتماع في انتظارك. لو في أي حاجة شاغلاك أو محتاج تتكلم فيها، إحنا جنبك ومعاك في صلاتنا 🙏\n{اسم_الخادم}"
+    ],
+    girl: [
+      "سلام ونعمة يا {اسم_الطفل_الأول} 🙏\nوحشتينا في اجتماع الثانوي. عارفين إن الدراسة والدروس واخدة وقتك، بس وجودك في القداس والاجتماع بيفرق معانا ومعاكي، ومكانك محفوظ دايمًا.\nربنا يحفظك ويوفقك ويبارك حياتك ✝️\n{اسم_الخادم}\nكنيسة العدرا ومارمرقس الطوابق",
+      "نعمة وسلام يا {اسم_الطفل_الأول} 🌿\nحبينا نطمن عليكي، ونقولك إن الاجتماع في انتظارك. لو في أي حاجة شاغلاكي أو محتاجة تتكلمي فيها، إحنا جنبك ومعاكي في صلاتنا 🙏\n{اسم_الخادم}"
+    ]
+  }
+};
+const WAK_SVC_LABELS = {"إعدادي":["تشجيع على القداس واجتماع الإعدادي","اطمئنان وتذكير"], "ثانوي":["تشجيع على القداس واجتماع الثانوي","اطمئنان ودعم"]};
+let waKSvc = "";
+function waKSvcOf(c){ const m = waKMode(c); return m==="parents" ? "ابتدائي" : m==="married" ? "متزوجين" : (myService || c.service || "إعدادي"); }
+function waKOvKey(mode, kind, i){ return "wak:"+waKSvc+":"+mode+":"+kind+":"+i; }
 const WAK_BLANK = {parents:"سلام ونعمة يا {أستاذ/أستاذة} {اسم_ولي_الأمر} 🙏\n", self:"سلام ونعمة يا {اسم_الطفل_الأول} 🙏\n", married:"سلام ونعمة يا {أستاذ/أستاذة} {اسمه/ها} 🙏\n"};
 const WAK_INTRO = {
   parents:"خدمة الأطفال: الرسالة بتروح للأم، ولو مفيش فللأب، ولو مفيش فلرقم الطفل نفسه (\"يا مامت أو بابا ...\"). الولد بياخد صيغة المذكر والبنت المؤنث. كل ما تبعت واحدة بيفتحلك اللي بعده.",
@@ -11263,17 +11290,18 @@ function waKBuildQueue(){
   return out;
 }
 function waKOptions(mode, kind){
-  const defs = WAK_DEFAULTS[mode][kind] || [], labels = WAK_DEF_LABELS[mode];
-  const out = defs.map((t,i)=>{ const ov = msgOv["wak:"+mode+":"+kind+":"+i]; const has = typeof ov==="string" && ov.trim();
+  const sd = mode==="self" && WAK_SVC_DEFAULTS[waKSvc];
+  const defs = (sd && sd[kind]) || WAK_DEFAULTS[mode][kind] || [], labels = (sd && WAK_SVC_LABELS[waKSvc]) || WAK_DEF_LABELS[mode];
+  const out = defs.map((t,i)=>{ const ov = msgOv[waKOvKey(mode, kind, i)]; const has = typeof ov==="string" && ov.trim();
     return {v:"d:"+i, label:"✨ "+(labels[i]||("رسالة "+(i+1)))+(has?" ✏️":""), text: has ? ov : t}; });
   let saved;
   if(mode==="married") saved = templates.filter(t=>t.spKind===kind || t.spKind==="both");
-  else if(mode==="self") saved = templates.filter(t=>t.waMode==="self" && (parentTplKind(t)===kind || parentTplKind(t)==="both"));
-  else saved = parentTplList().filter(t=>{ const k = parentTplKind(t); return (k===kind || k==="both") && !t.spKind && !t.waMode; });
+  else if(mode==="self") saved = templates.filter(t=>t.waMode==="self" && (!t.svc || t.svc===waKSvc) && (parentTplKind(t)===kind || parentTplKind(t)==="both"));
+  else saved = parentTplList().filter(t=>{ const k = parentTplKind(t); return (k===kind || k==="both") && !t.spKind && !t.waMode && (!t.svc || t.svc==="ابتدائي"); });
   saved.forEach(t=>out.push({v:"t:"+t.id, label:"💾 "+(t.text||"").replace(/\s+/g," ").slice(0,40), text:t.text||""}));
   return out;
 }
-function waKBase(mode, kind){ const o = waKOptions(mode, kind); return (o.find(x=>x.v===waK.cur[mode+":"+kind])||o[0]).text; }
+function waKBase(mode, kind){ const o = waKOptions(mode, kind); return (o.find(x=>x.v===waK.cur[waKSvc+":"+mode+":"+kind])||o[0]).text; }
 function waKFill(text, c, r){
   if(r.mode==="parents") return fillParentMessage(text, r);
   const t0 = (text||"").replace(/\{اسم_الخادم\}/g, myServantSign());
@@ -11344,7 +11372,8 @@ function waKRender(){
   const key = waK.queue[waK.idx];
   const {c, r} = waKEntryParse(key);
   if(!c || !r || c.noWhatsapp){ waK.idx++; waKRender(); return; }
-  const mode = r.mode, kind = waKKindOf(c, r), ck = mode+":"+kind, done = waK.sent.has(key);
+  waKSvc = waKSvcOf(c);
+  const mode = r.mode, kind = waKKindOf(c, r), ck = waKSvc+":"+mode+":"+kind, done = waK.sent.has(key);
   const gi = mode==="married" ? "💍" : c.gender==="female" ? "👧" : c.gender==="male" ? "👦" : "";
   const title = mode==="married" ? familyLine(c) : (c.name||"");
   const opts = waKOptions(mode, kind);
@@ -11421,7 +11450,7 @@ function waKRender(){
     const t = toTpl(); if(!t){ toast("الرسالة فاضية"); return; }
     const cur = waK.cur[ck] || "";
     if(!cur.startsWith("t:")){ // رسالة جاهزة: التعديل بيتحفظ في إعدادات الكنيسة وبيحل محل النص الأصلي
-      const k = "wak:"+mode+":"+kind+":"+cur.slice(2);
+      const k = waKOvKey(mode, kind, cur.slice(2));
       msgOv[k] = t;
       try{ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); toast("اتعدّلت الرسالة الجاهزة ✅"); refreshSw(); waKRenderKeep(); }
       catch(err){ delete msgOv[k]; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); }
@@ -11448,10 +11477,10 @@ function waKRender(){
     }catch(err){ console.error("waKDel", err); toast("تعذر الحذف" + (err&&err.code ? " ("+err.code+")" : "")); }
   };
   const rs = $("waKReset");
-  if(rs){ rs.style.display = (waK.cur[ck]||"").startsWith("d:") && msgOv["wak:"+mode+":"+kind+":"+waK.cur[ck].slice(2)] ? "" : "none";
+  if(rs){ rs.style.display = (waK.cur[ck]||"").startsWith("d:") && msgOv[waKOvKey(mode, kind, waK.cur[ck].slice(2))] ? "" : "none";
     rs.onclick = async ()=>{
       if(!confirm("ترجّع النص الأصلي للرسالة دي؟")) return;
-      const k = "wak:"+mode+":"+kind+":"+waK.cur[ck].slice(2); const old = msgOv[k]; delete msgOv[k];
+      const k = waKOvKey(mode, kind, waK.cur[ck].slice(2)); const old = msgOv[k]; delete msgOv[k];
       try{ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); toast("رجعت للنص الأصلي ✅"); waKRender(); }
       catch(err){ msgOv[k] = old; console.error(err); toast("تعذر الحفظ"); } }; }
   $("waKSave").onclick = async ()=>{
@@ -11468,12 +11497,12 @@ function waKRender(){
 async function waKSaveTemplate(text, kind, mode){
   text = (text||"").trim(); if(!text){ toast("اكتب الرسالة الأول"); return; }
   const ex = waKOptions(mode, kind).find(o=>o.v.startsWith("t:") && (o.text||"").trim()===text);
-  if(ex){ waK.cur[mode+":"+kind] = ex.v; toast("الرسالة دي محفوظة قبل كده"); return true; }
-  const tag = mode==="married" ? {spKind:kind} : mode==="self" ? {kidKind:kind, waMode:"self"} : {kidKind:kind};
+  if(ex){ waK.cur[waKSvc+":"+mode+":"+kind] = ex.v; toast("الرسالة دي محفوظة قبل كده"); return true; }
+  const tag = mode==="married" ? {spKind:kind} : mode==="self" ? {kidKind:kind, waMode:"self", svc:waKSvc} : {kidKind:kind, svc:"ابتدائي"};
   try{
     const ref = await addDoc(colTemplates, {text, category:"عام", ...tag, order: templates.length, churchCode: myChurchCode, createdAt: serverTimestamp()});
     if(ref && ref.id){
-      waK.cur[mode+":"+kind] = "t:"+ref.id;
+      waK.cur[waKSvc+":"+mode+":"+kind] = "t:"+ref.id;
       if(!templates.some(t=>t.id===ref.id)) templates.push({id:ref.id, text, category:"عام", ...tag, order:templates.length, churchCode:myChurchCode});
     }
     logActivity("حفظ رسالة افتقاد", mode+"/"+kind);
@@ -28349,7 +28378,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "272"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "273"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
