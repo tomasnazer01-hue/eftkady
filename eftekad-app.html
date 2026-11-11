@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v268</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v269</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v268</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v269</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11226,7 +11226,18 @@ function waKWeekStart(){ const d = new Date(); d.setDate(d.getDate() - ((d.getDa
 // الخادم اللي هيتحدد نوعه: المختار في الفلتر، أو أنا لو «الكل/أنا»
 function waKSenderUid(){ const sv = (document.getElementById("waKServant")||{}).value || "all"; return (sv==="all"||sv==="mine") ? myUid : sv; }
 function waKSenderGender(){ const u = churchServants.find(x=>x.id===waKSenderUid()); return u && (u.gender==="female"||u.gender==="male") ? u.gender : null; }
+let waKOnly = null, runEditCtx = "";
 function waKBuildQueue(){
+  if(waKOnly){
+    const o = [], spf0 = document.getElementById("waKSpouse").value || "auto", sg0 = waKSenderGender();
+    contacts.forEach(c=>{
+      if(!waKOnly.has(c.id) || c.graduated || c.noWhatsapp || c.wrongNumber) return;
+      const married = waKMode(c)==="married";
+      const forces = married ? (spf0==="both" ? ["husband","wife"] : (spf0==="husband"||spf0==="wife") ? [spf0] : (sg0 ? [sg0==="female" ? "wife" : "husband"] : [])) : [undefined];
+      forces.forEach(f=>{ const r = waKRec(c, f); if(r) o.push({key: c.id + (f ? "|"+f : ""), c, r}); });
+    });
+    return o;
+  }
   const g = document.getElementById("waKGroup").value || "all", sv = document.getElementById("waKServant").value || "all", st = document.getElementById("waKStatus").value;
   const spf = document.getElementById("waKSpouse").value || "auto", out = [];
   contacts.forEach(c=>{
@@ -11307,12 +11318,14 @@ function waKRefresh(){
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
   q.forEach(({c,r})=>{ cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
-  document.getElementById("waKSummary").textContent = q.length
+  document.getElementById("waKSummary").textContent = (waKOnly ? `📌 للمحددين بس (${waKOnly.size}) — ` : "") + (q.length
     ? `هيتبعت لـ ${q.length}: ` + Object.entries(cnt).map(([l,n])=>`${n} ${l.replace(/^\S+\s/,"")}`).join("، ") + "." + (unk?` ⚠️ ${unk} منهم جنسهم مش متحدد (هياخدوا صيغة المذكر).`:"")
-    : waKWhyEmpty();
+    : waKWhyEmpty());
   document.getElementById("btnWaKStart").disabled = !q.length;
 }
-function waKOpen(){
+function waKOpen(only){
+  waKOnly = (only instanceof Set && only.size) ? only : null;
+  if(waKOnly){ waK.running = false; document.getElementById("waKSetup").style.display = ""; document.getElementById("waKRun").style.display = "none"; }
   openScreenSimple("screen-wa");
   document.querySelectorAll("nav.bottomnav .nav-more").forEach(x=>x.classList.remove("active"));
   document.getElementById("navWaBtn").classList.add("active"); moveNavIndicator(document.getElementById("navWaBtn"));
@@ -11338,7 +11351,7 @@ function waKRender(){
   const scParent = mode==="parents" ? "👪 ولي الأمر" : "👫 الزوج/الزوجة", scKid = mode==="married" ? "🏠 اسم الأسرة" : "🧒 اسم المخدوم";
   box.innerHTML = `
     <div class="row" style="justify-content:space-between;align-items:center"><b>${waK.idx+1} من ${waK.queue.length}</b><span class="muted" style="font-size:12px">اتبعت: ${waK.sent.size}</span></div>
-    <div style="font-weight:800;font-size:16px;margin:6px 0 2px">${gi} ${cardEsc(title)}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px"><div style="font-weight:800;font-size:16px;flex:1">${gi} ${cardEsc(title)}</div><button type="button" id="waKEdit" title="تعديل بيانات المخدوم" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:7px 10px">✏️</button></div>
     <div style="margin:8px 0;font-size:13px">هيتبعت لـ: <b>${r.label}</b> ${r.name && r.type!=="self" ? cardEsc(r.name)+" " : ""}<span dir="ltr">${cardEsc(r.phone)}</span></div>
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
       <button type="button" id="waKMPrev" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:8px 10px" title="الرسالة السابقة">▶</button>
@@ -11362,6 +11375,7 @@ function waKRender(){
       <button type="button" id="waKExit" style="${btn};background:#FBE4E4;color:#B23B3B;padding:6px 14px">✖ خروج</button>
     </div>`;
   const $ = id=>box.querySelector("#"+id);
+  $("waKEdit").onclick = ()=>{ runEditCtx = "wak"; openEditModal(c.id); };
   const sw = $("waKSw"), ta = $("waKMsg");
   const load = ()=>{ sw.value = waK.cur[ck]; if(sw.value!==waK.cur[ck]){ sw.selectedIndex = 0; waK.cur[ck] = sw.value; } ta.value = waKFill(waKBase(mode, kind), c, r); };
   if(!waK.cur[ck]) waK.cur[ck] = "d:0";
@@ -11437,7 +11451,7 @@ document.getElementById("btnWaKBack").addEventListener("click", ()=>goToDashboar
 (function(){
   const wa = document.getElementById("navWaBtn"), ms = document.getElementById("navMissBtn");
   const bind = (el,fn)=>{ el.addEventListener("click", fn); el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" ") fn(); }); };
-  bind(wa, waKOpen); bind(ms, ()=>openMissingAsk());
+  bind(wa, ()=>waKOpen()); bind(ms, ()=>openMissingAsk());
 })();
 
 // ==================================================================
@@ -13996,7 +14010,7 @@ function maRender(){
   const btn = "display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;font-family:Tajawal,sans-serif;text-decoration:none";
   box.innerHTML = `
     <div class="row" style="justify-content:space-between;align-items:center"><b>${maIdx+1} من ${maQueue.length}</b><span class="muted" style="font-size:12px">اتبعت: ${maSent.size}</span></div>
-    <div style="font-weight:800;font-size:16px;margin:6px 0 2px">${cardEsc(maName(c))}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px"><div style="font-weight:800;font-size:16px;flex:1">${cardEsc(maName(c))}</div><button type="button" id="maEdit" title="تعديل بيانات المخدوم" style="${btn};background:#E7EEF9;color:#1B2A4A;padding:7px 10px">✏️</button></div>
     <div class="muted" style="font-size:12.5px">${cardEsc(maSub(c))}</div>
     <div style="margin:8px 0;font-size:13px">هيتبعت لـ: <b>${rec.label}</b> <span dir="ltr">${cardEsc(rec.phone)}</span></div>
     <div style="font-size:12.5px;margin-bottom:6px">الناقص: <b>${miss.join(" · ")}</b></div>
@@ -14016,6 +14030,7 @@ function maRender(){
     </div>
     <div style="text-align:center;margin-top:10px"><button type="button" id="maExit" style="${btn};background:#FBE4E4;color:#B23B3B;padding:6px 14px">✖ خروج</button></div>`;
   const $ = id=>box.querySelector("#"+id);
+  $("maEdit").onclick = ()=>{ runEditCtx = "ma"; openEditModal(c.id); };
   { const v = maVars(c, rec); wireShortcuts(box, $("maMsg"), {parent: v.pn || v.who, kid: v.nm, servant: v.sign}); }
   $("maOpenWa").onclick = ()=>{ ensureDirectAccess(c); window.open(waLink(rec.phone, $("maMsg").value), "_blank"); $("maNext").click(); };
   $("maSaveTpl").onclick = ()=>{ const t = maToTemplate($("maMsg").value, c, rec); if(!t.trim()){ toast("الرسالة فاضية"); return; } saveMsgOv(maKey(), t); };
@@ -17469,6 +17484,12 @@ function pickTemplate(){
 }
 
 document.getElementById("btnBulkSend").addEventListener("click", ()=>{
+  const ids = new Set(selectedIds); if(!ids.size){ toast("محدش متحدد"); return; }
+  waKOpen(ids);
+  if(!document.getElementById("btnWaKStart").disabled) document.getElementById("btnWaKStart").click();
+  else toast(document.getElementById("waKSummary").textContent || "مفيش حد يتبعتله");
+});
+(document.getElementById("btnBulkSendOld")||document.createElement("i")).addEventListener("click", ()=>{
   const ignoreGuard = document.getElementById("chkIgnoreSendGuard").checked;
   sendGuardOverride = ignoreGuard;
   const allSelected = [...selectedIds];
@@ -17517,6 +17538,7 @@ document.getElementById("btnBulkMissing").addEventListener("click", ()=>{
   const withMiss = [...ids].filter(id=>{ const c = contacts.find(x=>x.id===id); return c && maMiss(c).length; }).length;
   if(!withMiss){ toast("المحددين بياناتهم كاملة ✅"); return; }
   openMissingAsk(ids);
+  const stBtn = document.getElementById("btnMaStart"); if(stBtn && !stBtn.disabled) stBtn.click();
 });
 
 let sendPreferCategory = null;
@@ -28277,7 +28299,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "268"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "269"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28490,6 +28512,13 @@ setTimeout(refreshInstallBanner, 1500);
   document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) tick(); });
   setTimeout(tick, 5000);
 })();
+
+// v269: بعد تعديل مخدوم من قايمة الإرسال يرجّع لنفس البطاقة محدّثة
+new MutationObserver(()=>{
+  if(document.getElementById("modalEdit").classList.contains("show") || !runEditCtx) return;
+  const ctx = runEditCtx; runEditCtx = "";
+  setTimeout(()=>{ try{ if(ctx==="wak" && waK.running) waKRender(); else if(ctx==="ma") maRender(); }catch(e){ console.warn(e); } }, 400);
+}).observe(document.getElementById("modalEdit"), {attributes:true, attributeFilter:["class"]});
 </script>
 </body>
 </html>
