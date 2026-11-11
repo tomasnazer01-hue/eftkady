@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v280</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v281</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -2884,6 +2884,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div id="bulkBody" style="display:none;margin-top:8px"><div class="row wrap">
           <button class="btn btn-sage btn-sm" id="btnBulkSend">واتس اب 💬</button>
           <button class="btn btn-gold btn-sm" id="btnBulkMissing">📝 بيانات ناقصة</button>
+          <button class="btn btn-sage btn-sm" id="btnBulkNotice">🔔 رسالة تنبيه بالافتقاد</button>
           <button class="btn btn-sage btn-sm" id="btnBulkToTour">🧭 ضيف للجولة</button>
           <button class="btn btn-gold btn-sm" id="btnBulkStartTour">▶ ابدأ الجولة</button>
           <button class="btn btn-outline btn-sm" id="btnBulkMove">نقل لمجموعة</button>
@@ -3118,7 +3119,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v280</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v281</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5887,6 +5888,9 @@ const MSG_DEFS = {
   treeNudge_prep: {label:"🌱 تشجيع شجرة — إعدادي", chips:["{الاسم}"], hint:"", def:"وحشتنا يا {الاسم} 🌱 شجرتك مستنياك، ارجع سجّل صلاتك وحضورك وكمّل ثمارك 💪"},
   treeNudge_sec: {label:"🌱 تشجيع شجرة — ثانوي", chips:["{الاسم}"], hint:"", def:"سلام ونعمة يا {الاسم} 🌱 لاحظنا إنك بعيد شوية عن شجرتك. مستنيينك ترجع نصلّي وننمو مع بعض 🙏"},
   treeNudge_married: {label:"🌱 تشجيع شجرة — متزوجين", chips:["{يا_فلان}"], hint:"", def:"سلام ونعمة{يا_فلان} 🙏 وحشتونا! أسرتكم جزء مهم من اجتماعنا، ومستنيينكم تكمّلوا شجرتكم 🌱💍"},
+  visitNotice_parents: {label:"🔔 رسالة تنبيه بالافتقاد — ابتدائي (لولي الأمر)", chips:["{اسم_ولي_الأمر}","{اسم_الطفل_الأول}","{اسم_الخادم}"], hint:"بتتبعت لأولياء الأمور تنبّههم إن الخادم جاي يفتقد. {اسم_الخادم} = توقيعك.", def:"سلام ونعمة يا {اسم_ولي_الأمر} 🙏\nإن شاء الله هنعدّي نفتقد {اسم_الطفل_الأول} في أقرب وقت ونطمّن عليكم.\nقولولنا الوقت المناسب ليكم 🌿\n{اسم_الخادم}"},
+  visitNotice_self: {label:"🔔 رسالة تنبيه بالافتقاد — إعدادي / ثانوي (للمخدوم)", chips:["{اسم_الطفل_الأول}","{اسم_الخادم}"], hint:"بتتبعت للمخدوم نفسه تنبّهه إن الخادم جاي يفتقده. {اسم_الخادم} = توقيعك.", def:"سلام ونعمة يا {اسم_الطفل_الأول} 🌿\nوحشتنا! إن شاء الله هعدّي أفتقدك قريب، قولي إنت فاضي إمتى؟ 🤝\n{اسم_الخادم}"},
+  visitNotice_married: {label:"🔔 رسالة تنبيه بالافتقاد — متزوجين", chips:["{اسم_المستلم}","{اسم_الخادم}"], hint:"بتتبعت للزوج أو الزوجة تنبّههم بزيارة الافتقاد.", def:"سلام ونعمة يا {اسم_المستلم} 🙏\nإن شاء الله هنعدّي نفتقدكم في أقرب وقت، قولولنا الوقت المناسب ليكم 🌿\n{اسم_الخادم}"},
   starWeek: {label:"🏆 تهنئة نجم الأسبوع", chips:["{الاسم}","{التوقيع}"], hint:"", def:"مبروك يا {الاسم} 🏆🎉\nانت من أشطر الشطار الأسبوع ده! صليت صبح وليل وقريت الكتاب المقدس كل يوم، وحضرت القداس والاجتماع. ربنا يبارك فيك ويكمّل معاك 🙏\n{التوقيع}"},
   servantBirthday: {label:"🎂 تهنئة عيد ميلاد خادم", chips:["{الاسم}","{التوقيع}"], hint:"", def:"كل سنة وانت طيب يا {الاسم} 🎉🎂 ربنا يفرح قلبك ويبارك في خدمتك.\n{التوقيع}"},
   servantLogin: {label:"🔑 بيانات دخول خادم جديد", chips:["{الاسم}","{الرابط}","{الإيميل}","{سطر_الباسورد}"], hint:"{سطر_الباسورد} بيتحط مكانه «🔑 الباسورد: …».",
@@ -17682,6 +17686,58 @@ document.getElementById("btnBulkStartTour").addEventListener("click", ()=>{
     if(noLoc) toast(`${noLoc} من المحددين ملهمش لوكيشن وهيتخطوا`);
   }catch(e){ console.warn(e); } }, 900);
 });
+// 🔔 رسالة تنبيه بالافتقاد: نص قابل للتعديل + اختصارات، بيتبعت للمحددين واحد واحد (من غير ما يسجّل إنه افتقاد)
+function bulkNoticeOpen(){
+  const ids = new Set(selectedIds); if(!ids.size){ toast("محدش متحدد"); return; }
+  const meG = (churchServants.find(x=>x.id===myUid)||{}).gender;
+  const list = [];
+  contacts.forEach(c=>{
+    if(!ids.has(c.id) || c.graduated || c.noWhatsapp || c.wrongNumber) return;
+    let r = null;
+    if(waKMode(c)==="married"){ const f = meG==="female" ? "wife" : "husband"; r = waKRec(c, f) || waKRec(c, f==="wife" ? "husband" : "wife"); }
+    else r = waKRec(c);
+    if(r && r.phone) list.push({c, r});
+  });
+  if(!list.length){ toast("مفيش أرقام واتساب للمحددين"); return; }
+  const mode = list[0].r.mode, key = "visitNotice_" + (mode==="married" ? "married" : mode==="parents" ? "parents" : "self");
+  let el = document.getElementById("modalBulkNotice");
+  if(!el){ el = document.createElement("div"); el.className = "modal-overlay"; el.id = "modalBulkNotice"; document.body.appendChild(el); }
+  let idx = 0;
+  const draw = ()=>{
+    if(idx >= list.length){
+      el.innerHTML = `<div class="modal-sheet"><div class="modal-head"><h3>🔔 تنبيه بالافتقاد</h3></div><div style="text-align:center;padding:14px"><div style="font-size:42px">🎉</div><b>خلصت القايمة</b></div><button class="btn btn-primary btn-block" id="bnClose">تمام</button></div>`;
+      el.querySelector("#bnClose").onclick = ()=>closeModal("modalBulkNotice"); return;
+    }
+    const {c, r} = list[idx];
+    const prev = el.querySelector("#bnText") ? el.querySelector("#bnText").value : msgTpl(key);
+    el.innerHTML = `<div class="modal-sheet">
+      <div class="modal-head"><h3>🔔 تنبيه بالافتقاد</h3><button class="icon-btn" style="background:#eee;color:#333" id="bnX">✕</button></div>
+      <div class="muted" style="font-size:12.5px"><b>${idx+1} من ${list.length}</b> — هيتبعت لـ <b>${cardEsc(c.name||"")}</b> ${r.name && r.type!=="self" ? "("+cardEsc(r.name)+") " : ""}<span dir="ltr">${cardEsc(r.phone)}</span></div>
+      ${shortcutBarHtml(mode!=="self", mode==="parents" ? "👪 ولي الأمر" : "👫 الزوج/الزوجة", mode==="married" ? "🏠 اسم الأسرة" : "🧒 اسم المخدوم")}
+      <textarea id="bnText" style="width:100%;min-height:140px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;box-sizing:border-box;font-family:inherit">${cardEsc(prev)}</textarea>
+      <div class="muted" style="font-size:11.5px;margin:6px 0 2px">معاينة لـ ${cardEsc(firstName(c.name||""))}:</div>
+      <div id="bnPrev" style="white-space:pre-wrap;background:#F6F8FC;border-radius:10px;padding:8px;font-size:13px"></div>
+      <div class="row wrap" style="gap:6px;margin-top:8px">
+        <button class="btn btn-outline btn-sm" id="bnSave">💾 احفظ كنص ثابت</button>
+        <button class="btn btn-outline btn-sm" id="bnReset">↩️ النص الأصلي</button>
+      </div>
+      <div class="row" style="gap:6px;margin-top:10px">
+        <button class="btn btn-sage" style="flex:1" id="bnSend">📤 ابعت واتس اب ← التالي</button>
+        <button class="btn btn-ghost" id="bnSkip">⏭️ تخطي</button>
+      </div></div>`;
+    const ta = el.querySelector("#bnText"), pv = el.querySelector("#bnPrev");
+    const upd = ()=>{ pv.textContent = waKFill(ta.value, c, r); };
+    ta.addEventListener("input", upd); upd();
+    wireShortcuts(el, ta, {parent: mode==="married" ? "{اسم_المستلم}" : "{اسم_ولي_الأمر}", kid: mode==="married" ? "{اسم_المستلم}" : "{اسم_الطفل_الأول}", servant: "{اسم_الخادم}"});
+    el.querySelector("#bnX").onclick = ()=>closeModal("modalBulkNotice");
+    el.querySelector("#bnSave").onclick = async ()=>{ await saveMsgOv(key, ta.value); };
+    el.querySelector("#bnReset").onclick = ()=>{ ta.value = msgDefault(key); upd(); };
+    el.querySelector("#bnSkip").onclick = ()=>{ idx++; draw(); };
+    el.querySelector("#bnSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, waKFill(ta.value, c, r)), "_blank"); idx++; draw(); };
+  };
+  draw(); openModal("modalBulkNotice");
+}
+document.getElementById("btnBulkNotice").addEventListener("click", bulkNoticeOpen);
 document.getElementById("btnBulkMissing").addEventListener("click", ()=>{
   const ids = new Set(selectedIds);
   if(!ids.size){ toast("محدش متحدد"); return; }
@@ -28449,7 +28505,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "280"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "281"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
