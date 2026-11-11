@@ -5862,7 +5862,7 @@ function applyViewOnlyLockIfNeeded(screenEl, sectionKey){
 // ===== كل الرسائل القابلة للتعديل (النص الأصلي + اللي اتعدّل في meta.msgOverrides) =====
 let msgOv = {};
 // updateDoc بيستبدل الحقل كله (setDoc+merge كان بيسيب المفاتيح المحذوفة)
-async function saveMsgOv(){ try{ await updateDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}); }catch(e){ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); } }
+async function saveMsgOvAll(){ try{ await updateDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}); }catch(e){ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); } }
 const MSG_DEFS = {
   parentMissing: {label:"✉️ طلب البيانات الناقصة من الأب/الأم", chips:["{ماما/بابا}","{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
     hint:"الرسالة اللي بتتبعت لماما/بابا بالبيانات الناقصة بس. {الناقص} بيتحط مكانه القايمة مرقمة، و{التوقيع} اسمك، و{الكنيسة} اسم الكنيسة.",
@@ -11476,7 +11476,7 @@ function waKRender(){
     if(!cur.startsWith("t:")){ // رسالة جاهزة: التعديل بيتحفظ في إعدادات الكنيسة وبيحل محل النص الأصلي
       const k = waKOvKey(mode, kind, cur.slice(2));
       msgOv[k] = t;
-      try{ await saveMsgOv(); toast("اتعدّلت الرسالة الجاهزة ✅"); refreshSw(); waKRenderKeep(); }
+      try{ await saveMsgOvAll(); toast("اتعدّلت الرسالة الجاهزة ✅"); refreshSw(); waKRenderKeep(); }
       catch(err){ delete msgOv[k]; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); }
       return;
     }
@@ -11494,7 +11494,7 @@ function waKRender(){
       if(!confirm("تحذف الرسالة الجاهزة دي؟ (تقدر ترجّعها بزرار «رجّع الرسايل المحذوفة»)")) return;
       const k = waKOvKey(mode, kind, cur.slice(2))+":del";
       msgOv[k] = "1";
-      try{ await saveMsgOv(); const o = waKOptions(mode, kind); waK.cur[ck] = o.length ? o[0].v : ""; toast("اتحذفت ✅"); waKRender(); }
+      try{ await saveMsgOvAll(); const o = waKOptions(mode, kind); waK.cur[ck] = o.length ? o[0].v : ""; toast("اتحذفت ✅"); waKRender(); }
       catch(err){ delete msgOv[k]; console.error(err); toast("تعذر الحذف" + (err&&err.code ? " ("+err.code+")" : "")); }
       return;
     }
@@ -11512,14 +11512,14 @@ function waKRender(){
   if(rsAll){ const hid = Object.keys(msgOv).filter(k=>k.startsWith("wak:"+waKSvc+":"+mode+":"+kind+":") && k.endsWith(":del"));
     rsAll.style.display = hid.length ? "" : "none";
     rsAll.onclick = async ()=>{ const old = {}; hid.forEach(k=>{ old[k]=msgOv[k]; delete msgOv[k]; });
-      try{ await saveMsgOv(); toast("رجعت الرسايل ✅"); waKRender(); }
+      try{ await saveMsgOvAll(); toast("رجعت الرسايل ✅"); waKRender(); }
       catch(err){ Object.assign(msgOv, old); console.error(err); toast("تعذر الاسترجاع"); } }; }
   const rs = $("waKReset");
   if(rs){ rs.style.display = (waK.cur[ck]||"").startsWith("d:") && msgOv[waKOvKey(mode, kind, waK.cur[ck].slice(2))] ? "" : "none";
     rs.onclick = async ()=>{
       if(!confirm("ترجّع النص الأصلي للرسالة دي؟")) return;
       const k = waKOvKey(mode, kind, waK.cur[ck].slice(2)); const old = msgOv[k]; delete msgOv[k];
-      try{ await saveMsgOv(); toast("رجعت للنص الأصلي ✅"); waKRender(); }
+      try{ await saveMsgOvAll(); toast("رجعت للنص الأصلي ✅"); waKRender(); }
       catch(err){ msgOv[k] = old; console.error(err); toast("تعذر الحفظ"); } }; }
   $("waKSave").onclick = async ()=>{
     const t = toTpl(); if(!t){ toast("الرسالة فاضية"); return; }
@@ -14815,7 +14815,7 @@ document.getElementById("unifiedMsgDetails").addEventListener("toggle", (e)=>{
 });
 async function saveMsgOv(k, val){
   if(val==null || !String(val).trim() || String(val)===msgDefault(k)) delete msgOv[k]; else msgOv[k] = String(val);
-  try{ await saveMsgOv(); toast(msgOv[k] ? "تم حفظ الرسالة ✅" : "رجعت للنص الأصلي ✅"); }
+  try{ await saveMsgOvAll(); toast(msgOv[k] ? "تم حفظ الرسالة ✅" : "رجعت للنص الأصلي ✅"); }
   catch(err){ console.error(err); toast("تعذر الحفظ — تأكد من الإنترنت"); }
   try{ updateTithesCard(); updateContactNumberCard(); }catch(_){}
   loadUnifiedMsg();

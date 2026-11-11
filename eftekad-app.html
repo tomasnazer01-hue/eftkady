@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v274</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v275</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v274</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v275</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5861,6 +5861,8 @@ function applyViewOnlyLockIfNeeded(screenEl, sectionKey){
 }
 // ===== كل الرسائل القابلة للتعديل (النص الأصلي + اللي اتعدّل في meta.msgOverrides) =====
 let msgOv = {};
+// updateDoc بيستبدل الحقل كله (setDoc+merge كان بيسيب المفاتيح المحذوفة)
+async function saveMsgOvAll(){ try{ await updateDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}); }catch(e){ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); } }
 const MSG_DEFS = {
   parentMissing: {label:"✉️ طلب البيانات الناقصة من الأب/الأم", chips:["{ماما/بابا}","{الاسم}","{الناقص}","{رابط_شخصي}","{التوقيع}","{الكنيسة}"],
     hint:"الرسالة اللي بتتبعت لماما/بابا بالبيانات الناقصة بس. {الناقص} بيتحط مكانه القايمة مرقمة، و{التوقيع} اسمك، و{الكنيسة} اسم الكنيسة.",
@@ -11292,13 +11294,15 @@ function waKBuildQueue(){
 function waKOptions(mode, kind){
   const sd = mode==="self" && WAK_SVC_DEFAULTS[waKSvc];
   const defs = (sd && sd[kind]) || WAK_DEFAULTS[mode][kind] || [], labels = (sd && WAK_SVC_LABELS[waKSvc]) || WAK_DEF_LABELS[mode];
-  const out = defs.map((t,i)=>{ const ov = msgOv[waKOvKey(mode, kind, i)]; const has = typeof ov==="string" && ov.trim();
-    return {v:"d:"+i, label:"✨ "+(labels[i]||("رسالة "+(i+1)))+(has?" ✏️":""), text: has ? ov : t}; });
+  const out = [];
+  defs.forEach((t,i)=>{ if(msgOv[waKOvKey(mode, kind, i)+":del"]) return; const ov = msgOv[waKOvKey(mode, kind, i)]; const has = typeof ov==="string" && ov.trim();
+    out.push({v:"d:"+i, label:"✨ "+(labels[i]||("رسالة "+(i+1)))+(has?" ✏️":""), text: has ? ov : t}); });
   let saved;
   if(mode==="married") saved = templates.filter(t=>t.spKind===kind || t.spKind==="both");
   else if(mode==="self") saved = templates.filter(t=>t.waMode==="self" && (!t.svc || t.svc===waKSvc) && (parentTplKind(t)===kind || parentTplKind(t)==="both"));
   else saved = parentTplList().filter(t=>{ const k = parentTplKind(t); return (k===kind || k==="both") && !t.spKind && !t.waMode && (!t.svc || t.svc==="ابتدائي"); });
   saved.forEach(t=>out.push({v:"t:"+t.id, label:"💾 "+(t.text||"").replace(/\s+/g," ").slice(0,40), text:t.text||""}));
+  if(!out.length) out.push({v:"d:0", label:"✍️ رسالة فاضية", text:""});
   return out;
 }
 function waKBase(mode, kind){ const o = waKOptions(mode, kind); return (o.find(x=>x.v===waK.cur[waKSvc+":"+mode+":"+kind])||o[0]).text; }
@@ -11417,7 +11421,7 @@ function waKRender(){
       <button type="button" id="waKUpd" style="${btn};background:#E3F2FD;color:#0D47A1;flex:1">✏️ حفظ كتعديل</button>
       <button type="button" id="waKSave" style="${btn};background:#FFF4D6;color:#8a6a00;flex:1">💾 حفظ كرسالة جديدة</button>
     </div>
-    <div style="margin-top:6px;text-align:center"><button type="button" id="waKReset" style="${btn};background:#eee;color:#555;padding:5px 12px;font-size:12px;display:none">↩️ رجّع النص الأصلي للرسالة دي</button> <button type="button" id="waKDel" style="${btn};background:#FBE4E4;color:#B23B3B;padding:5px 12px;font-size:12px">🗑️ حذف الرسالة</button></div>
+    <div style="margin-top:6px;text-align:center"><button type="button" id="waKReset" style="${btn};background:#eee;color:#555;padding:5px 12px;font-size:12px;display:none">↩️ رجّع النص الأصلي للرسالة دي</button> <button type="button" id="waKRestore" style="${btn};background:#eee;color:#555;padding:5px 12px;font-size:12px;display:none">♻️ رجّع الرسايل المحذوفة</button> <button type="button" id="waKDel" style="${btn};background:#FBE4E4;color:#B23B3B;padding:5px 12px;font-size:12px">🗑️ حذف الرسالة</button></div>
     <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="waKSend" style="${btn};background:#25D366;color:#fff;flex:1">📤 ابعت واتساب ← وانقل للتالي</button></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button type="button" id="waKPrev" style="${btn};background:#E7EEF9;color:#1B2A4A" ${waK.idx===0?"disabled":""}>⬅️ السابق</button>
@@ -11472,7 +11476,7 @@ function waKRender(){
     if(!cur.startsWith("t:")){ // رسالة جاهزة: التعديل بيتحفظ في إعدادات الكنيسة وبيحل محل النص الأصلي
       const k = waKOvKey(mode, kind, cur.slice(2));
       msgOv[k] = t;
-      try{ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); toast("اتعدّلت الرسالة الجاهزة ✅"); refreshSw(); waKRenderKeep(); }
+      try{ await saveMsgOvAll(); toast("اتعدّلت الرسالة الجاهزة ✅"); refreshSw(); waKRenderKeep(); }
       catch(err){ delete msgOv[k]; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); }
       return;
     }
@@ -11486,7 +11490,15 @@ function waKRender(){
   };
   $("waKDel").onclick = async ()=>{
     const cur = waK.cur[ck] || "";
-    if(!cur.startsWith("t:")){ toast("دي رسالة جاهزة ما بتتحذفش — تقدر تعدّلها أو ترجّعها للأصل"); return; }
+    if(cur.startsWith("d:")){
+      if(!confirm("تحذف الرسالة الجاهزة دي؟ (تقدر ترجّعها بزرار «رجّع الرسايل المحذوفة»)")) return;
+      const k = waKOvKey(mode, kind, cur.slice(2))+":del";
+      msgOv[k] = "1";
+      try{ await saveMsgOvAll(); const o = waKOptions(mode, kind); waK.cur[ck] = o.length ? o[0].v : ""; toast("اتحذفت ✅"); waKRender(); }
+      catch(err){ delete msgOv[k]; console.error(err); toast("تعذر الحذف" + (err&&err.code ? " ("+err.code+")" : "")); }
+      return;
+    }
+    if(!cur.startsWith("t:")) return;
     if(!confirm("تحذف الرسالة المحفوظة دي؟")) return;
     const id = cur.slice(2);
     try{
@@ -11496,12 +11508,18 @@ function waKRender(){
       toast("اتحذفت ✅"); waKRender();
     }catch(err){ console.error("waKDel", err); toast("تعذر الحذف" + (err&&err.code ? " ("+err.code+")" : "")); }
   };
+  const rsAll = $("waKRestore");
+  if(rsAll){ const hid = Object.keys(msgOv).filter(k=>k.startsWith("wak:"+waKSvc+":"+mode+":"+kind+":") && k.endsWith(":del"));
+    rsAll.style.display = hid.length ? "" : "none";
+    rsAll.onclick = async ()=>{ const old = {}; hid.forEach(k=>{ old[k]=msgOv[k]; delete msgOv[k]; });
+      try{ await saveMsgOvAll(); toast("رجعت الرسايل ✅"); waKRender(); }
+      catch(err){ Object.assign(msgOv, old); console.error(err); toast("تعذر الاسترجاع"); } }; }
   const rs = $("waKReset");
   if(rs){ rs.style.display = (waK.cur[ck]||"").startsWith("d:") && msgOv[waKOvKey(mode, kind, waK.cur[ck].slice(2))] ? "" : "none";
     rs.onclick = async ()=>{
       if(!confirm("ترجّع النص الأصلي للرسالة دي؟")) return;
       const k = waKOvKey(mode, kind, waK.cur[ck].slice(2)); const old = msgOv[k]; delete msgOv[k];
-      try{ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); toast("رجعت للنص الأصلي ✅"); waKRender(); }
+      try{ await saveMsgOvAll(); toast("رجعت للنص الأصلي ✅"); waKRender(); }
       catch(err){ msgOv[k] = old; console.error(err); toast("تعذر الحفظ"); } }; }
   $("waKSave").onclick = async ()=>{
     const t = toTpl(); if(!t){ toast("الرسالة فاضية"); return; }
@@ -14797,7 +14815,7 @@ document.getElementById("unifiedMsgDetails").addEventListener("toggle", (e)=>{
 });
 async function saveMsgOv(k, val){
   if(val==null || !String(val).trim() || String(val)===msgDefault(k)) delete msgOv[k]; else msgOv[k] = String(val);
-  try{ await setDoc(doc(db,"meta",myChurchCode), {msgOverrides:{...msgOv}}, {merge:true}); toast(msgOv[k] ? "تم حفظ الرسالة ✅" : "رجعت للنص الأصلي ✅"); }
+  try{ await saveMsgOvAll(); toast(msgOv[k] ? "تم حفظ الرسالة ✅" : "رجعت للنص الأصلي ✅"); }
   catch(err){ console.error(err); toast("تعذر الحفظ — تأكد من الإنترنت"); }
   try{ updateTithesCard(); updateContactNumberCard(); }catch(_){}
   loadUnifiedMsg();
@@ -28398,7 +28416,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "274"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "275"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
