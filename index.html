@@ -2836,7 +2836,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v284</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v285</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3121,7 +3121,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v284</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v285</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -9241,7 +9241,11 @@ function renderGroupFilterChips(){
   const visibleGroups = (myRole==="supervisor" ? groups.filter(g=>mySupervisedGroups.includes(g.id)) : groups).filter(g=>!deprecatedIds.includes(g.id));
   const scopedContacts = myRole==="supervisor" ? contacts.filter(c=>mySupervisedGroups.includes(c.group)) : contacts;
   let html = `<button class="chip ${currentGroupFilter==='all'?'active':''}" data-g="all">الكل (${scopedContacts.length})</button>`;
-  visibleGroups.forEach(g=>{
+  // الترتيب: KG1 → KG2 → أولى … سادسة الأول، وبعدها باقي المجموعات (غير مصنف وغيرها) بترتيبها
+  const _gr = g=>{ try{ if(/اعدادي|إعدادي|ثانوي|ثانوى|اعدادى/.test(g.name||"")) return -1; const k = gradeKeyOfText(g.name); const i = PRIMARY_GRADES.indexOf(k); return i; }catch(_){ return -1; } };
+  const _ord = visibleGroups.map((g,i)=>({g,i,r:_gr(g)}));
+  _ord.sort((a,b)=> (a.r<0)-(b.r<0) || (a.r>=0 ? a.r-b.r : a.i-b.i));
+  _ord.map(x=>x.g).forEach(g=>{
     const c = contacts.filter(c=>c.group===g.id).length;
     html += `<button class="chip ${currentGroupFilter===g.id?'active':''}" data-g="${g.id}">${g.name} (${c})</button>`;
   });
@@ -28523,7 +28527,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "284"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "285"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
