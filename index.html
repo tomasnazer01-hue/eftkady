@@ -2836,7 +2836,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v288</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v289</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3121,7 +3121,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v288</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v289</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -20259,6 +20259,7 @@ document.querySelectorAll("[data-tour-order]").forEach(b=>b.addEventListener("cl
   document.querySelectorAll("[data-tour-order]").forEach(x=>x.classList.toggle("active", x===b));
 }));
 function vtStops(){ return vtState.ids.map(id=>contacts.find(c=>c.id===id)).filter(c=>c); }
+const vtNoteDraft = {}; // مسودة الملاحظة لكل مخدوم (بتفضل لو الكارت اتعمله رسم تاني)
 function vtPhones(c){
   const out = []; const add = (label, num, role)=>{ const n = String(num||"").trim(); if(n && !out.some(o=>normalizeDigits(o.num)===normalizeDigits(n))) out.push({label, num:n, role}); };
   if(isFamilyRecord(c)){ add("🤵 الزوج", c.husbandPhone); add("👰 الزوجة", c.wifePhone); }
@@ -20319,6 +20320,10 @@ function vtRender(){
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
       ${phones.length ? phones.map(ph=>`<div style="display:flex;gap:6px;align-items:center"><span style="font-size:13px;flex:1" dir="ltr">${cardEsc(ph.label)} ${cardEsc(ph.num)}</span><a href="tel:+${normalizeDigits(ph.num)}" style="${btn};background:#E1EEE3;color:#4E7A5E">📞 اتصال</a><a href="${waLink(ph.num,'')}" target="_blank" style="${btn};background:#DCF8C6;color:#1c8a47">💬</a>${ph.role?`<button type="button" data-ask-missing="${ph.role}" style="${btn};background:#FFF4DB;color:#8a6d15" title="ابعت البيانات الناقصة">✉️ ناقص</button>`:""}</div>`).join("") : `<div class="muted" style="font-size:12.5px">مفيش رقم تليفون</div>`}
     </div>
+    <div style="margin-top:8px">
+      ${(c.notes&&c.notes.length) ? `<div style="font-size:12px;color:#6b5a00;background:#FFF8DC;border-radius:8px;padding:6px 8px;margin-bottom:6px">📝 ${(c.notes.slice(-2)).map(n=>cardEsc(n.text)).join("<br>📝 ")}</div>` : ""}
+      <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="vtNoteTa" rows="2" placeholder="📝 ملاحظات من المكالمة / الزيارة..." style="flex:1;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;font-family:inherit;box-sizing:border-box">${cardEsc(vtNoteDraft[c.id]||"")}</textarea><button type="button" id="vtNoteSave" style="${btn};background:#F1E4B8;color:#8a6d15">💾 احفظ</button></div>
+    </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
       ${phones.map(ph=>{ const em = ph.role==="father" ? "👨" : ph.role==="mother" ? "👩" : (ph.label||"").includes("الزوج") && !(ph.label||"").includes("الزوجة") ? "🤵" : (ph.label||"").includes("الزوجة") ? "👰" : "📞"; return `<a href="tel:+${normalizeDigits(ph.num)}" title="اتصال ${cardEsc(ph.label)}" style="${btn};background:#E1EEE3;color:#2E7D32;font-size:15px">${em} اتصال</a>`; }).join("")}
       ${loc ? `<a href="https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}" target="_blank" style="${btn};background:#FBE9C6;color:#8a6d15">📍 اللوكيشن</a><a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}&travelmode=${visitRouteTravelMode}" target="_blank" style="${btn};background:#E7EEF9;color:#1B2A4A">🧭 وصّلني</a>` : `<span class="muted" style="font-size:12.5px">مفيش لوكيشن محدد</span>`}
@@ -20346,6 +20351,16 @@ function vtRender(){
   $("vtMiniBtn").onclick = ()=>{ vtMini = !vtMini; vtRender(); };
   $("vtMoveBtn").onclick = ()=>{ vtPanelPos = vtPanelPos==="below" ? "above" : "below"; try{ localStorage.setItem("eftekadVtPos", vtPanelPos); }catch(_){} vtRender(); try{ document.getElementById("visitTourPanel").scrollIntoView({block:"nearest", behavior:"smooth"}); }catch(_){} };
   $("vtHideBtn").onclick = ()=>{ vtHidden = true; vtRender(); };
+  { const nt = $("vtNoteTa"), ns = $("vtNoteSave");
+    if(nt && ns){
+      nt.addEventListener("input", ()=>{ vtNoteDraft[c.id] = nt.value; });
+      ns.onclick = async ()=>{
+        const text = nt.value.trim(); if(!text) return;
+        const notes = [...(c.notes||[]), {text, authorEmail: currentUserEmail||"", createdAt: new Date().toISOString()}];
+        try{ await updateDoc(doc(db,"contacts",c.id), {notes}); c.notes = notes; delete vtNoteDraft[c.id]; logActivity("إضافة ملاحظة", c.name); toast("اتحفظت الملاحظة ✅"); vtRender(); }
+        catch(err){ console.error(err); toast("تعذر حفظ الملاحظة" + (err&&err.code ? " ("+err.code+")" : "")); }
+      };
+    } }
   $("vtPrevBtn").onclick = ()=>{ if(vtState.idx>0){ vtState.idx--; vtSave(); vtDraw(true); vtRender(); } };
   $("vtSkipBtn").onclick = ()=>{ if(!last){ vtState.idx++; vtSave(); vtDraw(true); vtRender(); } };
   const psv = $("vtPanelServants");
@@ -28545,7 +28560,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "288"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "289"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
