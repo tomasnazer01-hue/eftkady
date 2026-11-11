@@ -2712,6 +2712,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div id="visitMapGroupTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
         <div id="visitMapRegionTabs" style="display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding:2px 0 6px;-webkit-overflow-scrolling:touch"></div>
         <div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><select id="visitMapServantSel" class="grow"></select><label class="row" style="gap:6px;font-size:12.5px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="visitMapNotHomeChk" style="width:auto" /> 🏠 لسه ما اتفتقدوش منزلي</label></div>
+        <div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><button type="button" class="btn btn-outline btn-sm" id="btnVmMulti">👆 تحديد جملة: مقفول</button><span class="muted" id="vmMultiCount" style="font-size:12.5px"></span></div>
         <div id="visitMapContainer" style="height:65vh;border-radius:12px;overflow:hidden"></div>
       </div>
     </section>
@@ -2835,7 +2836,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v281</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v282</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3119,7 +3120,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v281</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v282</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -19848,6 +19849,7 @@ window.sendMapMessage = (contactId)=>{
   ta.value = "";
 };
 let visitMapSelectedIds = new Set();
+let vmMulti = false; // وضع «تحديد جملة»: الضغط على أي مخدوم في الخريطة بيضيفه/يشيله من الجولة علطول
 let visitRouteLayer = null;
 let visitMapGroupFilter = new Set(); // empty = show all groups
 let visitMapRegionFilter = "all"; // all | mine | none | <regionId>
@@ -20214,8 +20216,17 @@ window.vmToggleSelect = (id, btn)=>{
   vmSetRing(id, on);
   if(btn){ btn.textContent = on ? "✔️ في الجولة (دوس للإزالة)" : "➕ ضيفه للجولة"; btn.style.background = on ? "#F1E4B8" : "#1B2A4A"; btn.style.color = on ? "#8a6d15" : "#fff"; }
   const cnt = document.getElementById("visitMapSelectedCount"); if(cnt) cnt.textContent = `محدد: ${visitMapSelectedIds.size}`;
+  const mc = document.getElementById("vmMultiCount"); if(mc) mc.textContent = vmMulti ? `في الجولة: ${visitMapSelectedIds.size}` : "";
   document.querySelectorAll(`.visitMapPickChk[data-id="${id}"]`).forEach(x=>x.checked = on);
 };
+document.getElementById("btnVmMulti").addEventListener("click", ()=>{
+  vmMulti = !vmMulti;
+  const b = document.getElementById("btnVmMulti");
+  b.textContent = vmMulti ? "👆 تحديد جملة: شغّال ✅" : "👆 تحديد جملة: مقفول";
+  b.classList.toggle("btn-primary", vmMulti); b.classList.toggle("btn-outline", !vmMulti);
+  const mc = document.getElementById("vmMultiCount"); if(mc) mc.textContent = vmMulti ? `في الجولة: ${visitMapSelectedIds.size}` : "";
+  if(vmMulti) toast("دوس على أي مخدوم في الخريطة يتضاف للجولة، ودوس تاني يتشال");
+});
 document.querySelectorAll("[data-tour-order]").forEach(b=>b.addEventListener("click", ()=>{
   vtOrderMode = b.dataset.tourOrder;
   document.querySelectorAll("[data-tour-order]").forEach(x=>x.classList.toggle("active", x===b));
@@ -20503,6 +20514,7 @@ function renderVisitMap(){
       });
       const marker = L.marker([c.location.lat, c.location.lng], {icon}).addTo(visitMapInstance);
       vmMarkers[c.id] = marker;
+      marker.on("click", ()=>{ if(!vmMulti) return; try{ marker.closePopup(); }catch(_){} window.vmToggleSelect(c.id); });
       const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.location.lat},${c.location.lng}`;
       const groupLabel = groupName(c.group);
       const btnStyle = "display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;text-decoration:none;font-size:15px;border:none;cursor:pointer";
@@ -28505,7 +28517,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "281"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "282"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
