@@ -2835,7 +2835,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v277</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v278</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3118,7 +3118,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v277</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v278</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11257,7 +11257,7 @@ function waKWeekStart(){ const d = new Date(); d.setDate(d.getDate() - ((d.getDa
 // الخادم اللي هيتحدد نوعه: المختار في الفلتر، أو أنا لو «الكل/أنا»
 function waKSenderUid(){ const sv = (document.getElementById("waKServant")||{}).value || "all"; return (sv==="all"||sv==="mine") ? myUid : sv; }
 function waKSenderGender(){ const u = churchServants.find(x=>x.id===waKSenderUid()); return u && (u.gender==="female"||u.gender==="male") ? u.gender : null; }
-let waKOnly = null, runEditCtx = "";
+let waKOnly = null, runEditCtx = "", waKIncSent = false;
 function waKBuildQueue(){
   if(waKOnly){
     const o = [], spf0 = document.getElementById("waKSpouse").value || "auto", sg0 = waKSenderGender();
@@ -11265,7 +11265,7 @@ function waKBuildQueue(){
       if(!waKOnly.has(c.id) || c.graduated || c.noWhatsapp || c.wrongNumber) return;
       const married = waKMode(c)==="married";
       const forces = married ? (spf0==="both" ? ["husband","wife"] : (spf0==="husband"||spf0==="wife") ? [spf0] : (sg0 ? [sg0==="female" ? "wife" : "husband"] : [])) : [undefined];
-      forces.forEach(f=>{ const r = waKRec(c, f); if(r) o.push({key: c.id + (f ? "|"+f : ""), c, r}); });
+      forces.forEach(f=>{ const r = waKRec(c, f); if(r && (waKIncSent || !waKSentWeek(c, r))) o.push({key: c.id + (f ? "|"+f : ""), c, r}); });
     });
     return o;
   }
@@ -11370,6 +11370,13 @@ function waKRefresh(){
   if(myService==="متزوجين" && (document.getElementById("waKSpouse").value||"auto")==="auto" && !waKSenderGender()){
     waKGenderPrompt(); document.getElementById("btnWaKStart").disabled = true; return;
   }
+  let box = document.getElementById("waKIncBox");
+  if(!box){ box = document.createElement("label"); box.id = "waKIncBox"; box.style.cssText = "display:none;margin:8px 0;padding:8px 10px;border-radius:10px;background:#FFF4D6;font-size:13px;cursor:pointer"; document.getElementById("waKSummary").after(box); }
+  let already = 0;
+  if(waKOnly){ const keep = waKIncSent; waKIncSent = true; const all = waKBuildQueue(); waKIncSent = keep; already = all.filter(({c,r})=>waKSentWeek(c,r)).length; }
+  box.style.display = already ? "block" : "none";
+  box.innerHTML = `<input type="checkbox" id="waKIncChk" ${waKIncSent?"checked":""} style="vertical-align:middle"> ابعت كمان للـ ${already} اللي اتبعتلهم الأسبوع ده`;
+  box.querySelector("#waKIncChk").onchange = e=>{ waKIncSent = e.target.checked; waKRefresh(); };
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
   q.forEach(({c,r})=>{ cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
@@ -11379,6 +11386,7 @@ function waKRefresh(){
   document.getElementById("btnWaKStart").disabled = !q.length;
 }
 function waKOpen(only){
+  waKIncSent = false;
   waKOnly = (only instanceof Set && only.size) ? only : null;
   if(waKOnly){ waK.running = false; document.getElementById("waKSetup").style.display = ""; document.getElementById("waKRun").style.display = "none"; }
   openScreenSimple("screen-wa");
@@ -11397,7 +11405,7 @@ function waKRender(){
   }
   const key = waK.queue[waK.idx];
   const {c, r} = waKEntryParse(key);
-  if(!c || !r || c.noWhatsapp || (!waKOnly && !waK.sent.has(key) && waKSentWeek(c, r))){
+  if(!c || !r || c.noWhatsapp || (!waKIncSent && !waK.sent.has(key) && waKSentWeek(c, r))){
     if(waK.dir===-1 && waK.idx>0) waK.idx--; else { waK.dir = 1; waK.idx++; }
     waKRender(); return; }
   waK.dir = 1;
@@ -28426,7 +28434,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "277"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "278"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
