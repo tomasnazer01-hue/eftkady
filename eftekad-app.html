@@ -2837,7 +2837,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v293</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v294</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3122,7 +3122,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v293</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v294</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11179,7 +11179,7 @@ document.getElementById("btnParentSendNow").addEventListener("click", ()=>{
   window.open(waLink(r.phone, fillParentMessage(r.msg, r)), "_blank");
   parentsSelected.delete(r.key);
   parentSendSentCount++; parentSendIdx++;
-  setDoc(doc(db,"contacts",r.child.id), {parentMsgAt: {[r.type]: todayStr()}, parentMsgAtTs: {[r.type]: Date.now()}}, {merge:true}).catch(err=>console.error("parentMsgAt", err));
+  setDoc(doc(db,"contacts",r.child.id), {parentMsgAt: {[r.type]: todayStr()}, parentMsgAtTs: {[r.type]: Date.now()}, parentMsgAtPh: {[r.type]: r.phone}}, {merge:true}).catch(err=>console.error("parentMsgAt", err));
   renderParentSendStep();
 });
 document.getElementById("btnParentSkip").addEventListener("click", ()=>{ parentSendIdx++; renderParentSendStep(); });
@@ -11283,13 +11283,28 @@ function waKEntryParse(key){ const [id,f] = String(key).split("|"); const c = co
 // قايمة الإرسال: [{key, c, r}] — في المتزوجين ممكن الأسرة تطلع مرتين (زوج وزوجة) لو اخترت «الاتنين»
 // بداية الأسبوع = آخر سبت (الأسبوع من السبت للخميس)
 // اتبعتله رسالة واتس الأسبوع ده (من أي خادم — التاريخ متسجل على المخدوم نفسه)
-// اتبعتله رسالة من أي خادم في آخر ٤٨ ساعة؟ (بنقرا التوقيت الدقيق، ولو مش موجود نقدّر من التاريخ القديم)
-const WAK_HOLD_MS = 48*3600*1000;
+// اتبعتله رسالة من أي خادم في آخر ٣ أيام؟ (بالتوقيت الدقيق + بنفس رقم التليفون: إخوات بيشاركوا نفس رقم الأب/الأم = شخص واحد)
+const WAK_HOLD_MS = 72*3600*1000;
+const waKPhoneNorm = p=>String(p||"").replace(/\D/g,"").slice(-10);
+const waKSentPhones = new Set();   // أرقام اتبعتلها في الجلسة دي (فوري، قبل ما Firebase يرجّع)
+let _waKHeld = {t:0, set:null};
+function waKHeldPhones(){
+  const now = Date.now();
+  if(_waKHeld.set && now - _waKHeld.t < 1500) return _waKHeld.set;
+  const set = new Set(waKSentPhones);
+  (typeof contactsRaw!=="undefined" ? contactsRaw : []).forEach(c=>["parentMsgAt","spouseMsgAt"].forEach(f=>{
+    const ts = c[f+"Ts"]||{}, ph = c[f+"Ph"]||{};
+    Object.keys(ts).forEach(t=>{ if(now - ts[t] < WAK_HOLD_MS && ph[t]) set.add(waKPhoneNorm(ph[t])); });
+  }));
+  _waKHeld = {t: now, set}; return set;
+}
 const waKSentWeek = (c,r)=>{
   const f = r.mode==="married" ? "spouseMsgAt" : "parentMsgAt";
   let ts = ((c[f+"Ts"]||{})[r.type]) || 0;
   if(!ts){ const d = waKLast(c,r); if(d) ts = Date.parse(String(d).slice(0,10)+"T12:00:00") || 0; }
-  return ts > 0 && (Date.now() - ts) < WAK_HOLD_MS;
+  if(ts > 0 && (Date.now() - ts) < WAK_HOLD_MS) return true;
+  const ph = waKPhoneNorm(r.phone);
+  return !!ph && waKHeldPhones().has(ph);
 };
 function waKWeekStart(){ const d = new Date(); d.setDate(d.getDate() - ((d.getDay() - 6 + 7) % 7)); return todayStr(d); }
 // الخادم اللي هيتحدد نوعه: المختار في الفلتر، أو أنا لو «الكل/أنا»
@@ -11414,7 +11429,7 @@ function waKRefresh(){
   let already = 0;
   if(waKOnly){ const keep = waKIncSent; waKIncSent = true; const all = waKBuildQueue(); waKIncSent = keep; already = all.filter(({c,r})=>waKSentWeek(c,r)).length; }
   box.style.display = already ? "block" : "none";
-  box.innerHTML = `<input type="checkbox" id="waKIncChk" ${waKIncSent?"checked":""} style="vertical-align:middle"> ابعت كمان للـ ${already} اللي اتبعتلهم في آخر ٤٨ ساعة`;
+  box.innerHTML = `<input type="checkbox" id="waKIncChk" ${waKIncSent?"checked":""} style="vertical-align:middle"> ابعت كمان للـ ${already} اللي اتبعتلهم في آخر ٣ أيام`;
   box.querySelector("#waKIncChk").onchange = e=>{ waKIncSent = e.target.checked; waKRefresh(); };
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
@@ -11519,8 +11534,8 @@ function waKRender(){
   $("waKMNext").onclick = ()=>step(1); $("waKMPrev").onclick = ()=>step(-1);
   $("waKNew").onclick = ()=>{ ta.value = waKFill(WAK_BLANK[mode], c, r); ta.focus(); toast("اكتب الرسالة الجديدة ودوس 💾 احفظ كرسالة"); };
   const markSent = ()=>{ if(waK.sent.has(key)) return; waK.sent.add(key); const f = waKField(r);
-    c[f] = {...(c[f]||{}), [r.type]: todayStr()}; c[f+"Ts"] = {...(c[f+"Ts"]||{}), [r.type]: Date.now()};
-    setDoc(doc(db,"contacts",c.id), {[f]: {[r.type]: todayStr()}, [f+"Ts"]: {[r.type]: Date.now()}}, {merge:true}).catch(err=>console.error(f, err)); };
+    c[f] = {...(c[f]||{}), [r.type]: todayStr()}; c[f+"Ts"] = {...(c[f+"Ts"]||{}), [r.type]: Date.now()}; c[f+"Ph"] = {...(c[f+"Ph"]||{}), [r.type]: r.phone}; waKSentPhones.add(waKPhoneNorm(r.phone)); _waKHeld.t = 0;
+    setDoc(doc(db,"contacts",c.id), {[f]: {[r.type]: todayStr()}, [f+"Ts"]: {[r.type]: Date.now()}, [f+"Ph"]: {[r.type]: r.phone}}, {merge:true}).catch(err=>console.error(f, err)); };
   $("waKSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, ta.value), "_blank"); markSent(); waK.idx++; waKRender(); };
   $("waKNext").onclick = ()=>{ if(!done) markSent(); waK.idx++; waKRender(); };
   $("waKSkip").onclick = ()=>{ waK.idx++; waKRender(); };
@@ -28572,7 +28587,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "293"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "294"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
