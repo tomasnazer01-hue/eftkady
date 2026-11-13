@@ -2827,6 +2827,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         </div>
         <div class="row" style="margin-bottom:10px">
           <input type="text" id="searchBox" class="grow" placeholder="بحث بالاسم أو الرقم" />
+          <button class="btn btn-primary btn-sm" id="btnSearchGo">🔍 ابحث</button>
           <button class="btn btn-gold btn-sm" id="btnAddPersonManual">+ إضافة شخص</button>
         </div>
         <div class="row" style="margin-bottom:10px"><input type="search" id="streetSearchQ" class="grow" placeholder="🛣️ بحث باسم الشارع" autocomplete="off" /></div>
@@ -2837,7 +2838,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v294</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v295</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3122,7 +3123,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v294</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v295</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3813,6 +3814,12 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <div style="height:10px"></div>
       <label class="field-label">رقم الهاتف</label>
       <input type="tel" id="editPhone" dir="ltr" />
+      <div id="editPhone2Wrap" style="display:none"><div style="height:10px"></div>
+        <label class="field-label">📱 رقم تاني</label>
+        <input type="tel" id="editPhone2" dir="ltr" placeholder="رقم تاني للمخدوم (اختياري)" /></div>
+      <div id="editAdminNoteWrap" style="display:none"><div style="height:10px"></div>
+        <label class="field-label">🔒 ملاحظات (أمين الخدمة فقط)</label>
+        <textarea id="editAdminNote" rows="3" placeholder="محدش يشوفها غيرك" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px;font-family:inherit"></textarea></div>
       <div style="height:10px"></div>
       <label class="field-label">المجموعة</label>
       <select id="editGroup"></select>
@@ -9413,7 +9420,7 @@ function rescopeContacts(){
   clearTimeout(window.__rscT); window.__rscT = setTimeout(()=>{ try{ renderContacts(); renderGroupFilterChips(); renderMemberGrid(); if(document.getElementById("screen-dashboard").classList.contains("active")) renderDashboard(); }catch(e){ console.error(e); } }, 120);
 }
 function getFilteredContacts(){
-  const q = document.getElementById("searchBox").value.trim().toLowerCase();
+  const q = (window.__searchApplied||"").trim().toLowerCase();   // البحث بيتطبق بزرار «ابحث» أو Enter
   const _hvNow = homeNotVisitedFilter ? buildHomeVisitMap() : null;
   const _tourSet = inTourFilter ? tourIdSet() : null;
   const out = contacts.filter(c=>{
@@ -9432,7 +9439,7 @@ function getFilteredContacts(){
     if(homeNotVisitedFilter && hvIsGreen(_hvNow.get(c.id))) return false;
     if(inTourFilter && !_tourSet.has(c.id)) return false;
     if(assignedFilterMine && c.assignedTo!==myUid && c.assignedHusbandUid!==myUid && c.assignedWifeUid!==myUid) return false;
-    if(q && !( (c.name||"").toLowerCase().arIncludes(q) || (c.phone||"").includes(q) || (c.address||"").toLowerCase().arIncludes(q) )) return false;
+    if(q && !( (c.name||"").toLowerCase().arIncludes(q) || (c.phone||"").includes(q) || (c.phone2||"").includes(q) || (c.address||"").toLowerCase().arIncludes(q) )) return false;
     return true;
   });
   out.sort((a,b)=>(a.name||"").arLocale(b.name||"","ar"));
@@ -9673,7 +9680,12 @@ function renderContacts(){
   });
   updateBulkBar();
 }
-{ let _st; document.getElementById("searchBox").addEventListener("input", ()=>{ clearTimeout(_st); _st = setTimeout(()=>{ contactsLimit = 100; renderContacts(); }, 160); }); }
+{ const box = document.getElementById("searchBox");
+  const go = ()=>{ window.__searchApplied = box.value; contactsLimit = 100; renderContacts(); };
+  document.getElementById("btnSearchGo").addEventListener("click", go);
+  box.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); box.blur(); } });
+  // لو مسحت الخانة القايمة ترجع كاملة
+  box.addEventListener("input", ()=>{ if(!box.value.trim() && window.__searchApplied){ go(); } }); }
 
 document.getElementById("chkSelectAll").addEventListener("change", (e)=>{
   const filtered = getFilteredContacts();
@@ -9881,6 +9893,12 @@ function openEditModal(id){
   updateEditPhotoPreview(c.name, c.photoUrl);
   document.getElementById("editName").value = c.name||"";
   document.getElementById("editPhone").value = c.phone||"";
+  { const p2w = document.getElementById("editPhone2Wrap"); p2w.style.display = (myService && myService!=="ابتدائي" && myService!=="متزوجين") ? "" : "none";
+    document.getElementById("editPhone2").value = c.phone2||"";
+    // 🔒 ملاحظات أمين الخدمة: بتتخزن في collection منفصلة (adminNotes) — مقفولة بقواعد Firebase على الأدمن بس
+    const aw = document.getElementById("editAdminNoteWrap"), at = document.getElementById("editAdminNote");
+    const isAdm = myRole==="admin" && !previewRole && !actingAs; aw.style.display = isAdm ? "" : "none"; at.value = ""; at.dataset.loaded = "";
+    if(isAdm){ const eid = id; getDoc(doc(db,"adminNotes",id)).then(sn=>{ if(editingId!==eid) return; const t = sn.exists() ? (sn.data().text||"") : ""; at.value = t; at.dataset.loaded = "1"; at.dataset.orig = t; }).catch(err=>{ console.error("adminNotes", err); at.placeholder = "تعذر التحميل — لازم تنشر قواعد Firebase الجديدة ("+(err&&err.code||"")+")"; }); } }
   document.getElementById("editGroup").value = c.group||specialGroupId("unassigned");
   document.getElementById("editRegion").value = c.region||"";
   document.getElementById("editAssigned").value = c.assignedTo||"";
@@ -13981,6 +13999,7 @@ document.getElementById("btnSaveEdit").addEventListener("click", async ()=>{
   const updates = {
     name: newName || c.name,
     phone: newPhone,
+    phone2: (document.getElementById("editPhone2").value||"").trim(),
     phoneNormalized: normalizeDigits(newPhone),
     group: chosenGroup,
     prevGroup: c.prevGroup || null,
@@ -14031,6 +14050,11 @@ document.getElementById("btnSaveEdit").addEventListener("click", async ()=>{
     const awarded = treeConfessionAward(c, updates.lastConfession);
     if(awarded){ updates.treeConfessions = awarded; toast("🌳 +" + TREE_POINTS.confession + " نقطة اعتراف في شجرتي"); }
   }
+  { const at = document.getElementById("editAdminNote");   // 🔒 ملاحظات أمين الخدمة (collection منفصلة)
+    if(at && at.dataset.loaded==="1" && at.value.trim() !== (at.dataset.orig||"").trim()){
+      const cid = c.id, txt = at.value.trim();
+      setDoc(doc(db,"adminNotes",cid), {churchCode: myChurchCode, text: txt, updatedAt: serverTimestamp(), updatedBy: currentUserEmail||""})
+        .catch(err=>{ console.error("adminNotes", err); toast("تعذر حفظ ملاحظة الأمين" + (err&&err.code ? " ("+err.code+")" : "") + " — انشر قواعد Firebase الجديدة"); }); } }
   const newStageId = document.getElementById("editStage").value || null;
   if(newStageId !== (c.spiritualStage||null)){
     updates.spiritualStage = newStageId;
@@ -20290,6 +20314,7 @@ function vtPhones(c){
   const out = []; const add = (label, num, role)=>{ const n = String(num||"").trim(); if(n && !out.some(o=>normalizeDigits(o.num)===normalizeDigits(n))) out.push({label, num:n, role}); };
   if(isFamilyRecord(c)){ add("🤵 الزوج", c.husbandPhone); add("👰 الزوجة", c.wifePhone); }
   add("📱", c.phone);
+  add("📱 رقم تاني", c.phone2);
   if(!c.fatherDeceased) add("👨 الأب", c.fatherPhone, "father");
   if(!c.motherDeceased) add("👩 الأم", c.motherPhone, "mother");
   return out;
@@ -28587,7 +28612,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "294"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "295"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
