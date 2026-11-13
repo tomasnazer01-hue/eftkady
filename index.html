@@ -2838,7 +2838,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v295</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v296</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3123,7 +3123,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v295</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v296</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3400,7 +3400,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           </div>
           <div id="absentList"></div>
           <div style="height:10px"></div>
-          <button class="btn btn-maroon btn-block" id="btnSendAbsent">📨 إرسال رسالة افتقاد للغايبين المحددين</button>
+          <button class="btn btn-maroon btn-block" id="btnSendAbsent">💬 ابعت رسالة افتقاد للغايبين المحددين</button>
           <div style="height:8px"></div>
           <button class="btn btn-outline btn-block" id="btnApplyActivityAbsent">⭐ تطبيق نشاط/خصم على الغايبين المحددين</button>
         </div>
@@ -23511,10 +23511,8 @@ document.getElementById("chkAbsentAll").addEventListener("change", (e)=>{
 document.getElementById("btnSendAbsent").addEventListener("click", ()=>{
   const ids = [...document.querySelectorAll("#absentList .chkAbsent:checked")].map(el=>el.dataset.id);
   if(ids.length===0){ toast("حدد غايب واحد على الأقل"); return; }
-  selectedIds = new Set(ids);
-  sendQueue = ids;
   absentSelected.clear();
-  startSending();
+  waKOpen(new Set(ids));   // نفس طريقة الواتس الجديدة: رسالة لكل خدمة + قايمة إرسال + تعديل + توزيع عشوائي
 });
 document.getElementById("btnApplyActivityAbsent").addEventListener("click", ()=>{
   const ids = [...document.querySelectorAll("#absentList .chkAbsent:checked")].map(el=>el.dataset.id);
@@ -28612,7 +28610,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "295"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "296"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
