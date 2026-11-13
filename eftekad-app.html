@@ -2838,7 +2838,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v296</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v297</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3123,7 +3123,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v296</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v297</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -8060,6 +8060,51 @@ function showScreen(which){
   document.getElementById("memberScreen").style.display = which==="member" ? "flex":"none";
   document.getElementById("app").classList.toggle("authed", which==="app");
 }
+// ⬅️ زرار/إيماءة الرجوع في الموبايل: يقفل آخر نافذة، أو يرجع للشاشة اللي قبلها، وبس من الرئيسية يخرج (بضغطتين)
+(function setupBackNav(){
+  try{
+    const stack = []; let navByBack = false, lastExit = 0, cur = "screen-dashboard";
+    const activeId = ()=>{ const a = document.querySelector("section.screen.active"); return a ? a.id : null; };
+    const push = ()=>{ try{ history.pushState({eftkad:1}, "", location.href); }catch(_){} };
+    push(); push();
+    const mo = new MutationObserver(()=>{
+      const id = activeId(); if(!id || id===cur) return;
+      if(!navByBack && cur && cur!==id){ if(stack[stack.length-1]!==cur) stack.push(cur); if(stack.length>25) stack.shift(); }
+      cur = id;
+    });
+    document.querySelectorAll("section.screen").forEach(sec=>mo.observe(sec, {attributes:true, attributeFilter:["class"]}));
+    const goScreen = id=>{
+      navByBack = true;
+      try{
+        const key = id.replace("screen-","");
+        const btn = document.querySelector(`nav.bottomnav button[data-screen="${key}"]`);
+        if(btn) btn.click(); else openScreenSimple(id);
+        if(id==="screen-dashboard"){ try{ renderDashboard(); }catch(_){} }
+      }catch(e){ console.error(e); }
+      setTimeout(()=>{ navByBack = false; cur = activeId() || cur; }, 60);
+    };
+    const leave = ()=>{ window.removeEventListener("popstate", onPop); history.go(-2); setTimeout(()=>history.back(), 120); };
+    function onPop(){
+      push();   // نفضل دايماً فيه خطوة قدام عشان الرجوع ما يطلعش من التطبيق
+      if(!document.getElementById("app").classList.contains("authed")){ leave(); return; }
+      // 1) نافذة مفتوحة؟ اقفل آخر واحدة
+      const mods = [...document.querySelectorAll(".modal-overlay.show")];
+      if(mods.length){ const m = mods[mods.length-1]; try{ window.closeModal(m.id); }catch(_){ m.classList.remove("show"); } return; }
+      // 2) شاشة الواتس شغّالة؟ ارجع لشاشة الإعداد
+      if(activeId()==="screen-wa" && typeof waK!=="undefined" && waK.running){ const ex = document.getElementById("waKExit"); if(ex){ ex.click(); return; } }
+      // 3) ارجع للشاشة اللي قبلها
+      let prev = stack.pop();
+      while(prev && prev===activeId()) prev = stack.pop();
+      if(prev){ goScreen(prev); return; }
+      if(activeId()!=="screen-dashboard"){ goScreen("screen-dashboard"); return; }
+      // 4) الرئيسية: ضغطتين للخروج
+      const now = Date.now();
+      if(now - lastExit < 2200){ leave(); return; }
+      lastExit = now; toast("دوس رجوع تاني للخروج");
+    }
+    window.addEventListener("popstate", onPop);
+  }catch(e){ console.error("backnav", e); }
+})();
 setTimeout(hideSplash, 6000); // safety net in case auth never resolves
 
 // ==================================================================
@@ -11365,9 +11410,18 @@ function waKBuildQueue(){
   });
   return out;
 }
+let waKFromAbsent = false;   // اتفتحت من «مين غاب النهارده»
+const WAK_ABSENT = {
+  parents: ["نعمة وسلام يا {اسم_ولي_الأمر} 🌿\nافتقدنا {اسم_الطفل_الأول} النهارده في الاجتماع، خير إن شاء الله؟ طمّنونا عليه 🙏\nوإن شاء الله نشوفه المرة الجاية ♥️\n{اسم_الخادم}"],
+  self: ["نعمة وسلام يا {اسم_الطفل_الأول} 🌿\nوحشتنا النهارده في الاجتماع، خير؟ طمّني عليك 🤝\nوإن شاء الله نشوفك المرة الجاية ♥️\n{اسم_الخادم}"],
+  married: ["نعمة وسلام يا {اسم_المستلم} 🌿\nافتقدناكم النهارده في الاجتماع، خير إن شاء الله؟ طمّنونا عليكم 🙏\nوإن شاء الله نشوفكم المرة الجاية ♥️\n{اسم_الخادم}"]
+};
+const WAK_ABSENT_LABELS = ["🕊️ افتقدناك النهارده (غياب)"];
+function waKBaseLen(mode, kind){ const sd = mode==="self" && WAK_SVC_DEFAULTS[waKSvc]; return ((sd && sd[kind]) || WAK_DEFAULTS[mode][kind] || []).length; }
 function waKOptions(mode, kind){
   const sd = mode==="self" && WAK_SVC_DEFAULTS[waKSvc];
-  const defs = (sd && sd[kind]) || WAK_DEFAULTS[mode][kind] || [], labels = (sd && WAK_SVC_LABELS[waKSvc]) || WAK_DEF_LABELS[mode];
+  const baseDefs = (sd && sd[kind]) || WAK_DEFAULTS[mode][kind] || [], baseLabels = (sd && WAK_SVC_LABELS[waKSvc]) || WAK_DEF_LABELS[mode];
+  const defs = baseDefs.concat(WAK_ABSENT[mode]||[]), labels = baseLabels.concat(WAK_ABSENT_LABELS);
   const out = [];
   defs.forEach((t,i)=>{ if(msgOv[waKOvKey(mode, kind, i)+":del"]) return; const ov = msgOv[waKOvKey(mode, kind, i)]; const has = typeof ov==="string" && ov.trim();
     out.push({v:"d:"+i, label:"✨ "+(labels[i]||("رسالة "+(i+1)))+(has?" ✏️":""), text: has ? ov : t}); });
@@ -11459,6 +11513,7 @@ function waKRefresh(){
 }
 function waKOpen(only){
   waKIncSent = false;
+  waKFromAbsent = !!(only && only.__absent); if(waKFromAbsent) waK.cur = {};
   waKOnly = (only instanceof Set && only.size) ? only : null;
   if(waKOnly){ waK.running = false; document.getElementById("waKSetup").style.display = ""; document.getElementById("waKRun").style.display = "none"; }
   openScreenSimple("screen-wa");
@@ -11524,7 +11579,7 @@ function waKRender(){
   $("waKEdit").onclick = ()=>{ runEditCtx = "wak"; openEditModal(c.id); };
   const sw = $("waKSw"), ta = $("waKMsg");
   const load = ()=>{ sw.value = waK.cur[ck]; if(sw.value!==waK.cur[ck]){ sw.selectedIndex = 0; waK.cur[ck] = sw.value; } ta.value = waKFill(waKBase(mode, kind), c, r); };
-  if(!waK.cur[ck]) waK.cur[ck] = "d:0";
+  if(!waK.cur[ck]) waK.cur[ck] = waKFromAbsent ? "d:"+waKBaseLen(mode, kind) : "d:0";
   // 🎲 توزيع عشوائي: لو معلّم على رسايل، كل مخدوم ياخد واحدة منهم (من غير تكرار قبل ما يخلصوا كلهم)
   const rset = waKRand[ck] || (waKRand[ck] = new Set());
   [...rset].forEach(v=>{ if(!opts.some(o=>o.v===v)) rset.delete(v); });
@@ -23512,7 +23567,7 @@ document.getElementById("btnSendAbsent").addEventListener("click", ()=>{
   const ids = [...document.querySelectorAll("#absentList .chkAbsent:checked")].map(el=>el.dataset.id);
   if(ids.length===0){ toast("حدد غايب واحد على الأقل"); return; }
   absentSelected.clear();
-  waKOpen(new Set(ids));   // نفس طريقة الواتس الجديدة: رسالة لكل خدمة + قايمة إرسال + تعديل + توزيع عشوائي
+  { const st = new Set(ids); st.__absent = true; waKOpen(st); }   // نفس طريقة الواتس الجديدة: رسالة لكل خدمة + قايمة إرسال + تعديل + توزيع عشوائي
 });
 document.getElementById("btnApplyActivityAbsent").addEventListener("click", ()=>{
   const ids = [...document.querySelectorAll("#absentList .chkAbsent:checked")].map(el=>el.dataset.id);
@@ -28610,7 +28665,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "296"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "297"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
