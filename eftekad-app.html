@@ -2838,7 +2838,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v298</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v299</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3123,7 +3123,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v298</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v299</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -7759,9 +7759,12 @@ function renderAccountSwitcher(){
   const list = readAccounts().filter(x=>x.email || x.slot===activeSlot);
   writeAccounts(list.filter(x=>x.email));
   if(!list.length){ wrap.innerHTML = `<div class="muted">مفيش حسابات محفوظة</div>`; return; }
-  wrap.innerHTML = list.map(x=>{
+  wrap.innerHTML = list.map((x,i)=>{
     const active = x.slot===activeSlot;
-    return `<div class="list-item" style="align-items:center">
+    const mv = `<div style="display:flex;flex-direction:column;gap:2px;flex:0 0 auto">
+        <button type="button" data-acct-up="${cardEsc(x.slot)}" ${i===0?"disabled":""} style="width:30px;height:26px;border:0;border-radius:8px;background:#EEF1F7;font-size:13px;${i===0?"opacity:.35":""}">▲</button>
+        <button type="button" data-acct-down="${cardEsc(x.slot)}" ${i===list.length-1?"disabled":""} style="width:30px;height:26px;border:0;border-radius:8px;background:#EEF1F7;font-size:13px;${i===list.length-1?"opacity:.35":""}">▼</button></div>`;
+    return `<div class="list-item" style="align-items:center">${mv}
       <div class="grow">
         <div class="item-name">${cardEsc(x.church || "حساب")}${x.service?` <span class="muted">· ${cardEsc(x.service)}</span>`:""}</div>
         <div class="item-sub" dir="ltr">${cardEsc(x.email||"")}</div>
@@ -7781,6 +7784,15 @@ document.getElementById("btnSwitchService")?.addEventListener("click", ()=>{
   renderAccountSwitcher();
 });
 document.getElementById("switchList")?.addEventListener("click", async (e)=>{
+  const mvBtn = e.target.closest("[data-acct-up],[data-acct-down]");
+  if(mvBtn){
+    const up = mvBtn.hasAttribute("data-acct-up"), slot = mvBtn.dataset.acctUp || mvBtn.dataset.acctDown;
+    const list = readAccounts().filter(x=>x.email || x.slot===activeSlot);
+    const i = list.findIndex(x=>x.slot===slot), j = up ? i-1 : i+1;
+    if(i<0 || j<0 || j>=list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    writeAccounts(list.filter(x=>x.email)); renderAccountSwitcher(); return;
+  }
   const o = e.target.closest("[data-acct-open]");
   if(o){ switchToSlot(o.dataset.acctOpen); return; }
   const r = e.target.closest("[data-acct-remove]");
@@ -28673,7 +28685,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "298"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "299"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
