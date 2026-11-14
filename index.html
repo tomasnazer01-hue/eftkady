@@ -2841,7 +2841,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v302</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v303</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3126,7 +3126,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v302</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v303</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -10348,6 +10348,10 @@ function genderizeAr(text, g){ // g: "m" للزوج | "f" للزوجة
   const re = new RegExp("(^|[^"+AR_L+"])((?:و|ف)?)("+pairs.map(p=>p[from].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")(?![" + AR_L + "])","g");
   return text.replace(re, (m, pre, px, w)=>pre + px + (map.get(w)||w));
 }
+function bdayMsgFor(p){ // v303: تهنئة عيد الميلاد بنوع الشخص (بنت = مؤنث، ولد = مذكر)
+  const t = fillTemplate(birthdayMessage, p);
+  return p && p.gender==="female" ? genderizeAr(t,"f") : p && p.gender==="male" ? genderizeAr(t,"m") : t;
+}
 function buildSpouseRecipients(familyContacts){
   const out = [];
   // بيظهروا بس الأزواج/الزوجات اللي بيانات أسرتهم مكتملة (الناقصة في تاب «ناقصة»)
@@ -12589,7 +12593,7 @@ function renderDashBirthdayCard(){
     return `<div class="list-item">
       ${avatarHTML(c.name||c.email, c.photoUrl)}
       <div class="grow"><div class="item-name">${kind==="servant"?"👤 ":""}${cardEsc(c.name||c.email||"")}</div><div class="item-sub">${label}${kind==="servant"?" · خادم":""}</div></div>
-      ${c.phone ? `<a class="btn btn-gold btn-sm" href="${waLink(c.phone, fillTemplate(birthdayMessage, c))}" target="_blank">🎉 واتساب</a>` : ''}
+      ${c.phone ? `<a class="btn btn-gold btn-sm" href="${waLink(c.phone, bdayMsgFor(c))}" target="_blank">🎉 واتساب</a>` : ''}
     </div>`;
   }).join("");
 }
@@ -25033,7 +25037,7 @@ document.getElementById("bdayList").addEventListener("click", (e)=>{
   const signOff = servantSignOff(churchServants.find(s=>s.id===myUid));
   const msg = kind==="s"
     ? msgFill("servantBirthday", {"الاسم": firstName(p.rawName||p.name), "التوقيع": signOff||""})
-    : fillTemplate(birthdayMessage, p);
+    : bdayMsgFor(p);
   window.open(waLink(p.phone, msg), "_blank");
   logActivity("تهنئة عيد ميلاد", p.rawName||p.name);
 });
@@ -28703,7 +28707,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "302"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "303"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
