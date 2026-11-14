@@ -2849,7 +2849,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v305</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v306</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3134,7 +3134,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v305</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v306</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -18269,30 +18269,37 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
 });
 
 (function(){
-  const groups = [
-    {k:"scan", label:"✅ تسجيل", subs:[["scan","حضور المخدومين"]]},
-    {k:"meetings", label:"📅 المواعيد", subs:[["meetings","المواعيد"]]},
-    {k:"reports", label:"📊 التقارير", subs:[["log","السجل والنقاط"],["report","تقرير الالتزام"]]},
-    {k:"tools", label:"🧰 أدوات", subs:[["directlinks","🔗 روابط شخصية"],["bonus","⭐ بونص"],["cards","🪪 كارنيهات"]]}
-  ];
-  const gRow = document.getElementById("atabGroupRow"), sRow = document.getElementById("atabSubRow");
+  // v306: تابات الحضور بقت أقسام مقفولة (زي الخدام) — دوس على القسم يفتح، ودوسة تانية تقفله
+  const tabs = [["scan","✅ حضور المخدومين"],["meetings","📅 المواعيد"],["log","📊 السجل والنقاط"],["report","📈 تقرير الالتزام"],["directlinks","🔗 روابط شخصية"],["bonus","⭐ بونص"],["cards","🪪 كارنيهات"]];
   const orig = t=>document.querySelector(`[data-atab="${t}"]`);
-  const groupOf = t=>groups.find(g=>g.subs.some(x=>x[0]===t));
-  let curGroup = "scan";
+  const gRow = document.getElementById("atabGroupRow"), sRow = document.getElementById("atabSubRow");
+  if(gRow) gRow.style.display="none"; if(sRow) sRow.style.display="none";
+  const hdrs = {};
+  tabs.forEach(([t,label])=>{
+    const pane = document.getElementById("atab-"+t); if(!pane) return;
+    const h = document.createElement("button"); h.type="button"; h.className="card atab-acc"+(t==="cards"?" cards-only":"");
+    h.dataset.acc = t;
+    h.style.cssText = "display:flex;width:100%;justify-content:space-between;align-items:center;font-weight:800;font-size:14px;text-align:right;cursor:pointer;margin-bottom:8px;border:0;font-family:inherit";
+    h.innerHTML = `<span>${label}</span><span class="atab-arrow" style="transition:transform .2s">◀</span>`;
+    pane.parentNode.insertBefore(h, pane); hdrs[t]=h;
+    h.addEventListener("click", ()=>{
+      const open = orig(t).classList.contains("active") && pane.style.display!=="none";
+      if(open){ // قفل
+        pane.style.display = "none"; orig(t).classList.remove("active");
+        try{ mgStopScan(); }catch(_){} try{ stopLookupScanner(); }catch(_){} try{ stopBonusScanner(); }catch(_){}
+        paint();
+      } else orig(t).click();
+    });
+  });
   function paint(){
-    const act = document.querySelector('[data-atab].active'); const t = act ? act.dataset.atab : "scan";
-    curGroup = (groupOf(t)||groups[0]).k;
-    gRow.innerHTML = groups.map(g=>`<button type="button" class="chip ${g.k===curGroup?'active':''}" data-atg="${g.k}">${g.label}</button>`).join("");
-    const g = groups.find(x=>x.k===curGroup);
-    const visibleSubs = g.subs.filter(([id])=>!(id==="cards" && orig("cards") && getComputedStyle(orig("cards")).display==="none"));
-    sRow.innerHTML = visibleSubs.length>1 ? visibleSubs.map(([id,l])=>`<button type="button" class="chip ${id===t?'active':''}" data-ats="${id}" style="font-size:12px">${l}</button>`).join("") : "";
+    tabs.forEach(([t])=>{ const h=hdrs[t]; if(!h) return; const pane=document.getElementById("atab-"+t); const on = orig(t).classList.contains("active") && pane && pane.style.display!=="none";
+      h.style.background = on ? "#fbf3d6" : ""; h.querySelector(".atab-arrow").style.transform = on ? "rotate(-90deg)" : ""; });
   }
-  gRow.addEventListener("click", e=>{ const b = e.target.closest("[data-atg]"); if(!b) return; const g = groups.find(x=>x.k===b.dataset.atg); orig(g.subs[0][0]).click(); });
-  sRow.addEventListener("click", e=>{ const b = e.target.closest("[data-ats]"); if(b) orig(b.dataset.ats).click(); });
   document.querySelectorAll("[data-atab]").forEach(b=>b.addEventListener("click", ()=>setTimeout(paint,0)));
   // الصفوف الأصلية للتابات تفضل شغالة بالكود بس مخفية
   const chipRow = document.querySelector('[data-atab="scan"]').parentElement; chipRow.style.display = "none";
-  setTimeout(()=>{ orig("scan").click(); paint(); }, 0);
+  // كل الأقسام مقفولة في البداية
+  setTimeout(()=>{ document.querySelectorAll("[data-atab]").forEach(x=>x.classList.remove("active")); ["codes","directlinks","meetings","scan","log","report","bonus","cards"].forEach(t=>{ const e=document.getElementById("atab-"+t); if(e) e.style.display="none"; }); paint(); }, 0);
 })();
 
 // ==================================================================
@@ -28737,7 +28744,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "305"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "306"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
