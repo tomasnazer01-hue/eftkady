@@ -2773,7 +2773,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <h2>استيراد ملف إكسل<button class="help-icon" data-help-title="استيراد ملف إكسيل" data-help-text="ارفع ملف xlsx أو csv فيه عمود اسم وعمود رقم هاتف على الأقل (وعمود عنوان اختياري). بعد الرفع، تختار أنهي عمود هو الاسم وأنهي هو الرقم من قايمة تظهرلك تحت.">?</button></h2>
         <p class="muted">اختر ملف xlsx أو csv، وبعدين حدد عمود الاسم وعمود رقم الهاتف.</p>
         <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" />
-        <button class="btn btn-gold btn-block" id="btnKidsImport" style="margin-top:12px">📚 استيراد شيت أطفال متقدم (مدرسة + فصل + ملاحظات + صور)</button>
+        <button class="btn btn-gold btn-block" id="btnKidsImport" style="margin-top:12px">📚 استيراد شيت مخدومين متقدم (مدرسة + فصل + ملاحظات + صور)</button>
       </div>
 
       <div class="card" id="mapCard" style="display:none">
@@ -2849,7 +2849,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v304</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v305</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3134,7 +3134,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v304</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v305</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3782,8 +3782,8 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
   <div class="modal-overlay" id="modalKidsImport">
     <div class="modal-sheet">
-      <div class="modal-head"><h3>📚 استيراد شيت أطفال</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalKidsImport')">✕</button></div>
-      <p class="muted" style="margin-top:0">ارفع الشيت، والتطبيق يوزّع كل طفل على مجموعة فصله، ويسجّل المدرسة والملاحظات وبابا يسوع/ماما العدرا والصورة.</p>
+      <div class="modal-head"><h3>📚 استيراد شيت مخدومين متقدم</h3><button class="icon-btn" style="background:#eee;color:#333" onclick="closeModal('modalKidsImport')">✕</button></div>
+      <p class="muted" style="margin-top:0">ارفع الشيت، والتطبيق يوزّع كل مخدوم على مجموعة فصله، ويسجّل المدرسة والملاحظات والصورة. كل الأعمدة اختيارية ما عدا الاسم — أي عمود مش موجود في الشيت عادي يتخطّاه.</p>
       <input type="file" id="kiFile" accept=".xlsx,.xls,.csv" />
       <div id="kiSheetInfo" class="muted" style="margin:6px 0"></div>
       <div id="kiBody"></div>
@@ -27507,8 +27507,8 @@ function kiGuessGroup(gradeKey, groupsList){
 // ===== واجهة استيراد شيت الأطفال المتقدم =====
 let kiRows = [], kiHdr = [], kiMap = {}, kiGrades = [], kiGradeGroup = {}, kiDec = {}, kiBusy = false;
 const KI_FIELDS = [
-  ["name","اسم الطفل *",/اسم الطفل|^الاسم/],["gender","النوع",/^النوع|الجنس/],["school","اسم المدرسة",/مدرسه/],
-  ["birthday","تاريخ الميلاد",/ميلاد/],["grade","السنة الدراسية (للمجموعة) *",/السنه الدراسيه|الفصل|الصف/],
+  ["name","الاسم *",/اسم الطفل|^الاسم|^اسم/],["gender","النوع",/^النوع|الجنس/],["school","اسم المدرسة",/مدرسه/],
+  ["birthday","تاريخ الميلاد",/ميلاد/],["grade","السنة الدراسية (للمجموعة)",/السنه الدراسيه|الفصل|الصف/],
   ["phone1","تليفون الأب",/تليفون.*الاب|هاتف.*الاب/],["phone2","تليفون آخر",/تليفون.*اخر|هاتف.*اخر/],
   ["address","العنوان",/العنوان/],["confessor","أب الاعتراف",/اب الاعتراف|اعتراف/],["photo","رابط الصورة",/صوره|صورة/],
   ["location","لينك اللوكيشن",/لوكيشن|location/i],["region","اسم المنطقة → المناطق",/اسم المنطقه|^المنطقه/],["c1","Comment → الملاحظات",/^comment\s*$/i],["c2","Comment 2 → الملاحظات",/comment\s*2/i]
@@ -27543,14 +27543,14 @@ function kiRender(){
   const gset = new Map();
   valid.forEach(i=>{ const raw = kiClean(kiCell(kiRows[i],"grade")); const key = kiGradeKey(raw); if(!gset.has(key)) gset.set(key,{label:raw,n:0}); gset.get(key).n++; });
   kiGrades = [...gset.keys()];
-  kiGrades.forEach(k=>{ if(!(k in kiGradeGroup)) kiGradeGroup[k] = kiGuessGroup(k, groups); });
+  kiGrades.forEach(k=>{ if(!(k in kiGradeGroup)) kiGradeGroup[k] = kiGuessGroup(k, groups); if(!kiGradeGroup[k]){ const rg0 = groups.filter(g=>!g.special)[0]; kiGradeGroup[k] = rg0 ? rg0.id : "__new__"; } });
   // المتوفين
   kiDec = {};
   valid.forEach(i=>{ const r=kiRows[i]; const d = kiDeceased(kiClean(kiCell(r,"c1"))+" . "+kiClean(kiCell(r,"c2"))); if(d.f||d.m) kiDec[i]={f:d.f,m:d.m,on:true}; });
   const realGroups = groups.filter(g=>!g.special);
-  let h = `<div class="card" style="margin:10px 0;background:#faf7ee"><b>① الأعمدة</b><div class="muted" style="margin:4px 0 8px">اتعرفت تلقائي — عدّل لو في عمود غلط.</div>`;
+  let h = `<div class="card" style="margin:10px 0;background:#faf7ee"><b>① الأعمدة</b><div class="muted" style="margin:4px 0 8px">اتعرفت تلقائي — عدّل لو في عمود غلط. أي خانة مش موجودة سيبها «مفيش».</div>`;
   h += KI_FIELDS.map(([k,l])=>`<div class="row" style="gap:6px;margin-bottom:4px"><span style="flex:0 0 42%;font-size:12.5px">${l}</span><select data-ki-col="${k}" style="flex:1">${kiOpt(kiMap[k])}</select></div>`).join("");
-  h += `</div><div class="card" style="margin:10px 0;background:#faf7ee"><b>② السنة الدراسية ← المجموعة</b><div class="muted" style="margin:4px 0 8px">كل سنة هتروح للمجموعة اللي تختارها.</div>`;
+  h += `</div><div class="card" style="margin:10px 0;background:#faf7ee"><b>② السنة الدراسية ← المجموعة</b><div class="muted" style="margin:4px 0 8px">كل سنة هتروح للمجموعة اللي تختارها. لو الشيت مفيهوش سنة دراسية، الكل هيروح للمجموعة المختارة.</div>`;
   h += kiGrades.map((k,gi)=>{
     const cur = kiGradeGroup[k];
     return `<div class="row" style="gap:6px;margin-bottom:4px"><span style="flex:0 0 38%;font-size:12.5px">${cardEsc(gset.get(k).label||"(فاضي)")} <span class="muted">(${gset.get(k).n})</span></span><select data-ki-grade="${gi}" style="flex:1">`+
@@ -27604,7 +27604,7 @@ async function kiPhoto(id){
 }
 async function kiRun(){
   if(kiBusy) return; 
-  if(kiMap.name==="" || kiMap.name==null || kiMap.grade==="" || kiMap.grade==null){ toast("لازم تحدد عمود الاسم وعمود السنة الدراسية"); return; }
+  if(kiMap.name==="" || kiMap.name==null){ toast("لازم تحدد عمود الاسم"); return; }
   autoReset();
   kiBusy = true; const btn = document.getElementById("kiGo"); btn.disabled = true; btn.textContent = "جاري الاستيراد...";
   try{
@@ -27693,7 +27693,7 @@ async function kiRun(){
       if(ops>=400){ await batch.commit(); batch=_writeBatch(db); ops=0; }
     }
     if(ops) await batch.commit();
-    logActivity("استيراد شيت أطفال", `${count} طفل`);
+    logActivity("استيراد شيت مخدومين", `${count} مخدوم`);
     const prog = document.getElementById("kiProg");
     let msg = `✅ اتضاف ${count} طفل` + (merged?` — ${merged} موجود اتكمّلت بياناته`:"") + (dup?` — ${dup} مكرر من غير جديد`:"") + (skipped?` — ${skipped} من غير مجموعة`:"") + (dec?` — ${dec} علامة متوفي`:"") + (newRg?` — ${newRg} منطقة جديدة`:"");
     prog.textContent = msg;
@@ -28737,7 +28737,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "304"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "305"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
