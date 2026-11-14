@@ -2789,6 +2789,14 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div style="height:10px"></div>
         <label class="field-label">🎂 عمود تاريخ الميلاد (اختياري)</label>
         <select id="selBirthday"><option value="">— بدون —</option></select>
+        <div id="importExtraBox">
+          <div id="importPhone2Box"><div style="height:10px"></div>
+            <label class="field-label">📱 عمود رقم التليفون الاحتياطي (اختياري)</label>
+            <select id="selPhone2"><option value="">— بدون —</option></select></div>
+          <div style="height:10px"></div>
+          <label class="field-label">⛪ عمود أب الاعتراف (اختياري)</label>
+          <select id="selConfessor"><option value="">— بدون —</option></select>
+        </div>
         <p class="muted" id="importBirthdayNote" style="font-size:11.5px;margin:4px 0 0;display:none"></p>
         <div id="importGeocodeBox" style="display:none;margin-top:8px">
           <label class="row" style="gap:8px;cursor:pointer">
@@ -2841,7 +2849,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v303</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v304</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3126,7 +3134,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v303</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v304</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3650,6 +3658,9 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div style="height:10px"></div>
         <label class="field-label">رقم الهاتف</label>
         <input type="tel" id="addPersonPhone" dir="ltr" />
+        <div id="addPersonPhone2Wrap" style="display:none"><div style="height:10px"></div>
+          <label class="field-label">📱 رقم تاني / احتياطي</label>
+          <input type="tel" id="addPersonPhone2" dir="ltr" placeholder="اختياري" /></div>
       </div>
       <div id="addPersonCoupleBox" style="display:none">
         <label class="field-label">🤵 اسم الزوج</label>
@@ -9114,6 +9125,13 @@ document.getElementById("fileExcel").addEventListener("change", async (e)=>{
   selPhone.innerHTML = importHeaders.map((h,i)=>`<option value="${i}">${h||("عمود "+(i+1))}</option>`).join("");
   selAddress.innerHTML = `<option value="">— بدون —</option>` + importHeaders.map((h,i)=>`<option value="${i}">${h||("عمود "+(i+1))}</option>`).join("");
   document.getElementById("selBirthday").innerHTML = `<option value="">— بدون —</option>` + importHeaders.map((h,i)=>`<option value="${i}">${h||("عمود "+(i+1))}</option>`).join("");
+  { const opts = `<option value="">— بدون —</option>` + importHeaders.map((h,i)=>`<option value="${i}">${h||("عمود "+(i+1))}</option>`).join("");
+    document.getElementById("selPhone2").innerHTML = opts; document.getElementById("selConfessor").innerHTML = opts;
+    const p1 = importHeaders.findIndex(h=>/رقم|هاتف|موبايل|phone|tel/i.test(h));
+    const p2g = importHeaders.findIndex((h,i)=>i!==p1 && /احتياط|تاني|ثاني|آخر|اخر|بديل|2|phone2|backup/i.test(h) && /رقم|هاتف|موبايل|تليفون|phone|tel|احتياط/i.test(h));
+    if(p2g>=0) document.getElementById("selPhone2").value = p2g;
+    const cg = importHeaders.findIndex(h=>/اعتراف|confess|كاهن/i.test(h)); if(cg>=0) document.getElementById("selConfessor").value = cg;
+    document.getElementById("importPhone2Box").style.display = (myService && myService!=="ابتدائي" && myService!=="متزوجين") ? "" : "none"; }
   const bdayGuessIdx = importHeaders.findIndex(h=>/ميلاد|birth|dob|تاريخ/i.test(h));
   if(bdayGuessIdx>=0) document.getElementById("selBirthday").value = bdayGuessIdx;
   // best-guess default selection
@@ -9199,13 +9217,15 @@ function renderImportPreview(reset){
   const aIdx = aIdxRaw!=="" ? +aIdxRaw : null;
   const bIdxRaw = document.getElementById("selBirthday").value;
   const bIdx = bIdxRaw!=="" ? +bIdxRaw : null;
+  const p2Raw = document.getElementById("selPhone2").value, p2Idx = (p2Raw!=="" && document.getElementById("importPhone2Box").style.display!=="none") ? +p2Raw : null;
+  const cfRaw = document.getElementById("selConfessor").value, cfIdx = cfRaw!=="" ? +cfRaw : null;
   if(reset===true || !importSel) importSelDefaults(); else importComputeDups();
   const tbl = document.getElementById("previewTable");
   const esc = v=>cardEsc(String(v??""));
-  let html = `<tr><th><input type="checkbox" id="importSelAll" style="width:auto" title="تحديد/إلغاء الكل" /></th><th>الاسم</th><th>الرقم</th>${aIdx!==null?'<th>العنوان</th>':''}${bIdx!==null?'<th>🎂 الميلاد</th>':''}</tr>`;
+  let html = `<tr><th><input type="checkbox" id="importSelAll" style="width:auto" title="تحديد/إلغاء الكل" /></th><th>الاسم</th><th>الرقم</th>${p2Idx!==null?'<th>📱 احتياطي</th>':''}${cfIdx!==null?'<th>⛪ الاعتراف</th>':''}${aIdx!==null?'<th>العنوان</th>':''}${bIdx!==null?'<th>🎂 الميلاد</th>':''}</tr>`;
   importRows.forEach((r,i)=>{
     const tag = importDup[i]==="exists" ? ' <span style="font-size:10.5px;background:#FDECEC;color:#B23B3B;border-radius:8px;padding:1px 6px;white-space:nowrap">موجود في المجموعة</span>' : importDup[i]==="sheet" ? ' <span style="font-size:10.5px;background:#FFF4DB;color:#8A6A00;border-radius:8px;padding:1px 6px;white-space:nowrap">متكرر في الشيت</span>' : "";
-    html += `<tr style="${importSel.has(i)?"":"opacity:.5"}"><td><input type="checkbox" class="importRowChk" data-i="${i}" ${importSel.has(i)?"checked":""} style="width:auto" /></td><td>${esc(r[nIdx])}${tag}</td><td dir="ltr">${esc(r[pIdx])}</td>${aIdx!==null?`<td>${esc(r[aIdx])}</td>`:''}${bIdx!==null?`<td dir="ltr">${parseBirthdayCell(r[bIdx])||'—'}</td>`:''}</tr>`;
+    html += `<tr style="${importSel.has(i)?"":"opacity:.5"}"><td><input type="checkbox" class="importRowChk" data-i="${i}" ${importSel.has(i)?"checked":""} style="width:auto" /></td><td>${esc(r[nIdx])}${tag}</td><td dir="ltr">${esc(r[pIdx])}</td>${p2Idx!==null?`<td dir="ltr">${esc(r[p2Idx])}</td>`:''}${cfIdx!==null?`<td>${esc(r[cfIdx])}</td>`:''}${aIdx!==null?`<td>${esc(r[aIdx])}</td>`:''}${bIdx!==null?`<td dir="ltr">${parseBirthdayCell(r[bIdx])||'—'}</td>`:''}</tr>`;
   });
   tbl.innerHTML = html;
   tbl.parentElement.style.cssText = "overflow:auto;max-height:340px;border:1px solid var(--line);border-radius:10px";
@@ -9221,6 +9241,8 @@ document.getElementById("selName").addEventListener("change", ()=>renderImportPr
 document.getElementById("selPhone").addEventListener("change", ()=>renderImportPreview());
 document.getElementById("selAddress").addEventListener("change", ()=>renderImportPreview());
 document.getElementById("selBirthday").addEventListener("change", ()=>renderImportPreview());
+document.getElementById("selPhone2").addEventListener("change", ()=>renderImportPreview());
+document.getElementById("selConfessor").addEventListener("change", ()=>renderImportPreview());
 
 document.getElementById("btnImportGo").addEventListener("click", async ()=>{
   const nIdx = +document.getElementById("selName").value;
@@ -9229,6 +9251,8 @@ document.getElementById("btnImportGo").addEventListener("click", async ()=>{
   const aIdx = aIdxRaw!=="" ? +aIdxRaw : null;
   const bIdxRaw2 = document.getElementById("selBirthday").value;
   const bIdx2 = bIdxRaw2!=="" ? +bIdxRaw2 : null;
+  const p2Idx2 = (document.getElementById("selPhone2").value!=="" && document.getElementById("importPhone2Box").style.display!=="none") ? +document.getElementById("selPhone2").value : null;
+  const cfIdx2 = document.getElementById("selConfessor").value!=="" ? +document.getElementById("selConfessor").value : null;
   const autoGeocode = aIdx!==null && document.getElementById("chkAutoGeocode").checked;
   const areaHint = document.getElementById("geocodeAreaHint").value.trim();
   autoReset();
@@ -9258,12 +9282,16 @@ document.getElementById("btnImportGo").addEventListener("click", async ()=>{
     const phone = String(r[pIdx]??"").trim();
     const address = aIdx!==null ? String(r[aIdx]??"").trim() : "";
     const birthday = bIdx2!==null ? parseBirthdayCell(r[bIdx2]) : null;
+    const phone2 = p2Idx2!==null ? String(r[p2Idx2]??"").trim() : "";
+    const confessor = cfIdx2!==null ? String(r[cfIdx2]??"").trim() : "";
     if(!name && !phone) continue;
     const ref = doc(colContacts);
     const _ap = autoAssignPicker(importGroupId);
     batch.set(ref, {
       ...(_ap ? _ap() : {}),
       ...(birthday ? {birthday} : {}),
+      ...(phone2 ? {phone2} : {}),
+      ...(confessor ? {confessorName: confessor} : {}),
       name: name || "بدون اسم",
       phone: phone,
       phoneNormalized: normalizeDigits(phone),
@@ -9797,6 +9825,7 @@ document.getElementById("btnAddPersonManual").addEventListener("click", ()=>{
   document.getElementById("addPersonCoupleBox").style.display = isCouple ? "block" : "none";
   document.getElementById("addPersonName").value = "";
   document.getElementById("addPersonPhone").value = "";
+  { const w=document.getElementById("addPersonPhone2Wrap"); if(w){ w.style.display=(myService && myService!=="ابتدائي" && myService!=="متزوجين")?"":"none"; document.getElementById("addPersonPhone2").value=""; } }
   ["addPersonHusbandName","addPersonHusbandPhone","addPersonHusbandBirthday","addPersonWifeName","addPersonWifePhone","addPersonWifeBirthday","addPersonWeddingDate"].forEach(id=>{
     document.getElementById(id).value = "";
   });
@@ -9905,6 +9934,7 @@ document.getElementById("btnConfirmAddPerson").addEventListener("click", async (
     address: gv("addPersonAddress") || null,
     location: addPersonLocation || null,
     confessorName: gv("addPersonConfessor") || null,
+    ...((myService && myService!=="ابتدائي" && myService!=="متزوجين" && gv("addPersonPhone2")) ? {phone2: gv("addPersonPhone2")} : {}),
     lastConfession: document.getElementById("addPersonLastConfession").value || null,
     lastCommunion: document.getElementById("addPersonLastCommunion").value || null
   });
@@ -28707,7 +28737,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "303"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "304"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
