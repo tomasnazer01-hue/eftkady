@@ -407,7 +407,8 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
     #printArea th, #printArea td{ border:1px solid #999; padding:6px 8px; text-align:right; font-size:13px; }
     #printArea th{ background:#eee; }
   }
-  html,body,.screen,#marriedTabBody,#contactsList{overflow-anchor:none}
+  html,body,main,.screen,#marriedTabBody,#contactsList{overflow-anchor:none}
+  main{overscroll-behavior-y:contain;}
   #groupFilterChips .chip,#regionFilterChips .chip,#visitFilterChips .chip,#servantFilterChips .chip{flex:0 0 auto;white-space:nowrap}
 </style>
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -2839,7 +2840,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v300</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v301</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3124,7 +3125,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v300</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v301</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -9763,7 +9764,7 @@ function renderContacts(){
   updateBulkBar();
 }
 { const box = document.getElementById("searchBox");
-  const go = ()=>{ window.__searchApplied = box.value; contactsLimit = 100; renderContacts(); };
+  const go = ()=>{ window.__searchApplied = box.value; contactsLimit = 100; renderContacts(); const mm=[...document.querySelectorAll("main")].find(m=>m.offsetParent); if(mm) mm.scrollTop = 0; };
   document.getElementById("btnSearchGo").addEventListener("click", go);
   box.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); box.blur(); } });
   // لو مسحت الخانة القايمة ترجع كاملة
@@ -28701,7 +28702,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "300"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "301"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28794,9 +28795,12 @@ document.getElementById("btnInstall").addEventListener("click", async ()=>{
 // v253: تثبيت السكرول وقت تحديد الأسماء وإعادة رسم القوائم (كل الخدمات)
 (function(){
   let lock=null;
+  const curMain=()=>[...document.querySelectorAll("main")].find(m=>m.offsetParent)||null;
   const hold=(ms)=>{
     const y=window.scrollY; const t0=performance.now(); lock=t0;
+    const mm=curMain(), my=mm?mm.scrollTop:0;   // السكرول الحقيقي في التطبيق على <main> مش على الصفحة
     const tick=()=>{ if(lock!==t0) return;
+      if(mm && Math.abs(mm.scrollTop-my)>1) mm.scrollTop=my;
       if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
       if(performance.now()-t0<ms) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
@@ -28808,8 +28812,10 @@ document.getElementById("btnInstall").addEventListener("click", async ()=>{
   const wrap=f=>function(){ const y=window.scrollY; const r=f.apply(this,arguments);
     if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y);
     requestAnimationFrame(()=>{ if(Math.abs(window.scrollY-y)>2) window.scrollTo(0,y); }); return r; };
-  try{ renderMarriedTab = wrap(renderMarriedTab); }catch(_){}
-  try{ renderContacts = wrap(renderContacts); }catch(_){}
+  const wrapM=f=>function(){ const m=curMain(), y=m?m.scrollTop:0; const r=f.apply(this,arguments);
+    if(m){ m.scrollTop=y; requestAnimationFrame(()=>{ m.scrollTop=y; }); } return r; };
+  try{ renderMarriedTab = wrapM(wrap(renderMarriedTab)); }catch(_){}
+  try{ renderContacts = wrapM(wrap(renderContacts)); }catch(_){}
 })();
 
 // v257: رسالة تثبيت التطبيق + تفعيل التنبيهات لأي حد مش مثبّت/مش مفعّل
