@@ -298,7 +298,8 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
   .item-sub{font-size:12.5px;color:#8a8f9e;direction:ltr;text-align:right;}
 
   #bulkBar{position:fixed !important;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:520px;bottom:86px;top:auto !important;z-index:40;max-height:55vh;overflow-y:auto;margin:0;padding:8px 12px;box-shadow:0 12px 32px rgba(27,42,74,.35);}
-  body.bulk-open #contactsList{padding-bottom:80px;}
+  #contactsList{padding-bottom:80px;}   /* ثابت — تغييره وقت التحديد كان بيخلي الشاشة تقفز */
+  #contactsList, #contactsList *{overflow-anchor:none;}
   body.bulk-expanded #contactsList{padding-bottom:50vh;}
   #fastScroll{position:fixed;right:0;top:130px;bottom:104px;width:30px;z-index:60;touch-action:none;display:none;}
   #fsThumb{position:absolute;right:3px;width:9px;min-height:54px;border-radius:8px;background:rgba(27,42,74,.5);box-shadow:0 0 0 2px rgba(255,255,255,.55);transition:opacity .25s,width .15s;}
@@ -2838,7 +2839,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v299</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v300</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3123,7 +3124,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v299</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v300</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -6367,6 +6368,12 @@ function avatarColor(name){
   let hash = 0;
   for(let i=0;i<s.length;i++) hash = (hash*31 + s.charCodeAt(i)) >>> 0;
   return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+}
+function photoLightbox(src, caption){
+  let el = document.getElementById("photoLightbox");
+  if(!el){ el = document.createElement("div"); el.id = "photoLightbox"; el.className = "modal-overlay"; el.style.cssText = "align-items:center;justify-content:center;background:rgba(0,0,0,.88);z-index:400;position:fixed"; document.body.appendChild(el); el.addEventListener("click", ()=>el.classList.remove("show")); }
+  el.innerHTML = `<div style="text-align:center;max-width:94vw"><img src="${src}" style="max-width:94vw;max-height:78vh;border-radius:14px;object-fit:contain;background:#222" />${caption?`<div style="color:#fff;font-weight:700;margin-top:10px">${cardEsc(caption)}</div>`:""}<div style="color:#ccc;font-size:12px;margin-top:6px">دوس في أي مكان للإغلاق</div></div>`;
+  el.classList.add("show");
 }
 function avatarHTML(name, photoUrl){
   if(photoUrl){
@@ -9735,13 +9742,22 @@ function renderContacts(){
     </div>
   `;}).join("") + (_more>0 ? `<button type="button" class="btn btn-outline btn-block" id="btnContactsMore" style="margin:10px 0">⬇️ عرض ${Math.min(_more,100)} كمان (باقي ${_more})</button>` : "");
   { const mb = document.getElementById("btnContactsMore"); if(mb) mb.onclick = ()=>{ contactsLimit += 100; renderContacts(); }; }
+  list.querySelectorAll(".avatar img").forEach(im=>{   // دوس على الصورة = تتكبّر (بدل ما يفتح البيانات)
+    im.style.cursor = "zoom-in";
+    im.addEventListener("click", ev=>{ ev.stopPropagation(); ev.preventDefault(); const row = im.closest("[data-open]"); photoLightbox(im.src, row ? ((contacts.find(x=>x.id===row.dataset.open)||{}).name||"") : ""); }, true);
+  });
   list.querySelectorAll("[data-open]").forEach(el=>{
     el.addEventListener("click", ()=>openEditModal(el.dataset.open));
   });
   list.querySelectorAll(".chkContact").forEach(chk=>{
     chk.addEventListener("change", ()=>{
+      // نثبّت مكان السكرول وقت التحديد علشان الشاشة ما تطلعش وتنزل
+      let sc = chk.parentElement; while(sc && sc!==document.body && !(sc.scrollHeight>sc.clientHeight+1 && /(auto|scroll)/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
+      if(!sc || sc===document.body) sc = document.scrollingElement || document.documentElement;
+      const top = sc.scrollTop;
       if(chk.checked) selectedIds.add(chk.dataset.id); else selectedIds.delete(chk.dataset.id);
       updateBulkBar();
+      sc.scrollTop = top; requestAnimationFrame(()=>{ sc.scrollTop = top; });
     });
   });
   updateBulkBar();
@@ -28685,7 +28701,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "299"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "300"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
