@@ -2838,7 +2838,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v297</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v298</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3123,7 +3123,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v297</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v298</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -4890,18 +4890,27 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div id="pendingUsersList" style="margin-top:8px"></div>
       </details>
 
-      <details id="adminRolesDetails" style="display:none;margin-bottom:10px">
-        <summary style="font-weight:700;cursor:pointer;padding:6px 0">🎚️ أدوار الخدام</summary>
-        <p class="muted" style="margin:8px 0 0">أمين الخدمة: كل حاجة · مشرف: بيشوف بس مخدومين المجموعات المحددة له · خادم · مساعد (مساعدة بسيطة). حدد صلاحية كل دور من الجدول اللي تحت.</p>
-        <div id="rolePermTableBox" style="margin:10px 0"></div>
-        <button class="btn btn-gold btn-block" id="btnOpenCreateServant" style="margin:10px 0">➕ إضافة خادم جديد (بحساب دخول جاهز)</button>
-        <select id="rolesServantFilter" style="margin-bottom:8px"><option value="all">🧸 كل المجموعات</option></select>
-        <input type="search" id="rolesServantSearch" placeholder="🔍 ابحث باسم الخادم" style="margin-bottom:8px;width:100%" />
-        <button class="btn btn-outline btn-block btn-sm" id="btnBulkGender" style="margin-bottom:8px">👥 تحديد النوع (أنكل / تاسوني) مرة واحدة</button>
-        <div id="rolesCredBox" style="margin-bottom:10px"></div>
-        <div id="rolesGradeChips" class="row wrap" style="margin-bottom:8px;display:none"></div>
-        <div id="rolesList"></div>
-      </details>
+      <div id="adminRolesDetails" style="display:none">
+        <details id="svPermDetails" class="card" style="margin-bottom:10px">
+          <summary style="font-weight:700;cursor:pointer;padding:6px 0">🔐 صلاحيات الخدام</summary>
+          <p class="muted" style="margin:8px 0 0">أمين الخدمة: كل حاجة · مشرف: بيشوف بس مخدومين المجموعات المحددة له · خادم · مساعد (مساعدة بسيطة). حدد صلاحية كل دور من الجدول اللي تحت.</p>
+          <div id="rolePermTableBox" style="margin:10px 0"></div>
+        </details>
+        <details id="svAddDetails" class="card" style="margin-bottom:10px">
+          <summary style="font-weight:700;cursor:pointer;padding:6px 0">➕ إضافة الخدام</summary>
+          <p class="muted" style="margin:8px 0 0">اعمل حساب دخول جاهز لخادم جديد وابعتله بياناته.</p>
+          <button class="btn btn-gold btn-block" id="btnOpenCreateServant" style="margin:10px 0">➕ إضافة خادم جديد (بحساب دخول جاهز)</button>
+        </details>
+        <details id="svDataDetails" class="card" style="margin-bottom:10px">
+          <summary style="font-weight:700;cursor:pointer;padding:6px 0">👤 بيانات الخدام</summary>
+          <select id="rolesServantFilter" style="margin:8px 0;width:100%"><option value="all">🧸 كل المجموعات</option></select>
+          <input type="search" id="rolesServantSearch" placeholder="🔍 ابحث باسم الخادم" style="margin-bottom:8px;width:100%" />
+          <button class="btn btn-outline btn-block btn-sm" id="btnBulkGender" style="margin-bottom:8px">👥 تحديد النوع (أنكل / تاسوني) مرة واحدة</button>
+          <div id="rolesCredBox" style="margin-bottom:10px"></div>
+          <div id="rolesGradeChips" class="row wrap" style="margin-bottom:8px;display:none"></div>
+          <div id="rolesList"></div>
+        </details>
+      </div>
 
       <details id="adminMemberLinksDetails" style="display:none;margin-bottom:10px">
         <summary style="font-weight:700;cursor:pointer;padding:6px 0">🔗 طلبات ربط المخدومين</summary>
@@ -19688,8 +19697,7 @@ document.getElementById("btnHubGoMeetings").addEventListener("click", ()=>{
     attSlot.appendChild(attendancePanel);
   }
   if(rolesPanel && rolesSlot){
-    rolesPanel.classList.add("card");
-    rolesSlot.appendChild(rolesPanel);
+    rolesSlot.appendChild(rolesPanel);   // الغلاف فاضي من الشكل — كل تابة جواه كارت لوحده ومقفولة
   }
   if(perfPanel && perfSlot){
     perfPanel.classList.add("card");
@@ -28665,7 +28673,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "297"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "298"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
