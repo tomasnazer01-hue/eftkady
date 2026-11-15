@@ -747,6 +747,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <img id="memberPhotoPreview" src="" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);display:none;margin:0 auto 8px" />
         <div id="memberPhotoPlaceholder" style="width:96px;height:96px;border-radius:50%;background:var(--sage-soft);color:var(--sage);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 8px">👤</div>
         <label for="memberPhotoInput" class="btn btn-outline btn-sm" style="cursor:pointer">📷 تغيير صورتي</label>
+        <button type="button" class="btn btn-outline btn-sm" id="btnMemberPhotoAdjust" style="display:none">🔍 تحريك / تكبير</button>
         <input type="file" id="memberPhotoInput" accept="image/*" style="display:none" />
       </div>
       <label class="field-label">الاسم</label>
@@ -2851,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v311</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v312</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3136,7 +3137,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v311</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v312</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -8466,9 +8467,11 @@ function startMemberView(linkedContactId){
     if(c.photoUrl){
       document.getElementById("memberPhotoPreview").src = c.photoUrl;
       document.getElementById("memberPhotoPreview").style.display = "block";
+      { const bb=document.getElementById("btnMemberPhotoAdjust"); if(bb) bb.style.display=""; }
       document.getElementById("memberPhotoPlaceholder").style.display = "none";
     } else {
       document.getElementById("memberPhotoPreview").style.display = "none";
+      { const bb=document.getElementById("btnMemberPhotoAdjust"); if(bb) bb.style.display="none"; }
       document.getElementById("memberPhotoPlaceholder").style.display = "flex";
     }
     if(document.activeElement && document.activeElement.closest("#memberFormBox")) return; // don't overwrite while typing
@@ -13687,37 +13690,24 @@ document.getElementById("btnVoiceNote").addEventListener("click", async ()=>{
   try{ voiceRecognizer.start(); }catch(err){ console.error(err); toast("تعذر بدء التسجيل"); isRecordingVoice=false; btn.textContent="🎤"; statusEl.style.display="none"; }
 });
 
+async function memberSavePhoto(dataUrl){
+  document.getElementById("memberPhotoPreview").src = dataUrl;
+  document.getElementById("memberPhotoPreview").style.display = "block";
+  document.getElementById("memberPhotoPlaceholder").style.display = "none";
+  document.getElementById("btnMemberPhotoAdjust").style.display = "";
+  if(!memberLinkedContactId) return;
+  try{ await updateDoc(doc(db,"contacts",memberLinkedContactId), {photoUrl: dataUrl}); toast("تم تحديث صورتك ✅"); }
+  catch(err){ console.error(err); toast("تعذر حفظ الصورة — تأكد من قواعد الأمان"); }
+}
 document.getElementById("memberPhotoInput").addEventListener("change", (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
+  const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
-  reader.onload = (ev)=>{
-    const img = new Image();
-    img.onload = async ()=>{
-      const size = 220;
-      const canvas = document.createElement("canvas");
-      canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext("2d");
-      const scale = Math.max(size/img.width, size/img.height);
-      const w = img.width*scale, h = img.height*scale;
-      ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
-      document.getElementById("memberPhotoPreview").src = dataUrl;
-      document.getElementById("memberPhotoPreview").style.display = "block";
-      document.getElementById("memberPhotoPlaceholder").style.display = "none";
-      if(!memberLinkedContactId) return;
-      try{
-        await updateDoc(doc(db,"contacts",memberLinkedContactId), {photoUrl: dataUrl});
-        toast("تم تحديث صورتك ✅");
-      }catch(err){
-        console.error(err);
-        toast("تعذر حفظ الصورة — تأكد من قواعد الأمان");
-      }
-    };
-    img.src = ev.target.result;
-  };
+  reader.onload = ev=>{ openPhotoAdjust(ev.target.result, memberSavePhoto); };   // v312: يفتح شاشة التحريك والتكبير قبل الحفظ
   reader.readAsDataURL(file);
+  e.target.value = "";
 });
+document.getElementById("btnMemberPhotoAdjust").addEventListener("click", ()=>{ const src = document.getElementById("memberPhotoPreview").src; if(src && document.getElementById("memberPhotoPreview").style.display!=="none") openPhotoAdjust(src, memberSavePhoto); });
+document.getElementById("memberPhotoPreview").addEventListener("click", ()=>document.getElementById("btnMemberPhotoAdjust").click());
 document.getElementById("editPhotoInput").addEventListener("change", (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -28817,7 +28807,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "311"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "312"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
