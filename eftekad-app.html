@@ -2851,7 +2851,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v308</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v309</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3136,7 +3136,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v308</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v309</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11451,7 +11451,9 @@ function waKSenderUid(){ const sv = (document.getElementById("waKServant")||{}).
 function waKSenderGender(){ const u = churchServants.find(x=>x.id===waKSenderUid()); return u && (u.gender==="female"||u.gender==="male") ? u.gender : null; }
 let waKOnly = null, runEditCtx = "", waKIncSent = false;
 const waKRand = {}, waKBag = {}, waKPick = {}; // توزيع عشوائي: الرسايل المعلّمة لكل نوع، وشنطة التوزيع، واللي اتختار لكل مخدوم
+let waKThirds = false, waKThirdsInfo = null; // v309: افتقاد النهارده = ثلث ولادي بس (٣ أيام)
 function waKBuildQueue(){
+  waKThirdsInfo = null;
   if(waKOnly){
     const o = [], spf0 = document.getElementById("waKSpouse").value || "auto", sg0 = waKSenderGender();
     contacts.forEach(c=>{
@@ -11463,7 +11465,7 @@ function waKBuildQueue(){
     return o;
   }
   const g = document.getElementById("waKGroup").value || "all", sv = document.getElementById("waKServant").value || "all", st = document.getElementById("waKStatus").value;
-  const spf = document.getElementById("waKSpouse").value || "auto", out = [];
+  const spf = document.getElementById("waKSpouse").value || "auto", out = []; let elig = 0, sentToday = 0;
   contacts.forEach(c=>{
     if(c.graduated || c.pendingApproval || c.noWhatsapp || c.wrongNumber) return;
     const fam = isFamilyRecord(c);
@@ -11478,12 +11480,18 @@ function waKBuildQueue(){
     const forces = married ? (spf==="both" ? ["husband","wife"] : (spf==="husband"||spf==="wife") ? [spf] : (sg ? [sg==="female" ? "wife" : "husband"] : [])) : [undefined];
     forces.forEach(f=>{
       const r = waKRec(c, f); if(!r) return;
+      elig++; if(waKLast(c, r)===todayStr()) sentToday++;
       if(st==="today" && waKLast(c, r)===todayStr()) return;
       if(waKSentWeek(c, r)) return;
       if(st==="never" && waKLast(c, r)) return;
       out.push({key: c.id + (f ? "|"+f : ""), c, r});
     });
   });
+  if(waKThirds && !waKFromAbsent){
+    const quota = Math.ceil(elig/3), left = Math.max(0, quota - sentToday);
+    waKThirdsInfo = {elig, quota, sentToday, avail: out.length};
+    return out.slice(0, left);
+  }
   return out;
 }
 let waKFromAbsent = false;   // اتفتحت من «مين غاب النهارده»
@@ -11582,13 +11590,13 @@ function waKRefresh(){
   const q = waKBuildQueue();
   const cnt = {}; let unk = 0;
   q.forEach(({c,r})=>{ cnt[r.label] = (cnt[r.label]||0)+1; if(r.mode!=="married" && c.gender!=="male" && c.gender!=="female") unk++; });
-  document.getElementById("waKSummary").textContent = (waKOnly ? `📌 للمحددين بس (${waKOnly.size}) — ` : "") + (q.length
+  document.getElementById("waKSummary").textContent = (waKThirds && waKThirdsInfo ? `📆 النهارده ثلث ولادك: ${waKThirdsInfo.quota} من ${waKThirdsInfo.elig} (باقي الثلثين في اليومين الجايين) — ` : "") + (waKOnly ? `📌 للمحددين بس (${waKOnly.size}) — ` : "") + (q.length
     ? `هيتبعت لـ ${q.length}: ` + Object.entries(cnt).map(([l,n])=>`${n} ${l.replace(/^\S+\s/,"")}`).join("، ") + "." + (unk?` ⚠️ ${unk} منهم جنسهم مش متحدد (هياخدوا صيغة المذكر).`:"")
     : waKWhyEmpty());
   document.getElementById("btnWaKStart").disabled = !q.length;
 }
 function waKOpen(only){
-  waKIncSent = false;
+  waKIncSent = false; if(!waKOpen.__keepThirds) waKThirds = false;
   waKFromAbsent = !!(only && only.__absent); if(waKFromAbsent) waK.cur = {};
   waKOnly = (only instanceof Set && only.size) ? only : null;
   if(waKOnly){ waK.running = false; document.getElementById("waKSetup").style.display = ""; document.getElementById("waKRun").style.display = "none"; }
@@ -15714,9 +15722,9 @@ document.getElementById("globalSearchInput").addEventListener("input", (e)=>{
 // BROWSER NOTIFICATIONS (best-effort reminders while the app is open)
 // ==================================================================
 // تنبيه بيشتغل على أندرويد/الموبايل (لازم عن طريق الـ service worker — new Notification بيتجاهله الموبايل)
-async function appNotify(title, body){
+async function appNotify(title, body, data){
   if(!("Notification" in window) || Notification.permission!=="granted") return false;
-  const opts = {body, icon:"./icon-192.png", badge:"./icon-192.png", dir:"rtl", lang:"ar", tag:"waznty-"+title};
+  const opts = {body, icon:"./icon-192.png", badge:"./icon-192.png", dir:"rtl", lang:"ar", tag:"waznty-"+title, data: data||{}};
   try{ const reg = await navigator.serviceWorker.getRegistration(); if(reg){ await reg.showNotification(title, opts); return true; } }catch(_){}
   try{ new Notification(title, opts); return true; }catch(_){ return false; }
 }
@@ -28750,7 +28758,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "308"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "309"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -28956,7 +28964,7 @@ setTimeout(refreshInstallBanner, 1500);
       const now = new Date(), today = ymd(now);
       const hhmm = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
       if(LS("remDaily")!=="0" && LS("remDailyLast")!==today && hhmm >= (LS("remDailyTime")||"18:00")){
-        LS("remDailyLast", today); await appNotify("وزنتك 🫶", DAILY_MSG);
+        LS("remDailyLast", today); await appNotify("وزنتك 🫶", DAILY_MSG, {open:"wak"});
       }
       if(LS("remBday")!=="0" && LS("remBdayLast")!==today && now.getHours()>=8 && (contacts||[]).length){
         const txt = bdayText(); LS("remBdayLast", today);
@@ -28967,9 +28975,25 @@ setTimeout(refreshInstallBanner, 1500);
   document.getElementById("btnTestDailyRem")?.addEventListener("click", async ()=>{
     if(!("Notification" in window)){ toast("المتصفح ده مش بيدعم التنبيهات"); return; }
     if(Notification.permission!=="granted"){ const p = await Notification.requestPermission(); try{ updateNotifStatusText(); }catch(_){} if(p!=="granted"){ toast("لازم تسمح بالتنبيهات الأول"); return; } }
-    await appNotify("وزنتك 🫶", DAILY_MSG);
+    await appNotify("وزنتك 🫶", DAILY_MSG, {open:"wak"});
     const b = bdayText(); if(b) await appNotify("أعياد ميلاد المخدومين 🎂", b); else toast("مفيش أعياد ميلاد النهارده");
   });
+  // v309: الضغط على تنبيه «ولادك مستنين افتقادك» يفتح واتساب الافتقاد لولادي أنا وثلثهم النهارده
+  let openWakPending = false;
+  function openWakDaily(){
+    if(openWakPending) return; openWakPending = true; let tries = 0;
+    const go = ()=>{
+      if(!(auth.currentUser && myUid && myService && (contacts||[]).length) && tries++<40){ setTimeout(go, 500); return; }
+      openWakPending = false;
+      try{ waKOpen.__keepThirds = true; waKThirds = true; waKOpen(); waKOpen.__keepThirds = false;
+        const sv = document.getElementById("waKServant"); if(sv){ sv.value = "mine"; if(sv.value!=="mine") sv.value = "all"; }
+        const g = document.getElementById("waKGroup"); if(g) g.value = "all";
+        waKRefresh(); }catch(e){ waKOpen.__keepThirds = false; console.warn("open wak", e); }
+    };
+    go();
+  }
+  try{ const q = new URLSearchParams(location.search); if(q.get("open")==="wak"){ openWakDaily(); history.replaceState(null,"",location.pathname); } }catch(_){}
+  try{ navigator.serviceWorker && navigator.serviceWorker.addEventListener("message", e=>{ if(e.data && e.data.open==="wak") openWakDaily(); }); }catch(_){}
   setInterval(tick, 60000);
   document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) tick(); });
   setTimeout(tick, 5000);

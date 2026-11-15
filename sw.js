@@ -4,7 +4,7 @@
 // أوفلاين منفصلة ومفعّلة بالفعل جوه التطبيق (enableIndexedDbPersistence) — الملف ده
 // بس مسؤول عن تحميل التطبيق نفسه (الشكل والكود) من غير إنترنت.
 
-const CACHE_VERSION = "eftekad-shell-v3";
+const CACHE_VERSION = "eftekad-shell-v4";
 const APP_SHELL_URLS = [
   "./",
   "./index.html",
@@ -77,7 +77,8 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("notificationclick", e=>{
   e.notification.close();
   e.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(cs=>{
-    for(const c of cs){ if("focus" in c) return c.focus(); }
-    return self.clients.openWindow("./");
+    const open = e.notification.data && e.notification.data.open;
+    for(const c of cs){ if("focus" in c){ if(open) try{ c.postMessage({open}); }catch(_){} return c.focus(); } }
+    return self.clients.openWindow(open ? "./?open="+open : "./");
   }));
 });
