@@ -2471,13 +2471,15 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <select id="escalationMeetingSelect" style="width:auto"></select>
           <button class="btn btn-outline btn-sm" id="btnRecalcEscalation">🔄 احسب دلوقتي</button>
         </div>
+        <div id="escTabs" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+          <button class="chip esc-tab" data-esc-filter="whatsapp" style="flex-direction:column;justify-content:center;gap:1px;border-radius:14px;line-height:1.35;padding:8px 4px;text-align:center"><span style="font-size:18px">💬</span><b>غاب مرة</b><span style="font-size:11px">ابعتله واتساب</span></button>
+          <button class="chip esc-tab" data-esc-filter="phone" style="flex-direction:column;justify-content:center;gap:1px;border-radius:14px;line-height:1.35;padding:8px 4px;text-align:center"><span style="font-size:18px">📞</span><b>غاب مرتين</b><span style="font-size:11px">كلّمه فون</span></button>
+          <button class="chip esc-tab" data-esc-filter="homevisit" style="flex-direction:column;justify-content:center;gap:1px;border-radius:14px;line-height:1.35;padding:8px 4px;text-align:center"><span style="font-size:18px">🏠</span><b>غاب 3 مرات</b><span style="font-size:11px">انزله افتقاد</span></button>
+        </div>
         <div class="row wrap" style="margin-bottom:10px">
-          <button class="chip" data-esc-filter="whatsapp">💬 واتساب (غاب أسبوع)</button>
-          <button class="chip" data-esc-filter="phone">📞 اتصال (غاب أسبوعين ورا بعض)</button>
-          <button class="chip" data-esc-filter="homevisit">🏠 زيارة منزلية (غاب 3 أسابيع ورا بعض)</button>
-          <button class="chip" data-esc-filter="duetoday">📅 متابعات مستحقة</button>
-          <button class="chip" data-esc-filter="notree">🌳 مش بيسجّل في شجرتي</button>
-          <button class="chip" data-esc-filter="care" data-only-service="ابتدائي">🕊️ رعاية (أب/أم متوفي)</button>
+          <button class="chip" data-esc-filter="duetoday" style="font-size:12px">📅 متابعات مستحقة</button>
+          <button class="chip" data-esc-filter="notree" style="font-size:12px">🌳 مش بيسجّل في شجرتي</button>
+          <button class="chip" data-esc-filter="care" data-only-service="ابتدائي" style="font-size:12px">🕊️ رعاية (أب/أم متوفي)</button>
         </div>
         <div class="row wrap" style="margin-bottom:10px">
           <div class="grow">
@@ -2849,7 +2851,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v307</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v308</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3134,7 +3136,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v307</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v308</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -28748,7 +28750,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "307"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "308"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
