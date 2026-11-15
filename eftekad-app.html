@@ -2851,7 +2851,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v309</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v310</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3136,7 +3136,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v309</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v310</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5147,7 +5147,20 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <div style="height:8px"></div>
           <p class="muted" id="unifiedMsgHint" style="margin-top:0"></p>
           <div class="row wrap" id="unifiedMsgChips" style="margin-bottom:6px"></div>
+          <details style="margin-bottom:8px"><summary class="muted" style="cursor:pointer;font-size:12.5px">🔣 كل الاختصارات (بعضها بيشتغل في رسايل معينة بس)</summary>
+            <div class="row wrap" id="unifiedMsgAllChips" style="margin-top:6px"></div></details>
+          <label class="field-label">النسخة الأساسية</label>
           <textarea id="unifiedMsgInput" rows="4"></textarea>
+          <div style="margin-top:10px;padding:10px;border:1.5px dashed var(--line);border-radius:12px">
+            <b style="font-size:13px">🔀 نسخ تانية لنفس الرسالة</b>
+            <div class="muted" style="font-size:12px;margin:2px 0 8px">كل مرة تتبعت، التطبيق بيختار نسخة عشوائي من الأساسية + النسخ دي، فكل واحد ياخد رسالة مختلفة.</div>
+            <div id="unifiedMsgVariants"></div>
+            <div class="row wrap" style="gap:6px;margin-top:6px">
+              <button type="button" class="btn btn-outline btn-sm" id="btnAddMsgVariant">➕ إضافة نسخة</button>
+              <button type="button" class="btn btn-gold btn-sm" id="btnAiMsgVariants">🤖 ولّد بالذكاء الاصطناعي</button>
+            </div>
+            <input type="text" id="aiMsgVariantsNote" placeholder="توجيه اختياري للـAI (مثال: بأسلوب أخف، أقصر…)" style="margin-top:6px" />
+          </div>
           <div style="height:8px"></div>
           <button class="btn btn-gold btn-block" id="btnSaveUnifiedMsg">حفظ</button>
           <button class="btn btn-ghost btn-block" id="btnResetUnifiedMsg" style="display:none;margin-top:6px">↩️ رجّع النص الأصلي</button>
@@ -5941,10 +5954,14 @@ const MSG_DEFS = {
   accountInvite: {label:"📤 نص دعوة عمل حساب", chips:[], hint:"", def:"اعمل حساب بسيط تقدر بيه تعدّل بياناتك بنفسك"},
   tripApproval: {label:"📤 نص طلب موافقة الرحلة", chips:[], hint:"", def:"من فضلك وافق على مشاركة ابنك/ابنتك في الرحلة"}
 };
+// v310: نسخ متعددة لكل رسالة — بيتختار واحدة عشوائي كل مرة (النسخ متخزنة في msgOv["var:<key>"] كـ JSON)
+function msgVariants(key){ try{ const a = JSON.parse(msgOv["var:"+key]||"[]"); return Array.isArray(a) ? a.filter(x=>typeof x==="string" && x.trim()) : []; }catch(_){ return []; } }
+function vpick(key, base){ const v = msgVariants(key); if(!v.length) return base; const pool = [base, ...v]; return pool[Math.floor(Math.random()*pool.length)]; }
+function msgTplV(key){ return vpick(key, msgTpl(key)); }
 function msgDefault(key){ const d = MSG_DEFS[key].def; return typeof d==="function" ? d() : d; }
 function msgTpl(key){ const v = msgOv[key]; return (typeof v==="string" && v.trim()) ? v : msgDefault(key); }
 function msgFill(key, vars){
-  let t = msgTpl(key);
+  let t = msgTplV(key);
   Object.keys(vars||{}).forEach(k=>{ t = t.split("{"+k+"}").join(vars[k]==null ? "" : String(vars[k])); });
   return t.replace(/[ \t]+\n/g,"\n").replace(/\n{3,}/g,"\n\n").trim();
 }
@@ -9718,7 +9735,7 @@ document.getElementById("dataStatusList").addEventListener("click", async (e)=>{
     await updateDoc(doc(db,"contacts",c.id), {directLinkSentAt: serverTimestamp(), missingAskedAt: serverTimestamp(), missingAskedBy: currentUserEmail||""});
     c.missingAskedAt = {toDate:()=>new Date()};
     const link = `${location.origin}/?memberDirect=${c.id}`;
-    window.open(waLink(phone, fillMissingDataMessage(missingDataMessage, c, contactMissingFields(c), link)), "_blank");
+    window.open(waLink(phone, fillMissingDataMessage(vpick("missingdata",missingDataMessage), c, contactMissingFields(c), link)), "_blank");
     logActivity("رسالة بيانات ناقصة", c.name||"");
   }catch(err){ console.error(err); toast("تعذر — تأكد من قواعد الأمان"); }
 });
@@ -10382,7 +10399,7 @@ function genderizeAr(text, g){ // g: "m" للزوج | "f" للزوجة
   return text.replace(re, (m, pre, px, w)=>pre + px + (map.get(w)||w));
 }
 function bdayMsgFor(p){ // v303: تهنئة عيد الميلاد بنوع الشخص (بنت = مؤنث، ولد = مذكر)
-  const t = fillTemplate(birthdayMessage, p);
+  const t = fillTemplate(vpick("birthday",birthdayMessage), p);
   return p && p.gender==="female" ? genderizeAr(t,"f") : p && p.gender==="male" ? genderizeAr(t,"m") : t;
 }
 function buildSpouseRecipients(familyContacts){
@@ -12567,7 +12584,7 @@ function bindMarriedRowActions(root){
       if(!c.directAccessEnabled) await updateDoc(doc(db,"contacts",c.id), {directAccessEnabled:true});
       await updateDoc(doc(db,"contacts",c.id), {directLinkSentAt: serverTimestamp()});
       const link = `${location.origin}/?memberDirect=${c.id}`;
-      const msg = fillFamilyInviteMessage(familyInviteMessage, c, link);
+      const msg = fillFamilyInviteMessage(vpick("familyinvite",familyInviteMessage), c, link);
       window.open(waLink(phone, msg), "_blank");
     }catch(err){ console.error(err); toast("تعذر — تأكد من قواعد الأمان"); }
   }));
@@ -12581,7 +12598,7 @@ function bindMarriedRowActions(root){
       if(!c.directAccessEnabled) await updateDoc(doc(db,"contacts",c.id), {directAccessEnabled:true});
       await updateDoc(doc(db,"contacts",c.id), {directLinkSentAt: serverTimestamp()});
       const link = `${location.origin}/?memberDirect=${c.id}`;
-      const msg = fillMissingDataMessage(missingDataMessage, c, missing, link);
+      const msg = fillMissingDataMessage(vpick("missingdata",missingDataMessage), c, missing, link);
       window.open(waLink(phone, msg), "_blank");
       logActivity("رسالة بيانات ناقصة", familyLine(c));
     }catch(err){ console.error(err); toast("تعذر — تأكد من قواعد الأمان"); }
@@ -12600,7 +12617,7 @@ function bindMarriedRowActions(root){
     const name = role==="husband" ? c.husbandName : c.wifeName;
     const phone = role==="husband" ? c.husbandPhone : c.wifePhone;
     if(!phone){ toast("مفيش رقم هاتف مسجّل"); return; }
-    const template = type==="birthday" ? marriedBirthdayMessage : marriedAnniversaryMessage;
+    const template = type==="birthday" ? vpick("marriedbirthday",marriedBirthdayMessage) : vpick("marriedanniversary",marriedAnniversaryMessage);
     const signOff = servantSignOff(churchServants.find(s=>s.id===myUid));
     const msg = fillMarriedGreeting(template, name, signOff, role==="husband" ? "m" : "f");
     window.open(waLink(phone, msg), "_blank");
@@ -14942,7 +14959,7 @@ document.getElementById("btnShareJoinLink").addEventListener("click", async ()=>
 document.getElementById("btnShareMemberJoinLink").addEventListener("click", async ()=>{
   const link = `${location.origin}/?memberJoin=${myChurchCode}`;
   if(navigator.share){
-    try{ await navigator.share({title:"دعوة انضمام", text:msgTpl("accountInvite"), url:link}); return; }
+    try{ await navigator.share({title:"دعوة انضمام", text:msgTplV("accountInvite"), url:link}); return; }
     catch(_){ /* fall through to clipboard */ }
   }
   try{
@@ -15039,17 +15056,47 @@ const UNIFIED_MSG_MAP = {
   const og = document.createElement("optgroup"); og.label = "رسائل تانية في التطبيق";
   Object.keys(MSG_DEFS).forEach(k=>{ const o = document.createElement("option"); o.value = "ov:"+k; o.textContent = MSG_DEFS[k].label; og.appendChild(o); });
   sel.appendChild(og); }
+const ALL_MSG_CHIPS = ["{الاسم}","{الاسم_الكامل}","{اسم_الطفل_الأول}","{اسم_ولي_الأمر}","{اسم_الأب_الأول}","{اسم_الأم_الأول}","{اسم_الزوج_الأول}","{اسم_الزوجة_الأول}","{اسم_المستلم}","{يا_فلان}","{أستاذ/أستاذة}","{ابنك/بنتك}","{ماما/بابا}","{اسمه/ها}","{ولي_الأمر}","{التوقيع}","{اسم_الخادم}","{الكنيسة}","{رابط_شخصي}","{رابط}","{الرابط}","{الناقص}","{الإنجاز}","{الاجتماع}","{اليوم}","{المدة}","{الفقرة}","{اسم}","{الكود}","{الإيميل}","{سطر_الباسورد}"];
+function renderMsgVariants(arr){
+  const box = document.getElementById("unifiedMsgVariants"); if(!box) return;
+  box.innerHTML = (arr||[]).map((t,i)=>`<div style="margin-bottom:8px"><div class="row" style="justify-content:space-between;align-items:center"><span class="muted" style="font-size:12px">نسخة ${i+2}</span><button type="button" class="btn btn-ghost btn-sm" data-del-variant style="color:#B23B3B">🗑️ حذف</button></div><textarea rows="3" data-msg-variant>${String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</textarea></div>`).join("") || '<div class="muted" style="font-size:12px;margin-bottom:6px">لسه مفيش نسخ تانية.</div>';
+  box.querySelectorAll("[data-del-variant]").forEach(b=>b.addEventListener("click", ()=>{ b.closest("div[style*=margin-bottom]").remove(); if(!box.querySelector("[data-msg-variant]")) renderMsgVariants([]); }));
+  box.querySelectorAll("[data-msg-variant]").forEach(t=>t.addEventListener("focus", ()=>{ window.__msgChipTarget = t; }));
+}
+function currentMsgVariants(){ return [...document.querySelectorAll("#unifiedMsgVariants [data-msg-variant]")].map(t=>t.value.trim()).filter(Boolean); }
+function unifiedMsgKey(){ const k = document.getElementById("unifiedMsgSelect").value; return k.startsWith("ov:") ? k.slice(3) : k; }
+document.getElementById("unifiedMsgInput").addEventListener("focus", ()=>{ window.__msgChipTarget = null; });
+document.getElementById("btnAddMsgVariant").addEventListener("click", ()=>{ const cur = currentMsgVariants(); cur.push(""); renderMsgVariants(cur); const ts = document.querySelectorAll("#unifiedMsgVariants [data-msg-variant]"); ts[ts.length-1]?.focus(); });
+document.getElementById("btnAiMsgVariants").addEventListener("click", async ()=>{
+  const base = document.getElementById("unifiedMsgInput").value.trim();
+  if(!base){ toast("اكتب النسخة الأساسية الأول"); return; }
+  const btn = document.getElementById("btnAiMsgVariants"); btn.disabled = true; const old = btn.textContent; btn.textContent = "⏳ بيولّد...";
+  const note = document.getElementById("aiMsgVariantsNote").value.trim();
+  const prompt = `عندي رسالة واتساب من خادم كنيسة لمخدوم:\n"""${base}"""\n\nاكتب 3 نسخ بديلة مختلفة الصياغة لنفس الرسالة بنفس المعنى ونفس النبرة، بالعامية المصرية، قصيرة ودافية.\nقواعد صارمة: احتفظ بكل الاختصارات اللي بين أقواس مجعّدة زي {الاسم} و{التوقيع} بنفس الشكل بالظبط ومتغيّرش فيها ولا تترجمها، وما تضيفش اختصارات جديدة.${note?`\nتوجيه إضافي: ${note}`:""}\nرجّع JSON array فيه 3 نصوص بس بدون أي كلام تاني.`;
+  const out = await callClaudeAI(prompt, 900);
+  btn.disabled = false; btn.textContent = old;
+  if(!out) return;
+  let arr = [];
+  try{ const m = out.match(/\[[\s\S]*\]/); arr = JSON.parse(m ? m[0] : out); }catch(_){ arr = out.split(/\n{2,}/).map(x=>x.trim()).filter(Boolean).slice(0,3); }
+  arr = arr.filter(x=>typeof x==="string" && x.trim());
+  if(!arr.length){ toast("مقدرتش أولّد نسخ — جرّب تاني"); return; }
+  renderMsgVariants([...currentMsgVariants(), ...arr]);
+  toast(`اتضافت ${arr.length} نسخ — راجعهم وبعدين دوس حفظ ✅`);
+});
 function loadUnifiedMsg(){
   const key = document.getElementById("unifiedMsgSelect").value;
   const isOv = key.startsWith("ov:");
   const cfg = isOv ? {hint:(MSG_DEFS[key.slice(3)].hint||"")+" الأزرار تحت بتضيف المتغيّرات في مكان المؤشر.", chips:MSG_DEFS[key.slice(3)].chips} : UNIFIED_MSG_MAP[key];
   document.getElementById("unifiedMsgInput").value = isOv ? msgTpl(key.slice(3)) : document.getElementById(cfg.input).value;
+  renderMsgVariants(msgVariants(isOv ? key.slice(3) : key));
   document.getElementById("btnResetUnifiedMsg").style.display = isOv ? "" : "none";
   document.getElementById("unifiedMsgHint").textContent = cfg.hint;
   const chipsBox = document.getElementById("unifiedMsgChips");
   chipsBox.innerHTML = (cfg.chips||[]).map(ph=>`<button type="button" class="chip" data-insert-chip="${ph}">+ ${ph}</button>`).join("");
-  chipsBox.querySelectorAll("[data-insert-chip]").forEach(b=>b.addEventListener("click", ()=>{
-    const ta = document.getElementById("unifiedMsgInput");
+  { const own = new Set(cfg.chips||[]); const all = document.getElementById("unifiedMsgAllChips");
+    all.innerHTML = ALL_MSG_CHIPS.filter(c=>!own.has(c)).map(ph=>`<button type="button" class="chip" style="font-size:12px" data-insert-chip="${ph}">+ ${ph}</button>`).join(""); }
+  document.querySelectorAll("#unifiedMsgChips [data-insert-chip],#unifiedMsgAllChips [data-insert-chip]").forEach(b=>b.addEventListener("click", ()=>{
+    const ta = (window.__msgChipTarget && document.body.contains(window.__msgChipTarget)) ? window.__msgChipTarget : document.getElementById("unifiedMsgInput");
     const s = ta.selectionStart ?? ta.value.length;
     const e = ta.selectionEnd ?? s;
     ta.value = ta.value.slice(0,s) + b.dataset.insertChip + ta.value.slice(e);
@@ -15073,8 +15120,11 @@ document.getElementById("btnResetUnifiedMsg").addEventListener("click", ()=>{
   const key = document.getElementById("unifiedMsgSelect").value; if(!key.startsWith("ov:")) return;
   if(confirm("ترجّع النص الأصلي للرسالة دي؟")) saveMsgOv(key.slice(3), "");
 });
-document.getElementById("btnSaveUnifiedMsg").addEventListener("click", ()=>{
+document.getElementById("btnSaveUnifiedMsg").addEventListener("click", async ()=>{
   const key = document.getElementById("unifiedMsgSelect").value;
+  { const vk = unifiedMsgKey(), vs = currentMsgVariants();
+    if(vs.length) msgOv["var:"+vk] = JSON.stringify(vs); else delete msgOv["var:"+vk];
+    try{ await saveMsgOvAll(); }catch(err){ console.error(err); toast("تعذر حفظ النسخ — تأكد من الإنترنت"); } }
   if(key.startsWith("ov:")){ saveMsgOv(key.slice(3), document.getElementById("unifiedMsgInput").value); return; }
   const cfg = UNIFIED_MSG_MAP[key];
   document.getElementById(cfg.input).value = document.getElementById("unifiedMsgInput").value;
@@ -15102,7 +15152,7 @@ function updateTithesCard(){
     card.style.display = "block";
     document.getElementById("tithesNumberDisplay").textContent = tithesNumber;
     document.getElementById("tithesCallBtn").href = `tel:+${normalizeDigits(tithesNumber)}`;
-    document.getElementById("tithesWaBtn").href = waLink(tithesNumber, msgTpl("tithesWa"));
+    document.getElementById("tithesWaBtn").href = waLink(tithesNumber, msgTplV("tithesWa"));
   } else {
     card.style.display = "none";
   }
@@ -15150,7 +15200,7 @@ function updateContactNumberCard(){
     card.style.display = "block";
     document.getElementById("contactNumberDisplay").textContent = contactNumber;
     document.getElementById("contactCallBtn").href = `tel:+${normalizeDigits(contactNumber)}`;
-    document.getElementById("contactWaBtn").href = waLink(contactNumber, msgTpl("contactWa"));
+    document.getElementById("contactWaBtn").href = waLink(contactNumber, msgTplV("contactWa"));
   } else {
     card.style.display = "none";
   }
@@ -18040,7 +18090,7 @@ function renderSendCard(){
   window._currentSendTemplate = null;
   if(sendMode==="directlinks"){
     const link = `${location.origin}/?memberDirect=${c.id}`;
-    msg = fillTemplate(directLinksMessage, {...c, directAccessEnabled:true});
+    msg = fillTemplate(vpick("directlink",directLinksMessage), {...c, directAccessEnabled:true});
     if(!msg.includes(link)) msg = msg.replace(/\{رابط_شخصي\}/g, link); // safety net
   } else {
     const tpl = pickTemplate();
@@ -18633,7 +18683,7 @@ async function sendDirectLinkToParent(contactId, type){
     if(!c.directAccessEnabled) updates.directAccessEnabled = true;
     await updateDoc(doc(db,"contacts",contactId), updates);
     const me = churchServants.find(x=>x.id===myUid);
-    const msg = fillParentMessage(msgTpl("parentLink").replace(/\{التوقيع\}/g, servantSignOff(me)), {type, name: (type==="father" ? c.fatherName : c.motherName)||"", child:{...c, directAccessEnabled:true}, phone});
+    const msg = fillParentMessage(msgTplV("parentLink").replace(/\{التوقيع\}/g, servantSignOff(me)), {type, name: (type==="father" ? c.fatherName : c.motherName)||"", child:{...c, directAccessEnabled:true}, phone});
     logActivity(type==="father" ? "إرسال رابط لبابا" : "إرسال رابط لماما", c.name);
     window.open(waLink(phone, msg), "_blank");
   }catch(err){ console.error(err); toast("تعذر الإرسال — تأكد من قواعد الأمان"); }
@@ -18647,7 +18697,7 @@ async function sendDirectLinkViaWhatsApp(contactId){
     updates.directLinkSentAt = serverTimestamp();
     await updateDoc(doc(db,"contacts",contactId), updates);
     logActivity("إرسال رابط دخول شخصي", c.name);
-    const msgText = fillTemplate(directLinksMessage, {...c, directAccessEnabled:true});
+    const msgText = fillTemplate(vpick("directlink",directLinksMessage), {...c, directAccessEnabled:true});
     window.open(waLink(c.phone, msgText), "_blank");
   }catch(err){
     console.error(err);
@@ -18744,7 +18794,7 @@ async function shareQr(contactId){
   const c = contacts.find(x=>x.id===contactId);
   if(!c) return;
   if(!c.phoneNormalized && !normalizeDigits(c.phone)){ toast("لازم رقم هاتف صحيح للشخص ده الأول"); return; }
-  const msgText = fillTemplate(barcodeMessage, c);
+  const msgText = fillTemplate(vpick("barcode",barcodeMessage), c);
   let dataUrl;
   try{ dataUrl = await makeQrDataUrl(c); }
   catch(err){ toast("تعذر توليد الكود — تأكد من الإنترنت وحاول تاني"); return; }
@@ -18776,7 +18826,7 @@ async function downloadQr(contactId){
 function openWaForBarcode(contactId){
   const c = contacts.find(x=>x.id===contactId);
   if(!c) return;
-  const msgText = fillTemplate(barcodeMessage, c);
+  const msgText = fillTemplate(vpick("barcode",barcodeMessage), c);
   window.open(waLink(c.phone, msgText), "_blank");
   logActivity("فتح واتساب لإرسال باركود", c.name);
   toast("اتفتح واتساب — دوس على مشبك الإرفاق 📎 واختار صورة الباركود اللي نزلتها");
@@ -21763,7 +21813,7 @@ async function sendPlanRowWhatsApp(rowIndex){
     }catch(err){ console.error("تعذر حفظ رقم الخادم", err); }
   }
 
-  let msg = planMessage
+  let msg = vpick("plan",planMessage)
     .replace(/\{اسم\}/g, servantName)
     .replace(/\{الفقرة\}/g, segment||"—")
     .replace(/\{اليوم\}/g, p.title||"—")
@@ -21995,7 +22045,7 @@ function renderTripDetail(trip){
     b.addEventListener("click", async ()=>{
       const link = `${location.origin}/?tripApprove=${b.dataset.shareApproval}`;
       if(navigator.share){
-        try{ await navigator.share({title:"موافقة على رحلة", text:msgTpl("tripApproval"), url:link}); return; }
+        try{ await navigator.share({title:"موافقة على رحلة", text:msgTplV("tripApproval"), url:link}); return; }
         catch(_){}
       }
       try{ await navigator.clipboard.writeText(link); toast("تم نسخ رابط الموافقة ✅"); }
@@ -24227,7 +24277,7 @@ function renderPriorityList(){
     if(!c.phone){ toast("مفيش رقم للشخص ده"); return; }
     if(wasRecentlySent(c) && !confirm(`${c.name} اتبعتله رسالة من ${sentRecentlyLabel(c)}. تبعت تاني؟`)) return;
     const tpl = pickTemplate();
-    const msg = fillTemplate(tpl?.text || msgTpl("quickDefault"), c);
+    const msg = fillTemplate(tpl?.text || msgTplV("quickDefault"), c);
     window.open(waLink(c.phone, msg), "_blank");      // الأول عشان المتصفح ما يمنعش الفتح
     try{
       await updateDoc(doc(db,"contacts",c.id), {sent:true, sentAt: serverTimestamp(), lastSentMessage: msg, lastSentMessageAt: serverTimestamp()});
@@ -28758,7 +28808,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "309"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "310"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
