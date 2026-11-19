@@ -2852,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v312</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v313</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3017,6 +3017,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="chip" data-atab="report">تقرير الالتزام</button>
           <button class="chip" data-atab="bonus">⭐ بونص</button>
           <button class="chip cards-only" data-atab="cards">🪪 كارنيهات</button>
+          <button class="chip cards-only" data-atab="party">🎉 حفلة</button>
         </div>
       </div>
 
@@ -3137,7 +3138,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v312</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v313</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3208,6 +3209,56 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div class="card"><h2>📜 آخر عمليات البونص</h2><div id="bonusLog"></div></div>
       </div>
 
+      <div id="atab-party" class="cards-only" style="display:none">
+        <div class="card">
+          <h2>🎉 استلام وتسليم الأطفال (الحفلات)</h2>
+          <p class="muted" style="margin-top:0">كل طفل ليه كارنيه بباركود (للاستلام عند الدخول) وتذكرة باركود لولي الأمر (للتسليم). الحالة متزامنة لحظياً بين كل الأجهزة والبابين، فمفيش طفل يتسلّم مرتين.</p>
+          <div id="partySetup" style="display:none;margin-bottom:10px;padding:10px;border:1.5px dashed var(--line);border-radius:12px">
+            <b style="font-size:13px">⚙️ إعداد الحفلة (للأدمن)</b>
+            <label class="field-label">اسم الحفلة</label>
+            <input type="text" id="partyEvName" placeholder="حفلة العيد" />
+            <label class="field-label">المجموعات المشاركة</label>
+            <div class="row wrap" id="partyGroups" style="gap:6px"></div>
+            <div class="row wrap" style="gap:6px;margin-top:8px">
+              <button class="btn btn-gold btn-sm" id="btnPartySaveSetup">💾 حفظ</button>
+              <button class="btn btn-ghost btn-sm" id="btnPartyNewEvent">🆕 ابدأ حفلة جديدة (من الصفر)</button>
+            </div>
+          </div>
+          <label class="field-label">أنا واقف على:</label>
+          <select id="partyDoor"><option value="باب 1">🚪 باب 1</option><option value="باب 2">🚪 باب 2</option></select>
+          <div class="row wrap" style="gap:6px;margin-top:10px">
+            <button class="chip" data-party-mode="in">📥 استلام</button>
+            <button class="chip" data-party-mode="out">📤 تسليم</button>
+            <button class="chip" data-party-mode="dash">📊 المتابعة</button>
+            <button class="chip" data-party-mode="print">🪪 طباعة الكروت</button>
+          </div>
+        </div>
+        <div id="partyResult" style="display:none"></div>
+        <div class="card" id="partyReaderWrap" style="display:none"><div id="qr-reader-party" style="width:100%"></div></div>
+        <div class="card" id="partyPane-in" style="display:none">
+          <h3 style="margin-top:0">📥 الاستلام عند الباب</h3>
+          <p class="muted" style="margin-top:0;font-size:12.5px">وجّه الكاميرا على باركود كارنيه الطفل. لو الكارنيه مش معاه، دوّر بالاسم:</p>
+          <input type="text" id="partyManualQ" placeholder="🔍 ابحث باسم الطفل" />
+          <div id="partyManualList" style="margin-top:6px"></div>
+        </div>
+        <div class="card" id="partyPane-out" style="display:none">
+          <h3 style="margin-top:0">📤 التسليم لولي الأمر</h3>
+          <p class="muted" style="margin-top:0;font-size:12.5px">وجّه الكاميرا على باركود <b>تذكرة ولي الأمر</b>، شوف صورة الطفل واسمه وأكّد التسليم. لو التذكرة ضايعة، استخدم البحث بالاسم (بيتسجل «بدون تذكرة»).</p>
+        </div>
+        <div class="card" id="partyPane-dash" style="display:none">
+          <h3 style="margin-top:0">📊 متابعة الحفلة</h3>
+          <div class="row" style="gap:8px;margin-bottom:6px"><input type="text" id="partyDashQ" placeholder="🔍 ابحث بالاسم" style="flex:1" />
+            <select id="partyDashFilter" style="flex:none;width:130px"><option value="all">الكل</option><option value="inside">جوه دلوقتي</option><option value="wait">لسه ماوصلوش</option><option value="out">اتسلّموا</option></select></div>
+          <div id="partyDash"></div>
+        </div>
+        <div class="card" id="partyPane-print" style="display:none">
+          <h3 style="margin-top:0">🪪 طباعة الكروت</h3>
+          <p class="muted" style="margin-top:0;font-size:12.5px">لكل طفل: كارنيه الطفل + تذكرة ولي الأمر (جنب بعض) على A4. اطبع وقص على الخط.</p>
+          <div class="row wrap" style="gap:6px;margin-bottom:6px"><button class="btn btn-outline btn-sm" id="btnPartyPrintAll">تحديد الكل</button><button class="btn btn-outline btn-sm" id="btnPartyPrintNone">إلغاء التحديد</button><span class="muted" id="partyPrintCount"></span></div>
+          <div id="partyPrintList" style="max-height:300px;overflow:auto;margin-bottom:8px"></div>
+          <button class="btn btn-gold btn-block" id="btnPartyPrint">🖨️ اطبع الكروت</button>
+        </div>
+      </div>
       <div id="atab-cards" class="cards-only" style="display:none">
         <div class="card">
           <h2>🪪 كارنيهات الأطفال</h2>
@@ -7505,6 +7556,7 @@ async function startAppListeners(churchCode){
     if(snap.exists()){
       const d = snap.data();
       try{ vtRemoteSync(d.visitTours); }catch(e){ console.warn("vtRemoteSync", e); }
+      partyEvent = (d.partyEvent && typeof d.partyEvent==="object") ? d.partyEvent : null; try{ partyRefreshUI(); }catch(_){}
       rotationMode = d.rotationMode || "rotate";
       document.getElementById("rotationMode").value = rotationMode;
       { const lg = (d.league && typeof d.league==="object") ? d.league : {}; leagueData = {teams:Array.isArray(lg.teams)?lg.teams:[], tourneys:Array.isArray(lg.tourneys)?lg.tourneys:[], admins:Array.isArray(lg.admins)?lg.admins:[], pts:(lg.pts&&typeof lg.pts==="object")?lg.pts:{liturgy:0, meeting:0}}; try{ window.__leagueRefresh && window.__leagueRefresh(); }catch(_){} }
@@ -18312,13 +18364,260 @@ document.getElementById("fileRestore").addEventListener("change", async (e)=>{
 });
 
 // ==================================================================
+// 🎉 PARTY PICKUP (v313) — استلام وتسليم الأطفال في الحفلات بالباركود
+// الحالة متخزنة جوه مستند المخدوم: contact.party[<eventId>] = {inAt,inDoor,inBy,outAt,outDoor,outBy,outManual}
+// (مفيش قواعد Firebase جديدة — الخدام أصلاً بيعدّلوا المخدومين)
+// ==================================================================
+let partyEvent = null;            // {id,name,groups:[]} — متخزن في meta/{church}.partyEvent
+let partyScanner = null, partyMode = "", partyLastScan = 0, partyPending = null;
+function partyEv(){ return partyEvent && partyEvent.id ? partyEvent : {id:"eid-"+new Date().getFullYear(), name:"حفلة العيد", groups:[]}; }
+function partyKids(){ const ev = partyEv(); const gs = new Set(ev.groups||[]); return contacts.filter(c=>c.name && gs.has(c.group)).sort((a,b)=>(groupName(a.group)).localeCompare(groupName(b.group),"ar") || a.name.localeCompare(b.name,"ar")); }
+function partySt(c){ const p = c.party && c.party[partyEv().id]; return p || {}; }
+function partyDoor(){ try{ return localStorage.getItem("partyDoor") || "باب 1"; }catch(_){ return "باب 1"; } }
+function partyMe(){ try{ const u = auth.currentUser; return (u && (u.displayName || (u.email||"").split("@")[0])) || ""; }catch(_){ return ""; } }
+function partyTime(ts){ if(!ts) return ""; try{ return new Date(ts).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}); }catch(_){ return ""; } }
+function partyFeedback(kind){ try{ if(kind==="ok"){ playBeep(880,140); navigator.vibrate && navigator.vibrate(60); } else { playBeep(300,350); navigator.vibrate && navigator.vibrate([120,60,120]); } }catch(_){} }
+function partyEsc(s){ return String(s==null?"":s).replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch])); }
+function partyPhoto(c, size){ return c.photoUrl ? `<img src="${partyEsc(c.photoUrl)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.25)" />` : `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#e8e2d0;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size/2.2)}px">🧒</div>`; }
+
+// ---- كتابة الحالة (transaction عشان البابين مايسجلوش نفس الطفل مرتين) ----
+async function partyWrite(c, action, opts){
+  opts = opts || {}; const evId = partyEv().id, ref = doc(db,"contacts",c.id);
+  return await runTransaction(db, async tx=>{
+    const snap = await tx.get(ref); const cur = (snap.data()||{}).party && (snap.data().party[evId]) || {};
+    if(action==="in"){
+      if(cur.inAt) return {status:"already", st:cur};
+      const st = {...cur, inAt:Date.now(), inDoor:partyDoor(), inBy:partyMe()};
+      tx.update(ref, {[`party.${evId}`]: st}); return {status:"ok", st};
+    }
+    if(action==="out"){
+      if(!cur.inAt) return {status:"notin", st:cur};
+      if(cur.outAt) return {status:"already", st:cur};
+      const st = {...cur, outAt:Date.now(), outDoor:partyDoor(), outBy:partyMe(), outManual: !!opts.manual};
+      tx.update(ref, {[`party.${evId}`]: st}); return {status:"ok", st};
+    }
+    if(action==="undoIn"){ tx.update(ref, {[`party.${evId}`]: {}}); return {status:"ok"}; }
+    if(action==="undoOut"){ const st = {...cur}; delete st.outAt; delete st.outDoor; delete st.outBy; delete st.outManual; tx.update(ref, {[`party.${evId}`]: st}); return {status:"ok"}; }
+    return {status:"bad"};
+  });
+}
+
+// ---- العثور على المخدوم من الكود ----
+function partyResolve(text){
+  const m = /^EFTEKAD-(KID|PICKUP):(.+)$/.exec(text||""); if(m) return {kind:m[1], list:[contacts.find(x=>x.id===m[2])].filter(Boolean)};
+  const m2 = /^EFTEKAD-CHECKIN:(.+)$/.exec(text||"");
+  if(m2){ const k = m2[1]; return {kind:"KID", list: contacts.filter(x=>x.id===k || (x.phoneNormalized||normalizeDigits(x.phone||""))===k)}; }
+  return null;
+}
+
+// ---- نتيجة كبيرة على الشاشة ----
+function partyShow(color, html){
+  const box = document.getElementById("partyResult"); if(!box) return;
+  const bg = color==="green" ? "#E3F3E8" : color==="red" ? "#FBE4E4" : color==="orange" ? "#FFF1D6" : "#EEF1F7";
+  const bd = color==="green" ? "#2E7D4F" : color==="red" ? "#B23B3B" : color==="orange" ? "#C98A10" : "#9aa7c0";
+  box.style.cssText = `display:block;margin:8px 0;padding:12px;border-radius:14px;border:2.5px solid ${bd};background:${bg};text-align:center`;
+  box.innerHTML = html;
+}
+function partyKidCard(c, line1, line2){
+  return `<div style="display:flex;justify-content:center;margin-bottom:6px">${partyPhoto(c,110)}</div>
+    <div style="font-size:21px;font-weight:900">${partyEsc(c.name)}</div>
+    <div class="muted" style="font-size:13px">${partyEsc(groupName(c.group))}</div>
+    ${line1?`<div style="font-size:16px;font-weight:800;margin-top:6px">${line1}</div>`:""}
+    ${line2?`<div class="muted" style="font-size:12.5px;margin-top:2px">${line2}</div>`:""}`;
+}
+
+// ---- استلام ----
+async function partyDoReceive(c, fromScan){
+  if(!partyEv().groups.includes(c.group)){ partyFeedback("bad"); partyShow("orange", partyKidCard(c, "⚠️ مش من المجموعات المسموحة في الحفلة", "اتأكد قبل ما تدخله")); return; }
+  let r; try{ r = await partyWrite(c,"in"); }catch(e){ console.error(e); partyFeedback("bad"); partyShow("red","❌ تعذر التسجيل — اتأكد من الإنترنت وجرّب تاني"); return; }
+  if(r.status==="ok"){ partyFeedback("ok"); partyShow("green", partyKidCard(c, "✅ اتستلم — اتفضل ادخل", `${partyDoor()} — ${partyTime(r.st.inAt)}`)); }
+  else { partyFeedback("bad"); partyShow("orange", partyKidCard(c, "⚠️ اتسجل قبل كده", `${partyEsc(r.st.inDoor||"")} — ${partyTime(r.st.inAt)}${r.st.inBy?" — "+partyEsc(r.st.inBy):""}`)); }
+  partyRenderDash();
+}
+// ---- تسليم ----
+async function partyAskOut(c, manual){
+  const st = partySt(c);
+  if(!st.inAt){ partyFeedback("bad"); partyShow("red", partyKidCard(c, "❌ الطفل ده لسه ما اتستلمش في الحفلة", "")); return; }
+  if(st.outAt){ partyFeedback("bad"); partyShow("red", partyKidCard(c, "❌ اتسلّم بالفعل!", `${partyEsc(st.outDoor||"")} — ${partyTime(st.outAt)}${st.outBy?" — "+partyEsc(st.outBy):""}<br>لو حد بيطلبه تاني، افحص التذكرة كويس`)); return; }
+  partyPending = {id:c.id, manual:!!manual}; partyFeedback("ok");
+  partyShow("blue", partyKidCard(c, manual ? "⚠️ تسليم بدون تذكرة" : "🎟️ التذكرة سليمة", `اتستلم ${partyTime(st.inAt)} — ${partyEsc(st.inDoor||"")}`) +
+    `<div class="row" style="gap:8px;margin-top:10px;justify-content:center"><button class="btn btn-sage" id="btnPartyConfirmOut" style="font-size:16px;padding:10px 22px">✅ تأكيد التسليم لولي الأمر</button><button class="btn btn-ghost" id="btnPartyCancelOut">إلغاء</button></div>`);
+  document.getElementById("btnPartyConfirmOut").addEventListener("click", async ()=>{
+    const p = partyPending; partyPending = null; if(!p) return;
+    const cc = contacts.find(x=>x.id===p.id); if(!cc) return;
+    let r; try{ r = await partyWrite(cc,"out",{manual:p.manual}); }catch(e){ console.error(e); partyShow("red","❌ تعذر التسجيل — اتأكد من الإنترنت وجرّب تاني"); return; }
+    if(r.status==="ok"){ partyFeedback("ok"); partyShow("green", partyKidCard(cc, "✅ اتسلّم لولي الأمر", `${partyDoor()} — ${partyTime(r.st.outAt)}`)); }
+    else { partyFeedback("bad"); partyShow("red", partyKidCard(cc, r.status==="already" ? "❌ اتسلّم بالفعل!" : "❌ ما اتستلمش", "")); }
+    partyRenderDash();
+  });
+  document.getElementById("btnPartyCancelOut").addEventListener("click", ()=>{ partyPending = null; document.getElementById("partyResult").style.display="none"; });
+}
+
+// ---- الماسح ----
+async function partyOnScan(text){
+  const now = Date.now(); if(now - partyLastScan < 1600 || partyPending) return; partyLastScan = now;
+  const r = partyResolve(text);
+  if(!r || !r.list.length){ partyFeedback("bad"); partyShow("red","❌ كود غير معروف"); return; }
+  if(r.list.length>1){ partyFeedback("bad"); partyShow("orange","⚠️ الكود ده يخص أكتر من طفل (إخوات بنفس رقم التليفون) — استخدم البحث بالاسم"); return; }
+  const c = r.list[0];
+  if(partyMode==="in"){
+    if(r.kind==="PICKUP"){ partyFeedback("bad"); partyShow("orange", partyKidCard(c,"⚠️ دي تذكرة ولي الأمر","الاستلام بيتم بكارنيه الطفل")); return; }
+    await partyDoReceive(c, true);
+  } else if(partyMode==="out"){
+    if(r.kind!=="PICKUP"){ partyFeedback("bad"); partyShow("orange", partyKidCard(c,"⚠️ ده كارنيه الطفل","اطلب من ولي الأمر تذكرة التسليم")); return; }
+    await partyAskOut(c, false);
+  }
+}
+async function partyStartScan(){
+  await partyStopScan();
+  try{ await scannerReady; }catch(_){ toast("تعذر تحميل الماسح — تأكد من الإنترنت"); return; }
+  if(!window.Html5Qrcode){ toast("جاري تحميل الماسح، حاول تاني بعد ثانية"); return; }
+  document.getElementById("partyReaderWrap").style.display = "block";
+  partyScanner = new Html5Qrcode("qr-reader-party");
+  const cfg = {fps:10, qrbox:{width:280, height:120}};
+  if(window.Html5QrcodeSupportedFormats) cfg.formatsToSupport = [Html5QrcodeSupportedFormats.CODE_128];
+  try{ await partyScanner.start({facingMode:"environment"}, cfg, partyOnScan, ()=>{}); }
+  catch(err){ toast("تعذر تشغيل الكاميرا — تأكد من إعطاء الإذن"); partyStopScan(); }
+}
+async function partyStopScan(){
+  const w = document.getElementById("partyReaderWrap"); if(w) w.style.display = "none";
+  if(partyScanner){ try{ await partyScanner.stop(); }catch(_){} try{ partyScanner.clear(); }catch(_){} partyScanner = null; }
+}
+
+// ---- الشاشات ----
+function partySetMode(m){
+  partyMode = m; partyPending = null;
+  document.querySelectorAll("[data-party-mode]").forEach(b=>b.classList.toggle("active", b.dataset.partyMode===m));
+  ["print","in","out","dash"].forEach(x=>{ const p = document.getElementById("partyPane-"+x); if(p) p.style.display = (x===m) ? "block" : "none"; });
+  document.getElementById("partyResult").style.display = "none";
+  if(m==="in"||m==="out") partyStartScan(); else partyStopScan();
+  if(m==="print") partyRenderPrint(); if(m==="dash") partyRenderDash();
+  if(m==="in"||m==="out") partyRenderManual();
+}
+function partyOpen(){
+  const ev = partyEv();
+  document.getElementById("partyEvName").value = ev.name || "";
+  const gbox = document.getElementById("partyGroups");
+  const svcGroups = groups.filter(g=>!g.special);
+  gbox.innerHTML = svcGroups.map(g=>`<label class="chip" style="cursor:pointer"><input type="checkbox" data-party-grp="${g.id}" ${ev.groups.includes(g.id)?"checked":""} style="width:auto;margin-left:4px">${partyEsc(g.name)}</label>`).join("") || '<span class="muted">مفيش مجموعات</span>';
+  document.getElementById("partyDoor").value = partyDoor();
+  document.getElementById("partySetup").style.display = (myRole==="admin" || !myRole) ? "block" : "none";
+  if(!partyMode) partySetMode(partyKids().length ? "dash" : "print"); else partySetMode(partyMode);
+}
+function partyRefreshUI(){ if(partyMode==="dash") partyRenderDash(); if(document.getElementById("atab-party")?.style.display==="block" && (partyMode==="in"||partyMode==="out")) partyRenderManual(); }
+
+function partyRenderPrint(){
+  const kids = partyKids(), box = document.getElementById("partyPrintList");
+  document.getElementById("partyPrintCount").textContent = kids.length ? `${kids.length} طفل في المجموعات المختارة` : "اختار المجموعات فوق واحفظ الأول";
+  box.innerHTML = kids.map(c=>`<label class="row" style="gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);cursor:pointer"><input type="checkbox" data-party-print="${c.id}" checked style="width:auto"><span>${partyEsc(c.name)}</span><span class="muted" style="font-size:11.5px">${partyEsc(groupName(c.group))}</span></label>`).join("");
+}
+async function partyBarcodeURL(value){
+  await qrReady; const cv = document.createElement("canvas");
+  JsBarcode(cv, value, {format:"CODE128", width:2, height:60, displayValue:false, margin:4, background:"#FFFFFF", lineColor:"#111111"});
+  return cv.toDataURL("image/png");
+}
+async function partyPrintCards(){
+  const ids = [...document.querySelectorAll("[data-party-print]:checked")].map(x=>x.dataset.partyPrint);
+  const kids = partyKids().filter(c=>ids.includes(c.id)); if(!kids.length){ toast("حدد أطفال الأول"); return; }
+  const w = window.open("", "_blank"); if(!w){ toast("المتصفح منع النافذة — اسمح بالنوافذ المنبثقة"); return; }
+  w.document.write("<p style='font-family:sans-serif;text-align:center;margin-top:40px'>⏳ بيجهّز الكروت...</p>");
+  const ev = partyEv(); let rows = "";
+  try{
+    for(const c of kids){
+      const b1 = await partyBarcodeURL("EFTEKAD-KID:"+c.id), b2 = await partyBarcodeURL("EFTEKAD-PICKUP:"+c.id);
+      const ph = c.photoUrl ? `<img class="ph" src="${partyEsc(c.photoUrl)}">` : `<div class="ph" style="background:#e8e2d0;text-align:center;line-height:54px;font-size:26px">🧒</div>`;
+      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div></div></div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
+      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div></div></div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
+    }
+  }catch(e){ console.error(e); w.document.body.innerHTML = "<p style='text-align:center'>تعذر تجهيز الباركود — اتأكد من الإنترنت</p>"; return; }
+  w.document.open();
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كروت ${partyEsc(ev.name)}</title><style>
+  @page{size:A4 portrait;margin:8mm} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#fff}
+  .row{display:flex;gap:6mm;margin-bottom:5mm;page-break-inside:avoid}
+  .card{width:92mm;height:52mm;border:1.5px solid #1B2A4A;border-radius:3mm;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box}
+  .card.par{border:1.5px dashed #2E7D4F}
+  .hd{background:#1B2A4A;color:#fff;font-size:10.5px;font-weight:700;padding:1.6mm 2.5mm;text-align:center}
+  .par .hd{background:#2E7D4F}
+  .bd{display:flex;gap:3mm;align-items:center;padding:2mm 3mm}
+  .ph{width:16mm;height:16mm;border-radius:50%;object-fit:cover;border:1px solid #888;flex:none}
+  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}
+  .bc{width:80mm;height:15mm;margin:0 auto;display:block;object-fit:fill}
+  .ft{font-size:8.5px;text-align:center;color:#444;margin-top:auto;padding-bottom:1.5mm}
+  </style></head><body>${rows}<script>setTimeout(function(){window.print()},600)<\/script></body></html>`);
+  w.document.close();
+}
+
+function partyRenderManual(){
+  const q = (document.getElementById("partyManualQ").value||"").trim(); const out = document.getElementById("partyManualList");
+  const kids = partyKids().filter(c=>!q || normalizeArabicName(c.name).includes(normalizeArabicName(q)));
+  const isIn = partyMode==="in";
+  const list = kids.filter(c=>{ const s = partySt(c); return isIn ? !s.inAt : (s.inAt && !s.outAt); }).slice(0,40);
+  out.innerHTML = (q||!isIn) ? list.map(c=>`<div class="row" style="gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:center"><div class="grow"><b>${partyEsc(c.name)}</b><div class="muted" style="font-size:11.5px">${partyEsc(groupName(c.group))}</div></div><button class="btn btn-outline btn-sm" data-party-manual="${c.id}">${isIn?"📥 استلام يدوي":"📤 تسليم بدون تذكرة"}</button></div>`).join("") || '<div class="muted">مفيش نتايج</div>' : '<div class="muted" style="font-size:12px">اكتب اسم الطفل لو الكارنيه مش مع ولي الأمر</div>';
+}
+function partyRenderDash(){
+  const kids = partyKids(), box = document.getElementById("partyDash"); if(!box) return;
+  if(!kids.length){ box.innerHTML = '<div class="muted">لسه ما اخترتش المجموعات اللي في الحفلة (من فوق).</div>'; return; }
+  let tIn=0, tOut=0, doorIn={}, doorOut={}; const byG = {};
+  kids.forEach(c=>{ const s = partySt(c); const g = groupName(c.group); byG[g] = byG[g]||{n:0,inside:0,out:0}; byG[g].n++;
+    if(s.inAt){ tIn++; doorIn[s.inDoor||"؟"] = (doorIn[s.inDoor||"؟"]||0)+1; if(!s.outAt) byG[g].inside++; }
+    if(s.outAt){ tOut++; byG[g].out++; doorOut[s.outDoor||"؟"] = (doorOut[s.outDoor||"؟"]||0)+1; } });
+  const inside = tIn - tOut, waiting = kids.length - tIn;
+  const stat = (n,l,col)=>`<div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;border-radius:12px;background:${col}"><div style="font-size:24px;font-weight:900">${n}</div><div style="font-size:11.5px">${l}</div></div>`;
+  const q = (document.getElementById("partyDashQ").value||"").trim(), flt = document.getElementById("partyDashFilter").value;
+  const rows = kids.filter(c=>{ const s = partySt(c); const st = s.outAt ? "out" : s.inAt ? "inside" : "wait"; return (flt==="all"||flt===st) && (!q || normalizeArabicName(c.name).includes(normalizeArabicName(q))); }).slice(0,120).map(c=>{ const s = partySt(c); const st = s.outAt ? "🚪 اتسلّم "+partyTime(s.outAt)+" ("+partyEsc(s.outDoor||"")+(s.outManual?" — بدون تذكرة":"")+")" : s.inAt ? "✅ جوه من "+partyTime(s.inAt)+" ("+partyEsc(s.inDoor||"")+")" : "⏳ لسه ماوصلش";
+    const undo = s.outAt ? `<button class="btn btn-ghost btn-sm" data-party-undo="out" data-id="${c.id}">↩️ إلغاء التسليم</button>` : s.inAt ? `<button class="btn btn-ghost btn-sm" data-party-undo="in" data-id="${c.id}">↩️ إلغاء الاستلام</button>` : "";
+    return `<div class="row" style="gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:center"><div class="grow"><b>${partyEsc(c.name)}</b> <span class="muted" style="font-size:11.5px">${partyEsc(groupName(c.group))}</span><div style="font-size:12px">${st}</div></div>${undo}</div>`; }).join("");
+  box.innerHTML = `<div class="row" style="gap:6px;margin-bottom:8px">${stat(inside,"جوه دلوقتي","#E3F3E8")}${stat(waiting,"لسه ماوصلوش","#FFF1D6")}${stat(tOut,"اتسلّموا","#EEF1F7")}${stat(kids.length,"الإجمالي","#F4F0E4")}</div>
+    <div class="muted" style="font-size:12px;margin-bottom:6px">دخول: ${Object.keys(doorIn).map(d=>partyEsc(d)+" "+doorIn[d]).join(" · ")||"—"} &nbsp;|&nbsp; تسليم: ${Object.keys(doorOut).map(d=>partyEsc(d)+" "+doorOut[d]).join(" · ")||"—"}</div>
+    <div class="muted" style="font-size:12px;margin-bottom:8px">${Object.keys(byG).map(g=>`${partyEsc(g)}: جوه ${byG[g].inside} / ${byG[g].n}`).join(" · ")}</div>
+    <div style="max-height:360px;overflow:auto">${rows || '<div class="muted">مفيش نتايج</div>'}</div>`;
+}
+
+// ---- ربط الأزرار ----
+document.getElementById("btnPartySaveSetup").addEventListener("click", async ()=>{
+  const gs = [...document.querySelectorAll("[data-party-grp]:checked")].map(x=>x.dataset.partyGrp);
+  const name = document.getElementById("partyEvName").value.trim() || "حفلة العيد";
+  const old = partyEv(); const keepId = partyEvent && partyEvent.id ? partyEvent.id : old.id;
+  partyEvent = {id:keepId, name, groups:gs};
+  try{ await setDoc(doc(db,"meta",myChurchCode), {partyEvent}, {merge:true}); toast("اتحفظت إعدادات الحفلة ✅"); }catch(e){ console.error(e); toast("تعذر الحفظ"); }
+  partyRenderPrint(); partyRenderDash();
+});
+document.getElementById("btnPartyNewEvent").addEventListener("click", async ()=>{
+  if(!confirm("تبدأ حفلة جديدة؟ سجل الاستلام والتسليم الحالي هيتقفل (بيفضل محفوظ) وتبدأ من الصفر.")) return;
+  const name = document.getElementById("partyEvName").value.trim() || "حفلة";
+  const gs = [...document.querySelectorAll("[data-party-grp]:checked")].map(x=>x.dataset.partyGrp);
+  partyEvent = {id:"ev-"+Date.now().toString(36), name, groups:gs};
+  try{ await setDoc(doc(db,"meta",myChurchCode), {partyEvent}, {merge:true}); toast("بدأت حفلة جديدة ✅"); }catch(e){ console.error(e); toast("تعذر الحفظ"); }
+  partyRenderDash(); partyRenderPrint();
+});
+document.getElementById("partyDoor").addEventListener("change", e=>{ try{ localStorage.setItem("partyDoor", e.target.value); }catch(_){} });
+document.querySelectorAll("[data-party-mode]").forEach(b=>b.addEventListener("click", ()=>partySetMode(b.dataset.partyMode)));
+document.getElementById("btnPartyPrint").addEventListener("click", partyPrintCards);
+document.getElementById("btnPartyPrintAll").addEventListener("click", ()=>{ document.querySelectorAll("[data-party-print]").forEach(x=>x.checked = true); });
+document.getElementById("btnPartyPrintNone").addEventListener("click", ()=>{ document.querySelectorAll("[data-party-print]").forEach(x=>x.checked = false); });
+document.getElementById("partyManualQ").addEventListener("input", partyRenderManual);
+document.getElementById("partyDashQ").addEventListener("input", partyRenderDash);
+document.getElementById("partyDashFilter").addEventListener("change", partyRenderDash);
+document.getElementById("partyManualList").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-party-manual]"); if(!b) return; const c = contacts.find(x=>x.id===b.dataset.partyManual); if(!c) return;
+  if(partyMode==="in") await partyDoReceive(c,false); else await partyAskOut(c, true);
+  partyRenderManual();
+});
+document.getElementById("partyDash").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-party-undo]"); if(!b) return; const c = contacts.find(x=>x.id===b.dataset.id); if(!c) return;
+  if(!confirm(`${b.dataset.partyUndo==="in"?"إلغاء استلام":"إلغاء تسليم"} ${c.name}؟`)) return;
+  try{ await partyWrite(c, b.dataset.partyUndo==="in" ? "undoIn" : "undoOut"); toast("اتلغى ✅"); }catch(err){ console.error(err); toast("تعذر الإلغاء"); }
+});
+document.querySelectorAll("[data-atab]").forEach(b=>b.addEventListener("click", ()=>{ if(b.dataset.atab!=="party") partyStopScan(); else partyOpen(); }));
+
+// ==================================================================
 // ATTENDANCE / QR
 // ==================================================================
 document.querySelectorAll('[data-atab]').forEach(b=>{
   b.addEventListener("click", ()=>{
     document.querySelectorAll('[data-atab]').forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
-    ["codes","directlinks","meetings","scan","log","report","bonus","cards"].forEach(tab=>{
+    ["codes","directlinks","meetings","scan","log","report","bonus","cards","party"].forEach(tab=>{
       document.getElementById("atab-"+tab).style.display = (tab===b.dataset.atab) ? "block":"none";
     });
     if(b.dataset.atab==="report") renderReportTab();
@@ -18330,7 +18629,7 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
 
 (function(){
   // v306: تابات الحضور بقت أقسام مقفولة (زي الخدام) — دوس على القسم يفتح، ودوسة تانية تقفله
-  const tabs = [["scan","✅ حضور المخدومين"],["meetings","📅 المواعيد"],["log","📊 السجل والنقاط"],["report","📈 تقرير الالتزام"],["directlinks","🔗 روابط شخصية"],["bonus","⭐ بونص"],["cards","🪪 كارنيهات"]];
+  const tabs = [["scan","✅ حضور المخدومين"],["meetings","📅 المواعيد"],["log","📊 السجل والنقاط"],["report","📈 تقرير الالتزام"],["directlinks","🔗 روابط شخصية"],["bonus","⭐ بونص"],["cards","🪪 كارنيهات"],["party","🎉 حفلة العيد — استلام وتسليم"]];
   const orig = t=>document.querySelector(`[data-atab="${t}"]`);
   const gRow = document.getElementById("atabGroupRow"), sRow = document.getElementById("atabSubRow");
   if(gRow) gRow.style.display="none"; if(sRow) sRow.style.display="none";
@@ -18346,7 +18645,7 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
       const open = orig(t).classList.contains("active") && pane.style.display!=="none";
       if(open){ // قفل
         pane.style.display = "none"; orig(t).classList.remove("active");
-        try{ mgStopScan(); }catch(_){} try{ stopLookupScanner(); }catch(_){} try{ stopBonusScanner(); }catch(_){}
+        try{ mgStopScan(); }catch(_){} try{ stopLookupScanner(); }catch(_){} try{ stopBonusScanner(); }catch(_){} try{ partyStopScan(); }catch(_){}
         paint();
       } else orig(t).click();
     });
@@ -18359,7 +18658,7 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
   // الصفوف الأصلية للتابات تفضل شغالة بالكود بس مخفية
   const chipRow = document.querySelector('[data-atab="scan"]').parentElement; chipRow.style.display = "none";
   // كل الأقسام مقفولة في البداية
-  setTimeout(()=>{ document.querySelectorAll("[data-atab]").forEach(x=>x.classList.remove("active")); ["codes","directlinks","meetings","scan","log","report","bonus","cards"].forEach(t=>{ const e=document.getElementById("atab-"+t); if(e) e.style.display="none"; }); paint(); }, 0);
+  setTimeout(()=>{ document.querySelectorAll("[data-atab]").forEach(x=>x.classList.remove("active")); ["codes","directlinks","meetings","scan","log","report","bonus","cards","party"].forEach(t=>{ const e=document.getElementById("atab-"+t); if(e) e.style.display="none"; }); paint(); }, 0);
 })();
 
 // ==================================================================
@@ -28807,7 +29106,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "312"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "313"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
@@ -29044,6 +29343,7 @@ setTimeout(refreshInstallBanner, 1500);
   try{ const q = new URLSearchParams(location.search); if(q.get("open")==="wak"){ openWakDaily(); history.replaceState(null,"",location.pathname); } }catch(_){}
   try{ navigator.serviceWorker && navigator.serviceWorker.addEventListener("message", e=>{ if(e.data && e.data.open==="wak") openWakDaily(); }); }catch(_){}
   setInterval(tick, 60000);
+  setInterval(()=>{ try{ if(document.getElementById("atab-party")?.style.display==="block") partyRefreshUI(); }catch(_){} }, 3000);
   document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) tick(); });
   setTimeout(tick, 5000);
 })();
