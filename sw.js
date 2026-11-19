@@ -4,7 +4,7 @@
 // أوفلاين منفصلة ومفعّلة بالفعل جوه التطبيق (enableIndexedDbPersistence) — الملف ده
 // بس مسؤول عن تحميل التطبيق نفسه (الشكل والكود) من غير إنترنت.
 
-const CACHE_VERSION = "eftekad-shell-v4";
+const CACHE_VERSION = "eftekad-shell-v5";
 const APP_SHELL_URLS = [
   "./",
   "./index.html",

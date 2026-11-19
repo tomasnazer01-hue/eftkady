@@ -2852,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v313</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v314</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3138,7 +3138,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v313</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v314</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11652,6 +11652,10 @@ function waKRefresh(){
   if(myService==="متزوجين" && (document.getElementById("waKSpouse").value||"auto")==="auto" && !waKSenderGender()){
     waKGenderPrompt(); document.getElementById("btnWaKStart").disabled = true; return;
   }
+  let gb = document.getElementById("waKGuardBox");
+  if(!gb){ gb = document.createElement("div"); gb.id = "waKGuardBox"; document.getElementById("waKSummary").before(gb); }
+  gb.innerHTML = wagSetupHtml();
+  { const sv = gb.querySelector("#wagSave"); if(sv) sv.onclick = ()=>wagSave(gb).then(()=>waKRefresh()); }
   let box = document.getElementById("waKIncBox");
   if(!box){ box = document.createElement("label"); box.id = "waKIncBox"; box.style.cssText = "display:none;margin:8px 0;padding:8px 10px;border-radius:10px;background:#FFF4D6;font-size:13px;cursor:pointer"; document.getElementById("waKSummary").after(box); }
   let already = 0;
@@ -11677,6 +11681,87 @@ function waKOpen(only){
   document.getElementById("navWaBtn").classList.add("active"); moveNavIndicator(document.getElementById("navWaBtn"));
   waKFillFilters();
   if(waK.running) waKRender(); else waKRefresh();
+}
+// 🛡️ v314 — حماية رقم الواتساب من الحظر: فاصل عشوائي بين الرسايل + حد للساعة واليوم (العدّاد على الجهاز)
+const WAG_DEF = {gapMin:120, gapMax:240, perHour:15, perDay:40};
+const WAG_KEY = "waGuardLog_v1";
+let wagMem = [], wagNext = 0, wagTimer = null;
+try{ wagNext = +localStorage.getItem(WAG_KEY+"_next") || 0; }catch(_){}
+function wagCfg(){
+  const o = {...WAG_DEF};
+  try{ const s = msgOv["waguard:"+(myService||"")]; if(s){ const p = JSON.parse(s); ["gapMin","gapMax","perHour","perDay"].forEach(k=>{ const n = +p[k]; if(isFinite(n) && n>=0) o[k] = n; }); } }catch(_){}
+  if(o.gapMax < o.gapMin) o.gapMax = o.gapMin;
+  return o;
+}
+function wagLog(){
+  try{ const a = JSON.parse(localStorage.getItem(WAG_KEY)||"[]"); if(Array.isArray(a)) return a.filter(t=>typeof t==="number" && Date.now()-t < 26*3600e3); }catch(_){}
+  return wagMem.filter(t=>Date.now()-t < 26*3600e3);
+}
+function wagRecord(){
+  const cfg = wagCfg(), a = wagLog(); a.push(Date.now()); wagMem = a;
+  try{ localStorage.setItem(WAG_KEY, JSON.stringify(a)); }catch(_){}
+  wagNext = Date.now() + (cfg.gapMin + Math.random()*(cfg.gapMax-cfg.gapMin))*1000;
+  try{ localStorage.setItem(WAG_KEY+"_next", String(wagNext)); }catch(_){}
+}
+function wagState(){
+  const cfg = wagCfg(), a = wagLog(), now = Date.now();
+  const hr = a.filter(t=>now-t < 3600e3);
+  const d0 = new Date(); d0.setHours(0,0,0,0);
+  const day = a.filter(t=>t >= d0.getTime());
+  let until = 0, why = "";
+  if(cfg.perDay && day.length >= cfg.perDay){ const d1 = new Date(d0); d1.setDate(d1.getDate()+1); until = d1.getTime(); why = "day"; }
+  else if(cfg.perHour && hr.length >= cfg.perHour){ until = Math.min(...hr) + 3600e3; why = "hour"; }
+  else if(wagNext > now){ until = wagNext; why = "gap"; }
+  return {cfg, hr:hr.length, day:day.length, until, why};
+}
+function wagFmt(ms){
+  const s = Math.max(0, Math.ceil(ms/1000));
+  if(s >= 3600) return "الساعة " + new Date(Date.now()+ms).toLocaleTimeString("ar-EG",{hour:"numeric",minute:"2-digit"});
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+}
+function wagBar(st, id){
+  const c = st.cfg, warn = (c.perHour && st.hr >= c.perHour*0.8) || (c.perDay && st.day >= c.perDay*0.8);
+  const stop = st.why==="hour" || st.why==="day";
+  const bg = stop ? "#FBE4E4" : warn ? "#FFF4D6" : "#E8F5E9";
+  let msg = "";
+  if(st.why==="day") msg = `🛑 وصلت حد النهارده (${c.perDay} رسالة). كمّل بكره عشان رقمك ما ياخدش حظر.`;
+  else if(st.why==="hour") msg = `🛑 وصلت حد الساعة (${c.perHour}). تقدر تكمّل بعد <b data-wag-cd>${wagFmt(st.until-Date.now())}</b>`;
+  else if(st.why==="gap") msg = `⏳ استنى <b data-wag-cd>${wagFmt(st.until-Date.now())}</b> قبل الرسالة الجاية (حماية من الحظر)`;
+  else if(warn) msg = "⚠️ قربت من الحد — خليك براحة";
+  return `<div id="${id||"wagBar"}" style="background:${bg};border-radius:10px;padding:8px 10px;font-size:12.5px;margin:8px 0">📊 الساعة دي: <b>${st.hr}/${c.perHour||"∞"}</b> • النهارده: <b>${st.day}/${c.perDay||"∞"}</b>${msg?`<div style="margin-top:4px">${msg}</div>`:""}</div>`;
+}
+function wagBlocked(){ const st = wagState(); if(!st.until) return false; toast(st.why==="gap" ? "استنى الوقت اللي في العدّاد الأول ⏳" : "وصلت حد الإرسال 🛑"); return true; }
+function wagWire(box, ids, rerender){
+  if(wagTimer){ clearInterval(wagTimer); wagTimer = null; }
+  const st = wagState(); if(!st.until) return;
+  ids.forEach(id=>{ const b = box.querySelector("#"+id); if(b){ b.disabled = true; b.style.opacity = ".45"; b.style.cursor = "not-allowed"; } });
+  wagTimer = setInterval(()=>{
+    const left = st.until - Date.now();
+    if(left <= 0){ clearInterval(wagTimer); wagTimer = null; rerender(); return; }
+    box.querySelectorAll("[data-wag-cd]").forEach(e=>e.textContent = wagFmt(left));
+  }, 1000);
+}
+function wagSetupHtml(){
+  const st = wagState(), c = st.cfg, adm = (myRole==="admin" || !myRole || myRole==="member");
+  const inp = "width:80px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;font:inherit";
+  return wagBar(st, "wagBarS") + (adm ? `<details style="font-size:12.5px;margin:0 0 8px"><summary style="cursor:pointer">⚙️ حدود الإرسال (لأمين الخدمة)</summary>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-top:6px">
+      <span>أقل فاصل بين الرسايل (بالثانية)</span><input type="number" min="0" id="wagGapMin" value="${c.gapMin}" style="${inp}">
+      <span>أكبر فاصل (بالثانية)</span><input type="number" min="0" id="wagGapMax" value="${c.gapMax}" style="${inp}">
+      <span>أقصى عدد رسايل في الساعة</span><input type="number" min="0" id="wagPerHour" value="${c.perHour}" style="${inp}">
+      <span>أقصى عدد رسايل في اليوم</span><input type="number" min="0" id="wagPerDay" value="${c.perDay}" style="${inp}">
+    </div>
+    <div class="muted" style="margin:6px 0">0 = من غير حد. الحدود دي للخدمة دي بس، والعدّاد بيتحسب على موبايل كل خادم لوحده (لأن كل واحد بيبعت من رقمه). الفاصل بيتختار عشوائي بين الرقمين.</div>
+    <button type="button" class="btn btn-primary btn-sm" id="wagSave">💾 حفظ الحدود</button></details>` : "");
+}
+async function wagSave(root){
+  const g = id=>Math.max(0, Math.round(+(root.querySelector("#"+id)||{}).value || 0));
+  const v = {gapMin:g("wagGapMin"), gapMax:g("wagGapMax"), perHour:g("wagPerHour"), perDay:g("wagPerDay")};
+  if(v.gapMax < v.gapMin) v.gapMax = v.gapMin;
+  const k = "waguard:"+(myService||""), old = msgOv[k];
+  msgOv[k] = JSON.stringify(v);
+  try{ await saveMsgOvAll(); toast("اتحفظت حدود الإرسال ✅"); }
+  catch(err){ if(old===undefined) delete msgOv[k]; else msgOv[k] = old; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); }
 }
 function waKRender(){
   const box = document.getElementById("waKRun");
@@ -11721,6 +11806,7 @@ function waKRender(){
       <button type="button" id="waKSave" style="${btn};background:#FFF4D6;color:#8a6a00;flex:1">💾 حفظ كرسالة جديدة</button>
     </div>
     <div style="margin-top:6px;text-align:center"><button type="button" id="waKReset" style="${btn};background:#eee;color:#555;padding:5px 12px;font-size:12px;display:none">↩️ رجّع النص الأصلي للرسالة دي</button> <button type="button" id="waKRestore" style="${btn};background:#eee;color:#555;padding:5px 12px;font-size:12px;display:none">♻️ رجّع الرسايل المحذوفة</button> <button type="button" id="waKDel" style="${btn};background:#FBE4E4;color:#B23B3B;padding:5px 12px;font-size:12px">🗑️ حذف الرسالة</button></div>
+    ${wagBar(wagState())}
     <div style="display:flex;gap:8px;margin-top:10px"><button type="button" id="waKSend" style="${btn};background:#25D366;color:#fff;flex:1">📤 ابعت واتساب ← وانقل للتالي</button></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button type="button" id="waKPrev" style="${btn};background:#E7EEF9;color:#1B2A4A" ${waK.idx===0?"disabled":""}>⬅️ السابق</button>
@@ -11763,10 +11849,11 @@ function waKRender(){
   $("waKMNext").onclick = ()=>step(1); $("waKMPrev").onclick = ()=>step(-1);
   $("waKNew").onclick = ()=>{ ta.value = waKFill(WAK_BLANK[mode], c, r); ta.focus(); toast("اكتب الرسالة الجديدة ودوس 💾 احفظ كرسالة"); };
   const markSent = ()=>{ if(waK.sent.has(key)) return; waK.sent.add(key); const f = waKField(r);
-    c[f] = {...(c[f]||{}), [r.type]: todayStr()}; c[f+"Ts"] = {...(c[f+"Ts"]||{}), [r.type]: Date.now()}; c[f+"Ph"] = {...(c[f+"Ph"]||{}), [r.type]: r.phone}; waKSentPhones.add(waKPhoneNorm(r.phone)); _waKHeld.t = 0;
+    c[f] = {...(c[f]||{}), [r.type]: todayStr()}; c[f+"Ts"] = {...(c[f+"Ts"]||{}), [r.type]: Date.now()}; c[f+"Ph"] = {...(c[f+"Ph"]||{}), [r.type]: r.phone}; waKSentPhones.add(waKPhoneNorm(r.phone)); _waKHeld.t = 0; wagRecord();
     setDoc(doc(db,"contacts",c.id), {[f]: {[r.type]: todayStr()}, [f+"Ts"]: {[r.type]: Date.now()}, [f+"Ph"]: {[r.type]: r.phone}}, {merge:true}).catch(err=>console.error(f, err)); };
-  $("waKSend").onclick = ()=>{ try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, ta.value), "_blank"); markSent(); waK.idx++; waKRender(); };
-  $("waKNext").onclick = ()=>{ if(!done) markSent(); waK.idx++; waKRender(); };
+  $("waKSend").onclick = ()=>{ if(wagBlocked()) return; try{ ensureDirectAccess(c); }catch(_){} window.open(waLink(r.phone, ta.value), "_blank"); markSent(); waK.idx++; waKRender(); };
+  $("waKNext").onclick = ()=>{ if(!done){ if(wagBlocked()) return; markSent(); } waK.idx++; waKRender(); };
+  wagWire(box, done ? ["waKSend"] : ["waKSend","waKNext"], waKRenderKeep);
   $("waKSkip").onclick = ()=>{ waK.idx++; waKRender(); };
   $("waKPrev").onclick = ()=>{ if(waK.idx>0){ waK.dir = -1; waK.idx--; waKRender(); } };
   $("waKExit").onclick = waKExit;
@@ -14441,6 +14528,7 @@ function maRender(){
     <div style="font-size:12.5px;margin-bottom:6px">الناقص: <b>${miss.join(" · ")}</b></div>
     ${shortcutBarHtml(maKey()==="parentMissing", "👪 ولي الأمر", maMar() ? "🏠 اسم المستلم" : "🧒 اسم المخدوم")}
     <textarea id="maMsg" style="width:100%;min-height:150px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px;box-sizing:border-box;font-family:Tajawal,sans-serif">${cardEsc(msg)}</textarea>
+    ${wagBar(wagState())}
     <div style="display:flex;gap:8px;margin-top:10px">
       <button type="button" id="maOpenWa" style="${btn};background:#25D366;color:#fff;flex:1">📤 ابعت واتساب ← وانقل للتالي</button>
     </div>
@@ -14457,7 +14545,7 @@ function maRender(){
   const $ = id=>box.querySelector("#"+id);
   $("maEdit").onclick = ()=>{ runEditCtx = "ma"; openEditModal(c.id); };
   { const v = maVars(c, rec); wireShortcuts(box, $("maMsg"), {parent: v.pn || v.who, kid: v.nm, servant: v.sign}); }
-  $("maOpenWa").onclick = ()=>{ ensureDirectAccess(c); window.open(waLink(rec.phone, $("maMsg").value), "_blank"); $("maNext").click(); };
+  $("maOpenWa").onclick = ()=>{ if(!maSent.has(c.id) && wagBlocked()) return; ensureDirectAccess(c); window.open(waLink(rec.phone, $("maMsg").value), "_blank"); $("maNext").click(); };
   $("maSaveTpl").onclick = ()=>{ const t = maToTemplate($("maMsg").value, c, rec); if(!t.trim()){ toast("الرسالة فاضية"); return; } saveMsgOv(maKey(), t); };
   $("maNoWa").onclick = async ()=>{
     try{ await updateDoc(doc(db,"contacts",c.id), {noWhatsapp:true}); c.noWhatsapp = true; toast("اتسجّل إنه مفيش واتساب وهيتخطّى"); }catch(e){ console.warn(e); toast("تعذر الحفظ"); }
@@ -14465,7 +14553,8 @@ function maRender(){
   };
   $("maNext").onclick = async ()=>{
     if(!maSent.has(c.id)){
-      maSent.add(c.id);
+      if(wagBlocked()) return;
+      maSent.add(c.id); wagRecord();
       try{ await updateDoc(doc(db,"contacts",c.id), {missingAskedAt: serverTimestamp(), missingAskedBy: currentUserEmail||""}); c.missingAskedAt = {toDate:()=>new Date()}; }catch(e){ console.warn(e); }
       logActivity("طلب بيانات ناقصة", `${maName(c)} — ${rec.label}`, c.id);
     }
@@ -14473,6 +14562,7 @@ function maRender(){
   };
   $("maPrev").onclick = ()=>{ if(maIdx>0){ maIdx--; maRender(); } };
   $("maSkip").onclick = ()=>{ maIdx++; maRender(); };
+  wagWire(box, done ? [] : ["maOpenWa","maNext"], ()=>{ try{ maRender(); }catch(_){} });
   $("maExit").onclick = ()=>{ if(confirm("تخرج من الإرسال؟ اللي اتبعتلهم اتحفظوا.")) closeModal("modalMissingAsk"); };
 }
 // ---- حماية بيانات التعديل: تنبيه لو اتقفل من غير حفظ + حفظ مؤقت يرجّع البيانات لو الصفحة اتعمللها ريلود (فتح الكاميرا بيعمل كده على بعض الموبايلات) ----
@@ -29106,7 +29196,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "313"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "314"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
