@@ -2852,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v316</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v317</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3138,7 +3138,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v316</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v317</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -18638,34 +18638,39 @@ function partyPhonesHTML(c){
 async function partyPrintCards(){
   const ids = [...document.querySelectorAll("[data-party-print]:checked")].map(x=>x.dataset.partyPrint);
   let kids = partyKids().filter(c=>ids.includes(c.id)); if(!kids.length){ toast("حدد أطفال الأول"); return; }
-  try{ await partyAssignNumbers(kids); }catch(e){ console.error(e); }
-  kids = kids.slice().sort((a,b)=> (partyLetter(groupName(a.group))).localeCompare(partyLetter(groupName(b.group))) || ((partySt(a).no||0)-(partySt(b).no||0)));
+  const noGender = kids.filter(c=>c.gender!=="female" && c.gender!=="male");
+  if(noGender.length){ toast(`حدد (بنت/ولد) لـ ${noGender.length} طفل الأول: ${noGender.slice(0,2).map(c=>firstName(c.name)).join("، ")}…`); return; }
   const w = window.open("", "_blank"); if(!w){ toast("المتصفح منع النافذة — اسمح بالنوافذ المنبثقة"); return; }
   w.document.write("<p style='font-family:sans-serif;text-align:center;margin-top:40px'>⏳ بيجهّز الكروت...</p>");
-  const ev = partyEv(); let rows = "";
+  let imgs = [];
   try{
+    try{ await qrReady; }catch(_){ throw new Error("barcode lib"); }
+    try{ await Promise.all([document.fonts.load("900 40px Cairo"), document.fonts.load("700 40px Cairo")]); }catch(_){}
+    try{ await partyAssignNumbers(kids); }catch(e){ console.error(e); }
+    kids = kids.slice().sort((a,b)=> (partyLetter(groupName(a.group))).localeCompare(partyLetter(groupName(b.group))) || ((partySt(a).no||0)-(partySt(b).no||0)));
+    const imgCache = new Map();
+    await Promise.all(kids.map(async c=>{ const im = await loadCardImage(c.photoUrl); if(im) imgCache.set(c.id, im); }));
+    const CW = 1100, CH = Math.round(1100*500/700);   // نفس نسبة الكارنيه العادي، دقة عالية
     for(const c of kids){
-      const b1 = await partyBarcodeURL("EFTEKAD-KID:"+c.id), b2 = await partyBarcodeURL("EFTEKAD-PICKUP:"+c.id);
-      const ph = c.photoUrl ? `<img class="ph" src="${partyEsc(c.photoUrl)}">` : `<div class="ph" style="background:#e8e2d0;text-align:center;line-height:54px;font-size:26px">🧒</div>`;
-      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div>${partyBadge(c)}</div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
-      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div>${partyBadge(c)}</div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
+      const pair = [];
+      for(const ticket of [false, true]){
+        const cv = document.createElement("canvas"); cv.width = CW; cv.height = CH;
+        const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,CW,CH);
+        await drawCard(ctx, 0, 0, CW, CH, c, imgCache, {ticket});
+        pair.push(cv.toDataURL("image/jpeg", 0.92)); cv.width = cv.height = 1;
+      }
+      imgs.push(pair);
     }
-  }catch(e){ console.error(e); w.document.body.innerHTML = "<p style='text-align:center'>تعذر تجهيز الباركود — اتأكد من الإنترنت</p>"; return; }
+  }catch(e){ console.error(e); w.document.body.innerHTML = "<p style='text-align:center;font-family:sans-serif'>تعذر تجهيز الكروت — اتأكد من الإنترنت</p>"; return; }
+  const rows = imgs.map(([a,b])=>`<div class="row"><img src="${a}"><img src="${b}"></div>`).join("");
   w.document.open();
-  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كروت ${partyEsc(ev.name)}</title><style>
-  @page{size:A4 portrait;margin:8mm} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#fff}
-  .row{display:flex;gap:6mm;margin-bottom:5mm;page-break-inside:avoid}
-  .card{width:92mm;height:52mm;border:1.5px solid #1B2A4A;border-radius:3mm;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box}
-  .card.par{border:1.5px dashed #2E7D4F}
-  .hd{background:#1B2A4A;color:#fff;font-size:10.5px;font-weight:700;padding:1.6mm 2.5mm;text-align:center}
-  .par .hd{background:#2E7D4F}
-  .bd{display:flex;gap:3mm;align-items:center;padding:1.5mm 3mm}
-  .ph{width:16mm;height:16mm;border-radius:50%;object-fit:cover;border:1px solid #888;flex:none}
-  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}.no{margin-right:auto;flex:none;width:15mm;height:15mm;border:2px solid #1B2A4A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;direction:ltr;color:#1B2A4A}.par .no{border-color:#2E7D4F;color:#2E7D4F}.tel{font-size:9.5px;color:#222;line-height:1.35}.tel b{font-size:10.5px}
-  .bc{width:80mm;height:13mm;margin:0 auto;display:block;object-fit:fill}
-  .ft{font-size:8.5px;text-align:center;color:#444;margin-top:auto;padding-bottom:1.5mm}
-  </style></head><body>${rows}<script>setTimeout(function(){window.print()},600)<\/script></body></html>`);
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كروت ${partyEsc(partyEv().name)}</title><style>
+  @page{size:A4 portrait;margin:8mm} body{margin:0;background:#fff}
+  .row{display:flex;gap:5mm;margin-bottom:5mm;page-break-inside:avoid;justify-content:center}
+  .row img{width:92mm;height:auto;display:block}
+  </style></head><body>${rows}<script>setTimeout(function(){window.print()},700)<\/script></body></html>`);
   w.document.close();
+  logActivity("تجهيز كروت الحفلة", `${imgs.length} طفل`);
 }
 
 function partyRenderManual(){
@@ -23302,7 +23307,14 @@ function cardPaletteFor(c){
   const list = CARD_PALETTES[c.gender==="female" ? "female" : "male"];
   return list[cardHash(c.id+"|p|"+cardSalt) % list.length];
 }
-function cardKey(c){ return c.phoneNormalized || normalizeDigits(c.phone) || c.id; }
+function cardKey(c){ return c.id; } // v317: باركود واحد فريد لكل مخدوم (نفس الكارنيه العادي وكارنيه الحفلة) — بيشتغل مع كل الماسحات وإخوات بنفس الرقم مايتلخبطوش
+function cardPhoneLines(c){
+  const seen = new Set(), items = [];
+  const add = (label, v)=>{ const raw = String(v||"").trim(); if(!raw) return; const d = normalizeDigits(raw).replace(/\D/g,"").replace(/^2(?=01)/,""); if(!d || seen.has(d)) return; seen.add(d); items.push(label ? `${label} ${raw}` : raw); };
+  add("الأب", c.fatherPhone); add("الأم", c.motherPhone); add("", c.phone); add("", c.phone2);
+  const lines = []; for(let i=0;i<items.length;i+=2) lines.push(items.slice(i,i+2).join("   |   "));
+  return lines.slice(0,2);
+}
 
 function rrect(ctx, x, y, w, h, r){
   ctx.beginPath();
@@ -23362,7 +23374,8 @@ function drawRunsRTL(ctx, tokens, fit, cx, y){
 }
 
 // Draws one card at (ox,oy) in px; the card is 700x500 logical units scaled to cw x ch.
-async function drawCard(ctx, ox, oy, cw, ch, c, imgCache){
+async function drawCard(ctx, ox, oy, cw, ch, c, imgCache, opts){
+  opts = opts || {};
   const k = cw/700;
   ctx.save();
   ctx.translate(ox, oy); ctx.scale(k, k);
@@ -23386,7 +23399,8 @@ async function drawCard(ctx, ox, oy, cw, ch, c, imgCache){
   drawCrown(ctx, 600, 72, 52, "#FFC107", "#E69500");
   drawCrown(ctx, 100, 72, 52, "#FFC107", "#E69500");
   ctx.font = "900 58px Cairo, Tajawal, Tahoma, sans-serif"; ctx.direction = "rtl"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillStyle = pal.ink; ctx.fillText(girl ? "بنت الملك" : "ابن الملك", 350, 76);
+  ctx.fillStyle = pal.ink; ctx.fillText(opts.ticket ? "تذكرة ولي الأمر" : (girl ? "بنت الملك" : "ابن الملك"), 350, 76);
+  if(opts.ticket){ ctx.save(); ctx.setLineDash([14,9]); ctx.lineWidth = 4; ctx.strokeStyle = pal.ink; rrect(ctx, 22, 22, 656, 456, 26); ctx.stroke(); ctx.restore(); }
   // name panel
   ctx.save(); ctx.shadowColor = "rgba(0,0,0,.18)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
   ctx.fillStyle = "rgba(255,255,255,.96)"; rrect(ctx, 34, 140, 420, 188, 30); ctx.fill(); ctx.restore();
@@ -23437,20 +23451,25 @@ async function drawCard(ctx, ox, oy, cw, ch, c, imgCache){
   ctx.restore();
   // barcode box
   ctx.save(); ctx.shadowColor = "rgba(0,0,0,.2)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
-  ctx.fillStyle = "#fff"; rrect(ctx, 34, 352, 632, 122, 22); ctx.fill(); ctx.restore();
+  ctx.fillStyle = "#fff"; rrect(ctx, 34, 378, 632, 102, 20); ctx.fill(); ctx.restore();
+  // phones strip + sequence number badge
+  { const pl = cardPhoneLines(c); ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = pal.ink; ctx.font = "800 19px Cairo, Tajawal, Tahoma, sans-serif";
+    pl.forEach((t,i)=>ctx.fillText(t, 244, (pl.length===1 ? 352 : 342+i*26))); ctx.restore(); }
+  { const code = (typeof partyCode==="function") ? partyCode(c) : ""; if(code){ ctx.save(); ctx.beginPath(); ctx.arc(500, 330, 40, 0, Math.PI*2); ctx.fillStyle = "#FFC107"; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.fillStyle = pal.ink; ctx.direction = "ltr"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = (code.length>4 ? "900 24px" : "900 30px")+" Cairo, Tajawal, Tahoma, sans-serif"; ctx.fillText(code, 500, 332); ctx.restore(); } }
   // barcode image drawn in device pixels, integer module width for crisp scanning
-  const bc = makeCardBarcodeCanvas(cardKey(c), Math.floor(600*k), Math.floor(86*k));
+  const bc = makeCardBarcodeCanvas(cardKey(c), Math.floor(600*k), Math.floor((opts.ticket?52:64)*k), opts.ticket ? `EFTEKAD-PICKUP:${c.id}` : null);
   if(bc){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0);
-    const bx = ox + Math.round(350*k - bc.width/2), by = oy + Math.round(413*k - bc.height/2);
+    const bx = ox + Math.round(350*k - bc.width/2), by = oy + Math.round((opts.ticket?414:429)*k - bc.height/2);
     ctx.imageSmoothingEnabled = false; ctx.drawImage(bc, bx, by); ctx.restore();
   }
+  if(opts.ticket){ ctx.save(); ctx.direction = "rtl"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#555"; ctx.font = "700 17px Cairo, Tajawal, Tahoma, sans-serif"; ctx.fillText("لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها", 350, 464); ctx.restore(); }
   ctx.restore();
 }
 // Returns a canvas with a CODE128 barcode whose module width is an integer number of pixels.
-function makeCardBarcodeCanvas(key, maxW, h){
+function makeCardBarcodeCanvas(key, maxW, h, fullValue){
   if(!window.JsBarcode) return null;
-  const value = `EFTEKAD-CHECKIN:${key}`;
+  const value = fullValue || `EFTEKAD-CHECKIN:${key}`;
   try{
     const probe = document.createElement("canvas");
     JsBarcode(probe, value, {format:"CODE128", width:1, height:10, displayValue:false, margin:0});
@@ -29227,7 +29246,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "316"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "317"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
