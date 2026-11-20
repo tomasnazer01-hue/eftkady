@@ -2852,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v314</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v315</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3138,7 +3138,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v314</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v315</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -18606,6 +18606,12 @@ async function partyBarcodeURL(value){
   JsBarcode(cv, value, {format:"CODE128", width:2, height:60, displayValue:false, margin:4, background:"#FFFFFF", lineColor:"#111111"});
   return cv.toDataURL("image/png");
 }
+function partyPhonesHTML(c){
+  const seen = new Set(), out = [];
+  const add = (label, v)=>{ const raw = String(v||"").trim(); if(!raw) return; const d = normalizeDigits(raw).replace(/\D/g,"").replace(/^2(?=01)/,""); if(!d || seen.has(d)) return; seen.add(d); out.push(`<div class="tel">${label} <b dir="ltr">${partyEsc(raw)}</b></div>`); };
+  add("👨 الأب:", c.fatherPhone); add("👩 الأم:", c.motherPhone); add("📞", c.phone); add("📞", c.phone2);
+  return out.join("");
+}
 async function partyPrintCards(){
   const ids = [...document.querySelectorAll("[data-party-print]:checked")].map(x=>x.dataset.partyPrint);
   const kids = partyKids().filter(c=>ids.includes(c.id)); if(!kids.length){ toast("حدد أطفال الأول"); return; }
@@ -18616,8 +18622,8 @@ async function partyPrintCards(){
     for(const c of kids){
       const b1 = await partyBarcodeURL("EFTEKAD-KID:"+c.id), b2 = await partyBarcodeURL("EFTEKAD-PICKUP:"+c.id);
       const ph = c.photoUrl ? `<img class="ph" src="${partyEsc(c.photoUrl)}">` : `<div class="ph" style="background:#e8e2d0;text-align:center;line-height:54px;font-size:26px">🧒</div>`;
-      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div></div></div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
-      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div></div></div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
+      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div></div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
+      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div></div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
     }
   }catch(e){ console.error(e); w.document.body.innerHTML = "<p style='text-align:center'>تعذر تجهيز الباركود — اتأكد من الإنترنت</p>"; return; }
   w.document.open();
@@ -18628,10 +18634,10 @@ async function partyPrintCards(){
   .card.par{border:1.5px dashed #2E7D4F}
   .hd{background:#1B2A4A;color:#fff;font-size:10.5px;font-weight:700;padding:1.6mm 2.5mm;text-align:center}
   .par .hd{background:#2E7D4F}
-  .bd{display:flex;gap:3mm;align-items:center;padding:2mm 3mm}
+  .bd{display:flex;gap:3mm;align-items:center;padding:1.5mm 3mm}
   .ph{width:16mm;height:16mm;border-radius:50%;object-fit:cover;border:1px solid #888;flex:none}
-  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}
-  .bc{width:80mm;height:15mm;margin:0 auto;display:block;object-fit:fill}
+  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}.tel{font-size:9.5px;color:#222;line-height:1.35}.tel b{font-size:10.5px}
+  .bc{width:80mm;height:13mm;margin:0 auto;display:block;object-fit:fill}
   .ft{font-size:8.5px;text-align:center;color:#444;margin-top:auto;padding-bottom:1.5mm}
   </style></head><body>${rows}<script>setTimeout(function(){window.print()},600)<\/script></body></html>`);
   w.document.close();
@@ -29196,7 +29202,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "314"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "315"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
