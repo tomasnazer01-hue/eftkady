@@ -2852,7 +2852,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v315</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v316</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3138,7 +3138,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v315</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v316</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -18462,6 +18462,28 @@ let partyEvent = null;            // {id,name,groups:[]} — متخزن في met
 let partyScanner = null, partyMode = "", partyLastScan = 0, partyPending = null;
 function partyEv(){ return partyEvent && partyEvent.id ? partyEvent : {id:"eid-"+new Date().getFullYear(), name:"حفلة العيد", groups:[]}; }
 function partyKids(){ const ev = partyEv(); const gs = new Set(ev.groups||[]); return contacts.filter(c=>c.name && gs.has(c.group)).sort((a,b)=>(groupName(a.group)).localeCompare(groupName(b.group),"ar") || a.name.localeCompare(b.name,"ar")); }
+// حرف المجموعة: KG1=K1 · KG2=K2 · أولى=A · تانية=B · تالتة=C · رابعة=D · خامسة=E · سادسة=F
+function partyLetter(gname){
+  const t = String(gname||"").toLowerCase().replace(/[\u064B-\u0652\u0640]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g,"");
+  if(/kg1|k\.?g\.?1|كيجي1|kg-1/.test(t)) return "K1";
+  if(/kg2|k\.?g\.?2|كيجي2|kg-2/.test(t)) return "K2";
+  if(/ساد?س|ساته|سته/.test(t)) return "F";
+  if(/خامس/.test(t)) return "E";
+  if(/رابع/.test(t)) return "D";
+  if(/تالت|ثالث/.test(t)) return "C";
+  if(/تاني|ثاني|ثانيه/.test(t)) return "B";
+  if(/اول/.test(t)) return "A";
+  return "";
+}
+function partyCode(c){ const no = partySt(c).no; const L = partyLetter(groupName(c.group)); return (no && L) ? `${L}-${no}` : (no ? String(no) : ""); }
+async function partyAssignNumbers(kids){
+  const evId = partyEv().id, all = partyKids(), byG = {};
+  all.forEach(c=>{ const n = partySt(c).no; if(n) byG[c.group] = Math.max(byG[c.group]||0, n); });
+  let assigned = 0;
+  for(const c of kids){ if(partySt(c).no) continue; const n = (byG[c.group]||0)+1; byG[c.group] = n;
+    try{ await updateDoc(doc(db,"contacts",c.id), {[`party.${evId}.no`]: n}); c.party = {...(c.party||{}), [evId]: {...partySt(c), no:n}}; assigned++; }catch(e){ console.error("party no", e); } }
+  return assigned;
+}
 function partySt(c){ const p = c.party && c.party[partyEv().id]; return p || {}; }
 function partyDoor(){ try{ return localStorage.getItem("partyDoor") || "باب 1"; }catch(_){ return "باب 1"; } }
 function partyMe(){ try{ const u = auth.currentUser; return (u && (u.displayName || (u.email||"").split("@")[0])) || ""; }catch(_){ return ""; } }
@@ -18486,7 +18508,7 @@ async function partyWrite(c, action, opts){
       const st = {...cur, outAt:Date.now(), outDoor:partyDoor(), outBy:partyMe(), outManual: !!opts.manual};
       tx.update(ref, {[`party.${evId}`]: st}); return {status:"ok", st};
     }
-    if(action==="undoIn"){ tx.update(ref, {[`party.${evId}`]: {}}); return {status:"ok"}; }
+    if(action==="undoIn"){ tx.update(ref, {[`party.${evId}`]: (cur.no ? {no:cur.no} : {})}); return {status:"ok"}; }
     if(action==="undoOut"){ const st = {...cur}; delete st.outAt; delete st.outDoor; delete st.outBy; delete st.outManual; tx.update(ref, {[`party.${evId}`]: st}); return {status:"ok"}; }
     return {status:"bad"};
   });
@@ -18511,7 +18533,7 @@ function partyShow(color, html){
 function partyKidCard(c, line1, line2){
   return `<div style="display:flex;justify-content:center;margin-bottom:6px">${partyPhoto(c,110)}</div>
     <div style="font-size:21px;font-weight:900">${partyEsc(c.name)}</div>
-    <div class="muted" style="font-size:13px">${partyEsc(groupName(c.group))}</div>
+    <div class="muted" style="font-size:13px">${partyEsc(groupName(c.group))}${partyCode(c)?` · <b style="color:#1B2A4A;font-size:16px">${partyEsc(partyCode(c))}</b>`:""}</div>
     ${line1?`<div style="font-size:16px;font-weight:800;margin-top:6px">${line1}</div>`:""}
     ${line2?`<div class="muted" style="font-size:12.5px;margin-top:2px">${line2}</div>`:""}`;
 }
@@ -18606,6 +18628,7 @@ async function partyBarcodeURL(value){
   JsBarcode(cv, value, {format:"CODE128", width:2, height:60, displayValue:false, margin:4, background:"#FFFFFF", lineColor:"#111111"});
   return cv.toDataURL("image/png");
 }
+function partyBadge(c){ const k = partyCode(c); return k ? `<div class="no">${partyEsc(k)}</div>` : ""; }
 function partyPhonesHTML(c){
   const seen = new Set(), out = [];
   const add = (label, v)=>{ const raw = String(v||"").trim(); if(!raw) return; const d = normalizeDigits(raw).replace(/\D/g,"").replace(/^2(?=01)/,""); if(!d || seen.has(d)) return; seen.add(d); out.push(`<div class="tel">${label} <b dir="ltr">${partyEsc(raw)}</b></div>`); };
@@ -18614,7 +18637,9 @@ function partyPhonesHTML(c){
 }
 async function partyPrintCards(){
   const ids = [...document.querySelectorAll("[data-party-print]:checked")].map(x=>x.dataset.partyPrint);
-  const kids = partyKids().filter(c=>ids.includes(c.id)); if(!kids.length){ toast("حدد أطفال الأول"); return; }
+  let kids = partyKids().filter(c=>ids.includes(c.id)); if(!kids.length){ toast("حدد أطفال الأول"); return; }
+  try{ await partyAssignNumbers(kids); }catch(e){ console.error(e); }
+  kids = kids.slice().sort((a,b)=> (partyLetter(groupName(a.group))).localeCompare(partyLetter(groupName(b.group))) || ((partySt(a).no||0)-(partySt(b).no||0)));
   const w = window.open("", "_blank"); if(!w){ toast("المتصفح منع النافذة — اسمح بالنوافذ المنبثقة"); return; }
   w.document.write("<p style='font-family:sans-serif;text-align:center;margin-top:40px'>⏳ بيجهّز الكروت...</p>");
   const ev = partyEv(); let rows = "";
@@ -18622,8 +18647,8 @@ async function partyPrintCards(){
     for(const c of kids){
       const b1 = await partyBarcodeURL("EFTEKAD-KID:"+c.id), b2 = await partyBarcodeURL("EFTEKAD-PICKUP:"+c.id);
       const ph = c.photoUrl ? `<img class="ph" src="${partyEsc(c.photoUrl)}">` : `<div class="ph" style="background:#e8e2d0;text-align:center;line-height:54px;font-size:26px">🧒</div>`;
-      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div></div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
-      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div></div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
+      rows += `<div class="row"><div class="card kid"><div class="hd">🎉 ${partyEsc(ev.name)} — كارنيه الطفل</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div>${partyBadge(c)}</div><img class="bc" src="${b1}"><div class="ft">يُمسح عند الدخول</div></div>
+      <div class="card par"><div class="hd">🎟️ ${partyEsc(ev.name)} — تذكرة ولي الأمر</div><div class="bd">${ph}<div><div class="nm">${partyEsc(c.name)}</div><div class="gr">${partyEsc(groupName(c.group))}</div>${partyPhonesHTML(c)}</div>${partyBadge(c)}</div><img class="bc" src="${b2}"><div class="ft">لا يُسلَّم الطفل إلا بهذه التذكرة — احتفظ بها</div></div></div>`;
     }
   }catch(e){ console.error(e); w.document.body.innerHTML = "<p style='text-align:center'>تعذر تجهيز الباركود — اتأكد من الإنترنت</p>"; return; }
   w.document.open();
@@ -18636,7 +18661,7 @@ async function partyPrintCards(){
   .par .hd{background:#2E7D4F}
   .bd{display:flex;gap:3mm;align-items:center;padding:1.5mm 3mm}
   .ph{width:16mm;height:16mm;border-radius:50%;object-fit:cover;border:1px solid #888;flex:none}
-  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}.tel{font-size:9.5px;color:#222;line-height:1.35}.tel b{font-size:10.5px}
+  .nm{font-size:13px;font-weight:800}.gr{font-size:10px;color:#555}.no{margin-right:auto;flex:none;width:15mm;height:15mm;border:2px solid #1B2A4A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;direction:ltr;color:#1B2A4A}.par .no{border-color:#2E7D4F;color:#2E7D4F}.tel{font-size:9.5px;color:#222;line-height:1.35}.tel b{font-size:10.5px}
   .bc{width:80mm;height:13mm;margin:0 auto;display:block;object-fit:fill}
   .ft{font-size:8.5px;text-align:center;color:#444;margin-top:auto;padding-bottom:1.5mm}
   </style></head><body>${rows}<script>setTimeout(function(){window.print()},600)<\/script></body></html>`);
@@ -18662,7 +18687,7 @@ function partyRenderDash(){
   const q = (document.getElementById("partyDashQ").value||"").trim(), flt = document.getElementById("partyDashFilter").value;
   const rows = kids.filter(c=>{ const s = partySt(c); const st = s.outAt ? "out" : s.inAt ? "inside" : "wait"; return (flt==="all"||flt===st) && (!q || normalizeArabicName(c.name).includes(normalizeArabicName(q))); }).slice(0,120).map(c=>{ const s = partySt(c); const st = s.outAt ? "🚪 اتسلّم "+partyTime(s.outAt)+" ("+partyEsc(s.outDoor||"")+(s.outManual?" — بدون تذكرة":"")+")" : s.inAt ? "✅ جوه من "+partyTime(s.inAt)+" ("+partyEsc(s.inDoor||"")+")" : "⏳ لسه ماوصلش";
     const undo = s.outAt ? `<button class="btn btn-ghost btn-sm" data-party-undo="out" data-id="${c.id}">↩️ إلغاء التسليم</button>` : s.inAt ? `<button class="btn btn-ghost btn-sm" data-party-undo="in" data-id="${c.id}">↩️ إلغاء الاستلام</button>` : "";
-    return `<div class="row" style="gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:center"><div class="grow"><b>${partyEsc(c.name)}</b> <span class="muted" style="font-size:11.5px">${partyEsc(groupName(c.group))}</span><div style="font-size:12px">${st}</div></div>${undo}</div>`; }).join("");
+    return `<div class="row" style="gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:center"><div class="grow"><b>${partyEsc(c.name)}</b> <span class="muted" style="font-size:11.5px">${partyEsc(groupName(c.group))}${partyCode(c)?" · "+partyEsc(partyCode(c)):""}</span><div style="font-size:12px">${st}</div></div>${undo}</div>`; }).join("");
   box.innerHTML = `<div class="row" style="gap:6px;margin-bottom:8px">${stat(inside,"جوه دلوقتي","#E3F3E8")}${stat(waiting,"لسه ماوصلوش","#FFF1D6")}${stat(tOut,"اتسلّموا","#EEF1F7")}${stat(kids.length,"الإجمالي","#F4F0E4")}</div>
     <div class="muted" style="font-size:12px;margin-bottom:6px">دخول: ${Object.keys(doorIn).map(d=>partyEsc(d)+" "+doorIn[d]).join(" · ")||"—"} &nbsp;|&nbsp; تسليم: ${Object.keys(doorOut).map(d=>partyEsc(d)+" "+doorOut[d]).join(" · ")||"—"}</div>
     <div class="muted" style="font-size:12px;margin-bottom:8px">${Object.keys(byG).map(g=>`${partyEsc(g)}: جوه ${byG[g].inside} / ${byG[g].n}`).join(" · ")}</div>
@@ -29202,7 +29227,7 @@ document.getElementById("regList")?.addEventListener("click", async e=>{
     if(!confirm(`مسح تسجيل «${r.name||""}»؟ مش هتقدر ترجّعه.`)) return;
     try{ await _deleteDoc(doc(db,"registrations",r.id)); toast("اتمسح ✅"); }catch(err){ console.error(err); toast("تعذر المسح"); } }
 });
-const APP_VERSION = "315"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "316"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
