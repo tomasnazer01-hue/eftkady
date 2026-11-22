@@ -1,0 +1,2 @@
+{"id":"./howtogo.html","name":"أوصل ازاي","short_name":"أوصل ازاي","description":"اتجاهات من مكانك لأي شارع","start_url":"./howtogo.html","scope":"./howtogo.html","display":"standalone","orientation":"portrait","dir":"rtl","lang":"ar","background_color":"#1B2A4A","theme_color":"#1B2A4A",
+"icons":[{"src":"htg-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"htg-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"htg-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}

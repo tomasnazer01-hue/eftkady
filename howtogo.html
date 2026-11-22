@@ -1,7 +1,13 @@
 <!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1B2A4A"><title>أوصل ازاي</title>
+<meta name="theme-color" content="#1B2A4A">
+<link rel="manifest" href="./htg.webmanifest">
+<link rel="icon" href="./htg-192.png">
+<link rel="apple-touch-icon" href="./htg-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="أوصل ازاي"><title>أوصل ازاي</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -30,6 +36,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc
 <button type="button" class="btn btn-gold" id="htgGo">🧭 وريني الطريق</button></div></div>
 <div class="card"><div id="htgMapHint" class="muted" style="font-size:12px;margin-bottom:4px"></div><div id="htgMap" style="height:300px;border-radius:12px;overflow:hidden"></div></div>
 <div class="card" id="htgResult" style="display:none"></div>
+<div class="card" id="htgInstall" style="display:none;text-align:center"><button type="button" class="btn btn-gold btn-block" id="htgInstallBtn">📲 نزّل التطبيق على موبايلك</button><div id="htgIosHint" class="muted" style="font-size:12.5px;margin-top:6px;display:none">على الآيفون: دوس زرار المشاركة ⬆️ ثم "إضافة إلى الشاشة الرئيسية"</div></div>
 <div id="toast"></div>
 <script>
 function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";clearTimeout(toast._t);toast._t=setTimeout(()=>e.style.display="none",2500);}
@@ -153,5 +160,14 @@ $("htgToSearch").addEventListener("click",()=>htgSearch("to"));
 $("htgFrom").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();htgSearch("from");}});
 $("htgTo").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();htgSearch("to");}});
 $("htgGo").addEventListener("click",htgRoute);
-window.addEventListener("load",()=>htgEnsureMap());})();
+window.addEventListener("load",()=>htgEnsureMap());
+let dp=null;const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+if(!standalone){
+ if(/iphone|ipad|ipod/i.test(navigator.userAgent)){$("htgInstall").style.display="";$("htgIosHint").style.display="";$("htgInstallBtn").style.display="none";}
+ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;$("htgInstall").style.display="";});
+ $("htgInstallBtn").addEventListener("click",async()=>{if(!dp){toast("من قايمة المتصفح اختار: إضافة إلى الشاشة الرئيسية");return;}dp.prompt();await dp.userChoice;dp=null;$("htgInstall").style.display="none";});
+}
+window.addEventListener("appinstalled",()=>{$("htgInstall").style.display="none";});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./htg-sw.js",{scope:"./howtogo.html"}).catch(()=>{});
+})();
 </script></body></html>
