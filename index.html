@@ -1215,6 +1215,18 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div id="htgMapHint" class="muted" style="font-size:12px;margin-bottom:4px"></div>
         <div id="htgMap" style="height:300px;border-radius:12px;overflow:hidden"></div>
       </div>
+      <div class="card" id="areaCard">
+        <h2 style="margin:0 0 4px;font-size:17px">🏘️ مربعاتي السكنية</h2>
+        <p class="muted" style="margin:0 0 6px;font-size:12px">ارسم مربع على الخريطة (دوسة على الركن الأول ودوسة على الركن المقابل) وسمّيه واحفظه. بيظهر فيه كل الشوارع، وبيتحفظ على الجهاز.</p>
+        <div class="row" style="gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn btn-gold btn-sm" id="areaDraw">✏️ ارسم مربع</button>
+          <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة على المربع</button>
+        </div>
+        <div id="areaHint" class="muted" style="font-size:12px;margin:6px 0"></div>
+        <div class="row" id="areaSaveRow" style="gap:6px;display:none"><input type="text" id="areaName" class="grow" placeholder="اسم المربع (مثلاً: حينا)"><button type="button" class="btn btn-gold btn-sm" id="areaSave">💾 حفظ</button></div>
+        <div id="areaList" style="margin-top:8px"></div>
+        <div id="areaStreets" style="margin-top:8px"></div>
+      </div>
       <div class="card" id="htgResult" style="display:none"></div>
     </section>
     <section class="screen" id="screen-plans">
@@ -2881,7 +2893,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v320</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v321</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3167,7 +3179,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v320</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v321</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29296,6 +29308,7 @@ async function htgEnsureMap(){
     document.getElementById("htgMapHint").textContent = "";
   });
   setTimeout(()=>HTG.map.invalidateSize(), 120);
+  if(typeof areaMapReady==="function") areaMapReady();
   return true;
 }
 function htgSetPoint(which, pt){
@@ -29424,7 +29437,128 @@ async function openHowToGo(){
   $("htgGo").addEventListener("click", htgRoute);
 })();
 
-const APP_VERSION = "320"; // shown in the members' install card so we can tell which build is really live
+
+// ==================== 🏘️ مربعاتي السكنية ====================
+const AREA = {pts:[], rect:null, cur:null, streetLayer:null, drawing:false, locked:false, lines:[]};
+function areaLoad(){ try{ return JSON.parse(localStorage.getItem("htg_areas")||"[]"); }catch(_){ return []; } }
+function areaStore(a){ try{ localStorage.setItem("htg_areas", JSON.stringify(a)); return true; }catch(_){ toast("مقدرتش أحفظ على الجهاز"); return false; } }
+function areaMapReady(){ if(HTG.map && !HTG.map._areaHooked){ HTG.map._areaHooked = true; HTG.map.on("click", areaClick); } }
+function areaClick(e){
+  if(!AREA.drawing) return;
+  AREA.pts.push(e.latlng);
+  const hint = document.getElementById("areaHint");
+  if(AREA.pts.length===1){ hint.textContent = "👆 دوس على الركن المقابل"; return; }
+  AREA.drawing = false;
+  const b = L.latLngBounds(AREA.pts[0], AREA.pts[1]);
+  const sw = b.getSouthWest(), ne = b.getNorthEast();
+  const wM = htgDist({lat:sw.lat,lng:sw.lng},{lat:sw.lat,lng:ne.lng}), hM = htgDist({lat:sw.lat,lng:sw.lng},{lat:ne.lat,lng:sw.lng});
+  if(wM>3000||hM>3000){ hint.textContent = "❌ المربع كبير (أقصى حاجة ٣ كم × ٣ كم) — ارسم مربع أصغر"; AREA.pts=[]; return; }
+  if(wM<40||hM<40){ hint.textContent = "❌ المربع صغير قوي — ارسم مربع أكبر"; AREA.pts=[]; return; }
+  AREA.cur = {name:"", bounds:[[sw.lat,sw.lng],[ne.lat,ne.lng]]};
+  areaShowRect();
+  hint.textContent = "✅ اكتب اسم للمربع واضغط حفظ";
+  document.getElementById("areaSaveRow").style.display = "";
+  document.getElementById("areaName").focus();
+  areaLoadStreets();
+}
+function areaShowRect(){
+  if(AREA.rect) HTG.map.removeLayer(AREA.rect);
+  AREA.rect = L.rectangle(AREA.cur.bounds, {color:"#C9A24B", weight:3, fillOpacity:.07}).addTo(HTG.map);
+  HTG.map.fitBounds(AREA.cur.bounds, {padding:[10,10]});
+  document.getElementById("areaLock").style.display = "";
+}
+function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; document.getElementById("areaStreets").innerHTML=""; }
+async function areaLoadStreets(){
+  const box = document.getElementById("areaStreets"), a = AREA.cur;
+  areaClearStreets();
+  let ways = a.ways;
+  if(!ways){
+    box.innerHTML = '<p class="muted">⏳ بجيب الشوارع...</p>';
+    const [s,w] = a.bounds[0], [n,e] = a.bounds[1];
+    const q = `[out:json][timeout:25];way["highway"]["name"](${s},${w},${n},${e});out geom;`;
+    for(const srv of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
+      try{
+        const res = await fetch(srv+"?data="+encodeURIComponent(q));
+        if(!res.ok) continue;
+        const j = await res.json();
+        ways = (j.elements||[]).filter(x=>x.geometry&&x.tags&&x.tags.name).map(x=>({name:x.tags["name:ar"]||x.tags.name, g:x.geometry.map(p=>[+p.lat.toFixed(6),+p.lon.toFixed(6)])}));
+        break;
+      }catch(_){}
+    }
+    if(!ways){ box.innerHTML = '<p>❌ معرفتش أجيب الشوارع (النت أو السيرفر) — جرب تاني</p>'; return; }
+    a.ways = ways;
+    if(a.id){ const all = areaLoad(), i = all.findIndex(x=>x.id===a.id); if(i>=0){ all[i].ways = ways; areaStore(all); } }
+  }
+  if(!ways.length){ box.innerHTML = '<p class="muted">مفيش شوارع مسمّية جوه المربع ده.</p>'; return; }
+  AREA.streetLayer = L.layerGroup().addTo(HTG.map);
+  const byName = {};
+  ways.forEach(w=>{ (byName[w.name] = byName[w.name]||[]).push(w); });
+  const names = Object.keys(byName).sort((x,y)=>x.localeCompare(y,"ar"));
+  names.forEach(n=>{
+    const lines = byName[n].map(w=>L.polyline(w.g, {color:"#1B2A4A", weight:5, opacity:.8}).bindTooltip(n, {sticky:true}).addTo(AREA.streetLayer));
+    lines.forEach(l=>l.on("click", ()=>areaPickStreet(n)));
+    AREA.lines.push({n, lines});
+  });
+  box.innerHTML = `<b style="font-size:13px">🛣️ الشوارع (${names.length}) — دوس على شارع عشان تروحله</b>` + names.map(n=>`<button type="button" class="btn btn-sm" style="margin:3px;white-space:normal" data-area-st="${htgEsc(n)}">${htgEsc(n)}</button>`).join("");
+  box.querySelectorAll("[data-area-st]").forEach(b=>b.addEventListener("click", ()=>areaPickStreet(b.dataset.areaSt)));
+}
+function areaPickStreet(name){
+  const item = AREA.lines.find(x=>x.n===name); if(!item) return;
+  AREA.lines.forEach(x=>x.lines.forEach(l=>l.setStyle({color:x.n===name?"#d33":"#1B2A4A", weight:x.n===name?7:5})));
+  const first = item.lines[0], pts = first.getLatLngs(), mid = pts[Math.floor(pts.length/2)];
+  htgSetPoint("to", {lat:mid.lat, lng:mid.lng, label:name+" (من مربعاتي)"});
+  document.getElementById("htgTo").value = name;
+  try{ HTG.map.fitBounds(L.featureGroup(item.lines).getBounds(), {padding:[30,30]}); }catch(_){}
+  toast("🎯 "+name+" اتحدد كوجهة — اختار مكانك وادوس وريني الطريق");
+}
+function areaRenderList(){
+  const all = areaLoad(), box = document.getElementById("areaList");
+  if(!all.length){ box.innerHTML = '<p class="muted" style="font-size:12px;margin:0">مفيش مربعات محفوظة لسه.</p>'; return; }
+  box.innerHTML = all.map(a=>`<div class="row" style="gap:6px;margin:4px 0"><button type="button" class="btn btn-sm grow" style="text-align:right" data-area-open="${a.id}">🏘️ ${htgEsc(a.name)}${a.ways?" · "+new Set(a.ways.map(w=>w.name)).size+" شارع":""}</button><button type="button" class="btn btn-sm" data-area-del="${a.id}" title="مسح">🗑️</button></div>`).join("");
+  box.querySelectorAll("[data-area-open]").forEach(b=>b.addEventListener("click", async ()=>{
+    const a = areaLoad().find(x=>x.id===b.dataset.areaOpen); if(!a) return;
+    if(!await htgEnsureMap()) return; areaMapReady();
+    AREA.cur = a; AREA.drawing=false; AREA.pts=[];
+    document.getElementById("areaSaveRow").style.display="none"; document.getElementById("areaHint").textContent = "📌 "+a.name;
+    areaShowRect(); areaLoadStreets();
+    document.getElementById("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
+  }));
+  box.querySelectorAll("[data-area-del]").forEach(b=>b.addEventListener("click", ()=>{
+    const a = areaLoad().find(x=>x.id===b.dataset.areaDel); if(!a || !confirm("تمسح مربع «"+a.name+"»؟")) return;
+    areaStore(areaLoad().filter(x=>x.id!==a.id));
+    if(AREA.cur && AREA.cur.id===a.id){ if(AREA.rect){ HTG.map.removeLayer(AREA.rect); AREA.rect=null; } areaClearStreets(); AREA.cur=null; }
+    areaRenderList();
+  }));
+}
+(function(){
+  const $ = id=>document.getElementById(id);
+  $("areaDraw").addEventListener("click", async ()=>{
+    if(!await htgEnsureMap()) return; areaMapReady();
+    if(AREA.locked) $("areaLock").click();
+    HTG.picking = false; AREA.drawing = true; AREA.pts = [];
+    $("areaSaveRow").style.display = "none";
+    $("areaHint").textContent = "👆 دوس على أول ركن للمربع";
+    $("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
+  });
+  $("areaSave").addEventListener("click", ()=>{
+    const name = $("areaName").value.trim();
+    if(!name){ toast("اكتب اسم للمربع"); return; }
+    if(!AREA.cur) return;
+    const all = areaLoad();
+    const rec = {id:"a"+Date.now(), name, bounds:AREA.cur.bounds, ways:AREA.cur.ways||null};
+    all.push(rec);
+    if(areaStore(all)){ AREA.cur = rec; $("areaSaveRow").style.display="none"; $("areaName").value=""; $("areaHint").textContent="💾 اتحفظ: "+name; areaRenderList(); }
+  });
+  $("areaLock").addEventListener("click", ()=>{
+    if(!AREA.cur||!HTG.map) return;
+    AREA.locked = !AREA.locked;
+    if(AREA.locked){ HTG.map.setMaxBounds(L.latLngBounds(AREA.cur.bounds).pad(0.15)); HTG.map.setMinZoom(Math.max(HTG.map.getZoom()-1,12)); $("areaLock").textContent="🔒 الخريطة مثبّتة (دوس لفكها)"; }
+    else{ HTG.map.setMaxBounds(null); HTG.map.setMinZoom(0); $("areaLock").textContent="🔓 ثبّت الخريطة على المربع"; }
+  });
+  areaRenderList();
+})();
+
+const APP_VERSION = "321"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
