@@ -2896,7 +2896,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v323</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v324</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3182,7 +3182,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v323</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v324</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3195,6 +3195,8 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <div class="row wrap" style="gap:6px;margin-top:6px">
             <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="liturgy">📷 القداس</button>
             <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="meeting">📷 الاجتماع</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="club">📷 النادي</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="participation">📷 المشاركة</button>
           </div>
           <div id="mgScanPanel" style="display:none;margin-top:8px">
             <div id="mgScanTitle" style="font-weight:800;margin-bottom:4px"></div>
@@ -18838,10 +18840,22 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
 // ==================================================================
 const MEMBER_GRID_COLS = [
   {key:"liturgy", label:"القداس", defName:"قداس"},
-  {key:"meeting", label:"الاجتماع", defName:"اجتماع"}
+  {key:"meeting", label:"الاجتماع", defName:"اجتماع"},
+  {key:"club", label:"النادي", defName:"نادي"},
+  {key:"participation", label:"المشاركة", defName:"مشاركة"}
 ];
+// نوع الميعاد في جدول الحضور: القداس/الاجتماع زي ما هم، والنادي/المشاركة بالاسم أو بالنوع
+function memberGridType(m){
+  const t = meetingTreeType(m); if(t) return t;
+  if(m && (m.treeType==="club" || m.treeType==="participation")) return m.treeType;
+  const n = (m&&m.name)||"";
+  if(m && m.treeType==="none") return "";
+  if(n.includes("نادي")) return "club";
+  if(n.includes("مشارك")) return "participation";
+  return "";
+}
 function memberMeetingsFor(key){
-  const list = meetings.filter(m=>!(m.name||"").includes("خدام") && meetingTreeType(m)===key);
+  const list = meetings.filter(m=>!(m.name||"").includes("خدام") && memberGridType(m)===key);
   const def = MEMBER_GRID_COLS.find(c=>c.key===key).defName;
   return list.sort((a,b)=>((b.name||"").includes(def)?1:0)-((a.name||"").includes(def)?1:0));
 }
@@ -18861,6 +18875,7 @@ function memberGridRecs(c, key, date){
 }
 function renderMemberGrid(){
   const card = document.getElementById("memberGridCard"); if(!card) return;
+  if(document.activeElement && document.activeElement.dataset && document.activeElement.dataset.mgPts!==undefined) return; // بيكتب نقاط — ما نقطعوش
   const dateInp = document.getElementById("mgDate"); if(!dateInp.value) dateInp.value = todayStr();
   const date = dateInp.value;
   try{ populateGroupServantFilters("mgGroup","mgServant"); }catch(e){ console.error("mg filters", e); }
@@ -18876,7 +18891,7 @@ function renderMemberGrid(){
   const counts = MEMBER_GRID_COLS.map(col=>full.filter(c=>memberGridRecs(c,col.key,date).length).length);
   const shown = list.slice(0,300);
   body.innerHTML = `<table style="border-collapse:collapse;width:100%;min-width:300px">
-    <thead><tr><th style="${th};text-align:right">الاسم</th>${MEMBER_GRID_COLS.map(c=>`<th style="${th}">${c.label}</th>`).join("")}</tr></thead>
+    <thead><tr><th style="${th};text-align:right">الاسم</th>${MEMBER_GRID_COLS.map(c=>{ const pv = memberMeetingsFor(c.key)[0]?.points||0; return `<th style="${th}">${c.label}<div style="margin-top:3px;font-weight:400"><input type="number" inputmode="numeric" min="0" data-mg-pts="${c.key}" value="${pv}" ${myRole==="admin"?"":"disabled"} title="نقاط ${c.label} لكل حضور" style="width:54px;padding:3px;text-align:center;font-size:12px;border:1.5px solid var(--gold);border-radius:6px"> <span style="font-size:10px">نقطة</span></div></th>`; }).join("")}</tr></thead>
     <tbody>${shown.map(c=>`<tr><td style="${td};text-align:right;font-weight:700;font-size:13px">${cardEsc(c.name||"")}</td>${MEMBER_GRID_COLS.map(col=>{
       const on = memberGridRecs(c,col.key,date).length>0;
       return `<td style="${td}"><button type="button" data-mg-cid="${c.id}" data-mg-col="${col.key}" style="width:34px;height:34px;border-radius:8px;border:1.5px solid ${on?'var(--sage)':'var(--line)'};background:${on?'var(--sage)':'#fff'};color:#fff;font-size:18px;font-weight:800;cursor:pointer">${on?'✓':''}</button></td>`;
@@ -18895,6 +18910,7 @@ async function memberGridMark(c, key, addOnly){
         await deleteDoc(doc(db,"attendance",r.id));
         attendance = attendance.filter(a=>a.id!==r.id);
         try{ await setDoc(doc(db,"contacts",c.id), {treeAtt:{[r.id]:0}}, {merge:true}); }catch(_){}
+        if(r.awardedPoints>0){ try{ const cc = contacts.find(x=>x.id===c.id); await updateDoc(doc(db,"contacts",c.id), {totalPoints: Math.max(0,(cc?.totalPoints||0)-r.awardedPoints)}); }catch(_){} }
       }
       logActivity("إلغاء حضور", `${c.name} — ${col.label} — ${date}`);
       return "removed";
@@ -18927,6 +18943,20 @@ async function memberGridMark(c, key, addOnly){
     return null;
   }
 }
+document.getElementById("mgBody").addEventListener("change", async (e)=>{
+  const inp = e.target.closest("[data-mg-pts]"); if(!inp) return;
+  if(myRole!=="admin"){ toast("تعديل النقاط للأمين بس"); return; }
+  const key = inp.dataset.mgPts, col = MEMBER_GRID_COLS.find(x=>x.key===key);
+  const pts = Math.max(0, parseInt(normalizeDigits(inp.value))||0);
+  try{
+    const m = memberMeetingsFor(key)[0];
+    if(m) await updateDoc(doc(db,"meetings",m.id), {points: pts});
+    else await addDoc(colMeetings, {name:col.defName, weekday:null, reminderTime:null, points:pts, bonusCount:0, bonusPoints:0, bothBonusPoints:0, treeType:key, churchCode:myChurchCode, createdAt:serverTimestamp()});
+    logActivity("تعديل نقاط ميعاد", `${col.label} = ${pts}`);
+    toast(`✅ ${col.label}: ${pts} نقطة لكل حضور جديد (اللي اتسجل قبل كده مش بيتغير)`);
+  }catch(err){ console.error(err); toast("تعذر حفظ النقاط"); }
+  setTimeout(()=>{ try{ renderMemberGrid(); }catch(_){} }, 400);
+});
 document.getElementById("mgBody").addEventListener("click", (e)=>{
   const b = e.target.closest("[data-mg-cid]"); if(!b) return;
   const c = contacts.find(x=>x.id===b.dataset.mgCid); if(!c) return;
@@ -23162,8 +23192,8 @@ async function awardAttendancePoints(contact, meetingId, dateStr, attId){
       const c = contacts.find(x=>x.id===contact.id);
       await updateDoc(doc(db,"contacts",contact.id), {totalPoints: (c?.totalPoints||0)+totalAward});
     }
-    if(bonusAwarded>0){
-      await updateDoc(doc(db,"attendance",attId), {bonus: bonusAwarded});
+    if(totalAward>0){
+      await updateDoc(doc(db,"attendance",attId), bonusAwarded>0 ? {bonus: bonusAwarded, awardedPoints: totalAward} : {awardedPoints: totalAward});
     }
   }catch(err){ console.error("awardAttendancePoints failed", err); }
 }
@@ -29618,7 +29648,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "323"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "324"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
