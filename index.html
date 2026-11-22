@@ -1217,11 +1217,13 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       </div>
       <div class="card" id="areaCard">
         <h2 style="margin:0 0 4px;font-size:17px">🏘️ مربعاتي السكنية</h2>
-        <p class="muted" style="margin:0 0 6px;font-size:12px">ارسم مربع على الخريطة (دوسة على الركن الأول ودوسة على الركن المقابل) وسمّيه واحفظه. بيظهر فيه كل الشوارع، وبيتحفظ على الجهاز.</p>
-        <div class="row" style="gap:6px;flex-wrap:wrap">
-          <button type="button" class="btn btn-gold btn-sm" id="areaDraw">✏️ ارسم مربع</button>
-          <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة على المربع</button>
-        </div>
+        <p class="muted" style="margin:0 0 6px;font-size:12px">زي تحديد الموقع في وزنتي: دوس على الخريطة في وسط المنطقة (أو استخدم موقعك أو دوّر باسم شارع) والمربع بيتحط لوحده. بيظهر فيه كل الشوارع وبتحفظه باسم.</p>
+        <button type="button" class="btn btn-gold btn-block btn-sm" id="areaGps" style="margin-bottom:6px">📡 استخدام موقعي الحالي</button>
+        <div class="row" style="gap:6px;margin-bottom:6px"><input type="search" id="areaQ" class="grow" placeholder="🔍 ابحث باسم الشارع أو المنطقة"><button type="button" class="btn btn-gold btn-sm" id="areaQBtn">بحث</button></div>
+        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12.5px">📐 حجم المربع:</span>
+          <select id="areaSize"><option value="300">صغير (٣٠٠ م)</option><option value="600" selected>متوسط (٦٠٠ م)</option><option value="1000">كبير (١ كم)</option><option value="2000">كبير جداً (٢ كم)</option></select>
+          <button type="button" class="btn btn-sm" id="areaDraw">👆 دوس على الخريطة</button>
+          <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة</button></div>
         <div id="areaHint" class="muted" style="font-size:12px;margin:6px 0"></div>
         <div class="row" id="areaSaveRow" style="gap:6px;display:none"><input type="text" id="areaName" class="grow" placeholder="اسم المربع (مثلاً: حينا)"><button type="button" class="btn btn-gold btn-sm" id="areaSave">💾 حفظ</button></div>
         <div id="areaList" style="margin-top:8px"></div>
@@ -2893,7 +2895,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v321</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v322</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3179,7 +3181,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v321</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v322</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29443,24 +29445,17 @@ const AREA = {pts:[], rect:null, cur:null, streetLayer:null, drawing:false, lock
 function areaLoad(){ try{ return JSON.parse(localStorage.getItem("htg_areas")||"[]"); }catch(_){ return []; } }
 function areaStore(a){ try{ localStorage.setItem("htg_areas", JSON.stringify(a)); return true; }catch(_){ toast("مقدرتش أحفظ على الجهاز"); return false; } }
 function areaMapReady(){ if(HTG.map && !HTG.map._areaHooked){ HTG.map._areaHooked = true; HTG.map.on("click", areaClick); } }
-function areaClick(e){
-  if(!AREA.drawing) return;
-  AREA.pts.push(e.latlng);
-  const hint = document.getElementById("areaHint");
-  if(AREA.pts.length===1){ hint.textContent = "👆 دوس على الركن المقابل"; return; }
-  AREA.drawing = false;
-  const b = L.latLngBounds(AREA.pts[0], AREA.pts[1]);
-  const sw = b.getSouthWest(), ne = b.getNorthEast();
-  const wM = htgDist({lat:sw.lat,lng:sw.lng},{lat:sw.lat,lng:ne.lng}), hM = htgDist({lat:sw.lat,lng:sw.lng},{lat:ne.lat,lng:sw.lng});
-  if(wM>3000||hM>3000){ hint.textContent = "❌ المربع كبير (أقصى حاجة ٣ كم × ٣ كم) — ارسم مربع أصغر"; AREA.pts=[]; return; }
-  if(wM<40||hM<40){ hint.textContent = "❌ المربع صغير قوي — ارسم مربع أكبر"; AREA.pts=[]; return; }
-  AREA.cur = {name:"", bounds:[[sw.lat,sw.lng],[ne.lat,ne.lng]]};
+function areaSize(){ return +document.getElementById("areaSize").value || 600; }
+let _areaT = null;
+function areaSetCenter(lat, lng){
+  const half = areaSize()/2, dLat = half/111000, dLng = half/(111000*Math.cos(lat*Math.PI/180));
+  AREA.cur = {name:"", center:[lat,lng], bounds:[[lat-dLat,lng-dLng],[lat+dLat,lng+dLng]]};
   areaShowRect();
-  hint.textContent = "✅ اكتب اسم للمربع واضغط حفظ";
+  document.getElementById("areaHint").textContent = "✅ اكتب اسم للمنطقة واضغط حفظ (أو دوس مكان تاني على الخريطة لتحريك المربع)";
   document.getElementById("areaSaveRow").style.display = "";
-  document.getElementById("areaName").focus();
-  areaLoadStreets();
+  clearTimeout(_areaT); _areaT = setTimeout(areaLoadStreets, 700);
 }
+function areaClick(e){ if(AREA.drawing) areaSetCenter(e.latlng.lat, e.latlng.lng); }
 function areaShowRect(){
   if(AREA.rect) HTG.map.removeLayer(AREA.rect);
   AREA.rect = L.rectangle(AREA.cur.bounds, {color:"#C9A24B", weight:3, fillOpacity:.07}).addTo(HTG.map);
@@ -29532,14 +29527,33 @@ function areaRenderList(){
 }
 (function(){
   const $ = id=>document.getElementById(id);
-  $("areaDraw").addEventListener("click", async ()=>{
+  const startPick = async ()=>{
     if(!await htgEnsureMap()) return; areaMapReady();
     if(AREA.locked) $("areaLock").click();
-    HTG.picking = false; AREA.drawing = true; AREA.pts = [];
-    $("areaSaveRow").style.display = "none";
-    $("areaHint").textContent = "👆 دوس على أول ركن للمربع";
-    $("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
+    HTG.picking = false; AREA.drawing = true;
+    $("areaHint").textContent = "👆 دوس على الخريطة في وسط المنطقة";
+  };
+  $("areaDraw").addEventListener("click", async ()=>{ await startPick(); $("htgMap").scrollIntoView({block:"center", behavior:"smooth"}); });
+  $("areaGps").addEventListener("click", async ()=>{
+    if(!navigator.geolocation){ toast("الجهاز مش بيدعم تحديد الموقع"); return; }
+    $("areaHint").textContent = "⏳ بحدد موقعك...";
+    navigator.geolocation.getCurrentPosition(async pos=>{ await startPick(); areaSetCenter(pos.coords.latitude, pos.coords.longitude); },
+      ()=>{ $("areaHint").textContent = "❌ مقدرتش أحدد موقعك — اسمح للمتصفح بالوصول للموقع (وافتح الرابط من كروم/سفاري)"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
   });
+  const doSearch = async ()=>{
+    const q = $("areaQ").value.trim(); if(!q){ toast("اكتب اسم الشارع أو المنطقة"); return; }
+    $("areaHint").textContent = "⏳ بدوّر...";
+    try{
+      if(!await htgEnsureMap()) return;
+      const r = await htgGeocode(q, false);
+      if(!r || !r.length){ $("areaHint").textContent = "❌ ملقيتش المكان ده — جرب تكتب الاسم مع المدينة"; return; }
+      await startPick(); areaSetCenter(+r[0].lat, +r[0].lon);
+      $("areaHint").textContent = "📍 "+r[0].display_name+" — دوس على الخريطة لو عايز تحرك المربع";
+    }catch(_){ $("areaHint").textContent = "❌ البحث مش شغال دلوقتي — جرب تاني"; }
+  };
+  $("areaQBtn").addEventListener("click", doSearch);
+  $("areaQ").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); doSearch(); } });
+  $("areaSize").addEventListener("change", ()=>{ if(AREA.cur && AREA.cur.center && !AREA.cur.id) areaSetCenter(AREA.cur.center[0], AREA.cur.center[1]); });
   $("areaSave").addEventListener("click", ()=>{
     const name = $("areaName").value.trim();
     if(!name){ toast("اكتب اسم للمربع"); return; }
@@ -29547,7 +29561,7 @@ function areaRenderList(){
     const all = areaLoad();
     const rec = {id:"a"+Date.now(), name, bounds:AREA.cur.bounds, ways:AREA.cur.ways||null};
     all.push(rec);
-    if(areaStore(all)){ AREA.cur = rec; $("areaSaveRow").style.display="none"; $("areaName").value=""; $("areaHint").textContent="💾 اتحفظ: "+name; areaRenderList(); }
+    if(areaStore(all)){ AREA.cur = rec; AREA.drawing=false; $("areaSaveRow").style.display="none"; $("areaName").value=""; $("areaHint").textContent="💾 اتحفظ: "+name; areaRenderList(); }
   });
   $("areaLock").addEventListener("click", ()=>{
     if(!AREA.cur||!HTG.map) return;
@@ -29558,7 +29572,7 @@ function areaRenderList(){
   areaRenderList();
 })();
 
-const APP_VERSION = "321"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "322"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
