@@ -1204,7 +1204,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div class="row" style="gap:6px"><input type="text" id="htgFrom" class="grow" placeholder="أو اكتب اسم شارع / مكان البداية" /><button type="button" class="btn btn-sm" id="htgFromSearch">بحث</button></div>
         <div id="htgFromInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
         <label style="font-weight:700;font-size:13px;margin-top:8px;display:block">🎯 رايح فين؟</label>
-        <div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان" /><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
+        <div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان (في حدود ٢ كم منك)" /><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
         <div id="htgToInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
         <div class="row" style="gap:6px;margin-top:6px">
           <select id="htgMode" class="grow"><option value="driving">🚗 بالعربية / المواصلات</option><option value="foot">🚶 مشي</option></select>
@@ -2881,7 +2881,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v318</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v319</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3167,7 +3167,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v318</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v319</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29308,14 +29308,19 @@ function htgSetPoint(which, pt){
   HTG[key] = L.marker([pt.lat, pt.lng]).addTo(HTG.map).bindPopup(which==="from" ? "من" : "إلى");
   HTG.map.setView([pt.lat, pt.lng], 15);
 }
-async function htgGeocode(q){
-  const near = HTG.from;
-  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=ar&q=${encodeURIComponent(q)}`;
-  if(near){ const d=0.5; url += `&viewbox=${near.lng-d},${near.lat+d},${near.lng+d},${near.lat-d}`; }
-  else url += "&countrycodes=eg";
+function htgDist(a,b){ const R=6371000,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dn=r(b.lng-a.lng); const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const HTG_RADIUS = 2000; // البحث عن الوجهة في حدود ٢ كم من مكانك بس
+async function htgGeocode(q, local){
+  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=20&accept-language=ar&q=${encodeURIComponent(q)}`;
+  if(local){
+    const f = HTG.from, dLat = HTG_RADIUS/111000, dLng = HTG_RADIUS/(111000*Math.cos(f.lat*Math.PI/180));
+    url += `&viewbox=${f.lng-dLng},${f.lat+dLat},${f.lng+dLng},${f.lat-dLat}&bounded=1`;
+  }else url += "&countrycodes=eg";
   const res = await fetch(url);
   if(!res.ok) throw new Error("geocode "+res.status);
-  return res.json();
+  let r = await res.json();
+  if(local){ r = r.filter(x=>htgDist(HTG.from,{lat:+x.lat,lng:+x.lon})<=HTG_RADIUS).slice(0,6); }
+  return r;
 }
 async function htgSearch(which){
   const inp = document.getElementById(which==="from" ? "htgFrom" : "htgTo");
@@ -29325,8 +29330,10 @@ async function htgSearch(which){
   info.textContent = "⏳ بدوّر...";
   try{
     await htgEnsureMap();
-    const r = await htgGeocode(q);
-    if(!r || !r.length){ info.textContent = "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
+    const local = which==="to";
+    if(local && !HTG.from){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — البحث عن الوجهة بيبقى في حدود ٢ كم منك"; return; }
+    const r = await htgGeocode(q, local);
+    if(!r || !r.length){ info.textContent = local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
     if(r.length===1){ htgSetPoint(which, {lat:+r[0].lat, lng:+r[0].lon, label:r[0].display_name}); return; }
     info.innerHTML = "اختار المكان الصح:" + r.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal" data-htg-pick="${which}:${i}">📍 ${htgEsc(x.display_name)}</button></div>`).join("");
     info._res = r;
@@ -29408,7 +29415,7 @@ async function openHowToGo(){
   $("htgGo").addEventListener("click", htgRoute);
 })();
 
-const APP_VERSION = "318"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "319"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.

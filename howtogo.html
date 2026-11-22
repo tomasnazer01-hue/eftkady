@@ -30,7 +30,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc
 <div class="row" style="gap:6px"><input type="text" id="htgFrom" class="grow" placeholder="أو اكتب اسم شارع / مكان البداية"><button type="button" class="btn btn-sm" id="htgFromSearch">بحث</button></div>
 <div id="htgFromInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
 <label style="font-weight:700;font-size:13px;margin-top:8px;display:block">🎯 رايح فين؟</label>
-<div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان"><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
+<div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان (في حدود ٢ كم منك)"><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
 <div id="htgToInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
 <div class="row" style="gap:6px;margin-top:6px"><select id="htgMode" class="grow"><option value="driving">🚗 بالعربية / المواصلات</option><option value="foot">🚶 مشي</option></select>
 <button type="button" class="btn btn-gold" id="htgGo">🧭 وريني الطريق</button></div></div>
@@ -66,14 +66,19 @@ function htgSetPoint(which, pt){
   HTG[key] = L.marker([pt.lat, pt.lng]).addTo(HTG.map).bindPopup(which==="from" ? "من" : "إلى");
   HTG.map.setView([pt.lat, pt.lng], 15);
 }
-async function htgGeocode(q){
-  const near = HTG.from;
-  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=ar&q=${encodeURIComponent(q)}`;
-  if(near){ const d=0.5; url += `&viewbox=${near.lng-d},${near.lat+d},${near.lng+d},${near.lat-d}`; }
-  else url += "&countrycodes=eg";
+function htgDist(a,b){ const R=6371000,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dn=r(b.lng-a.lng); const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const HTG_RADIUS = 2000; // البحث عن الوجهة في حدود ٢ كم من مكانك بس
+async function htgGeocode(q, local){
+  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=20&accept-language=ar&q=${encodeURIComponent(q)}`;
+  if(local){
+    const f = HTG.from, dLat = HTG_RADIUS/111000, dLng = HTG_RADIUS/(111000*Math.cos(f.lat*Math.PI/180));
+    url += `&viewbox=${f.lng-dLng},${f.lat+dLat},${f.lng+dLng},${f.lat-dLat}&bounded=1`;
+  }else url += "&countrycodes=eg";
   const res = await fetch(url);
   if(!res.ok) throw new Error("geocode "+res.status);
-  return res.json();
+  let r = await res.json();
+  if(local){ r = r.filter(x=>htgDist(HTG.from,{lat:+x.lat,lng:+x.lon})<=HTG_RADIUS).slice(0,6); }
+  return r;
 }
 async function htgSearch(which){
   const inp = document.getElementById(which==="from" ? "htgFrom" : "htgTo");
@@ -83,8 +88,10 @@ async function htgSearch(which){
   info.textContent = "⏳ بدوّر...";
   try{
     await htgEnsureMap();
-    const r = await htgGeocode(q);
-    if(!r || !r.length){ info.textContent = "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
+    const local = which==="to";
+    if(local && !HTG.from){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — البحث عن الوجهة بيبقى في حدود ٢ كم منك"; return; }
+    const r = await htgGeocode(q, local);
+    if(!r || !r.length){ info.textContent = local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
     if(r.length===1){ htgSetPoint(which, {lat:+r[0].lat, lng:+r[0].lon, label:r[0].display_name}); return; }
     info.innerHTML = "اختار المكان الصح:" + r.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal" data-htg-pick="${which}:${i}">📍 ${htgEsc(x.display_name)}</button></div>`).join("");
     info._res = r;
