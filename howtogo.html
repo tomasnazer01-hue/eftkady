@@ -36,13 +36,14 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc
 <button type="button" class="btn btn-gold" id="htgGo">🧭 وريني الطريق</button></div></div>
 <div class="card"><div id="htgMapHint" class="muted" style="font-size:12px;margin-bottom:4px"></div><div id="htgMap" style="height:300px;border-radius:12px;overflow:hidden"></div></div>
 <div class="card" id="areaCard">
-        <h2 style="margin:0 0 4px;font-size:17px">🏘️ مربعاتي السكنية</h2>
-        <p class="muted" style="margin:0 0 6px;font-size:12px">زي تحديد الموقع في وزنتي: دوس على الخريطة في وسط المنطقة (أو استخدم موقعك أو دوّر باسم شارع) والمربع بيتحط لوحده. بيظهر فيه كل الشوارع وبتحفظه باسم.</p>
-        <button type="button" class="btn btn-gold btn-block btn-sm" id="areaGps" style="margin-bottom:6px">📡 استخدام موقعي الحالي</button>
+        <h2 style="margin:0 0 4px;font-size:17px">🏘️ مناطقي (بالشوارع)</h2>
+        <p class="muted" style="margin:0 0 6px;font-size:12px">حدد منطقتك زي وزنتي: دوس نقطة نقطة على حدود المنطقة (تمشي مع شكل الشوارع). علامة صغيرة بيضا في نص كل ضلع: دوس عليها أو اسحبها تزود نقطة بين نقطتين. اسحب أي نقطة بإيدك تحركها، ودوس على نقطة تمسحها.</p>
+        <button type="button" class="btn btn-gold btn-block btn-sm" id="areaGps" style="margin-bottom:6px">📡 روح لموقعي الحالي</button>
         <div class="row" style="gap:6px;margin-bottom:6px"><input type="search" id="areaQ" class="grow" placeholder="🔍 ابحث باسم الشارع أو المنطقة"><button type="button" class="btn btn-gold btn-sm" id="areaQBtn">بحث</button></div>
-        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12.5px">📐 حجم المربع:</span>
-          <select id="areaSize"><option value="300">صغير (٣٠٠ م)</option><option value="600" selected>متوسط (٦٠٠ م)</option><option value="1000">كبير (١ كم)</option><option value="2000">كبير جداً (٢ كم)</option></select>
-          <button type="button" class="btn btn-sm" id="areaDraw">👆 دوس على الخريطة</button>
+        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
+          <button type="button" class="btn btn-gold btn-sm" id="areaDraw">✏️ ابدأ رسم منطقة</button>
+          <button type="button" class="btn btn-sm" id="areaUndo">↩️ تراجع عن آخر نقطة</button>
+          <button type="button" class="btn btn-sm" id="areaClear">🧹 مسح الرسم</button>
           <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة</button></div>
         <div id="areaHint" class="muted" style="font-size:12px;margin:6px 0"></div>
         <div class="row" id="areaSaveRow" style="gap:6px;display:none"><input type="text" id="areaName" class="grow" placeholder="اسم المربع (مثلاً: حينا)"><button type="button" class="btn btn-gold btn-sm" id="areaSave">💾 حفظ</button></div>
@@ -185,36 +186,68 @@ async function htgRoute(){
 
 
 // ==================== 🏘️ مربعاتي السكنية ====================
-const AREA = {pts:[], rect:null, cur:null, streetLayer:null, drawing:false, locked:false, lines:[]};
+const AREA = {poly:[], shape:null, vMarks:[], mMarks:[], cur:null, ways:null, streetLayer:null, drawing:false, locked:false, lines:[]};
+let _areaT = null;
 function areaLoad(){ try{ return JSON.parse(localStorage.getItem("htg_areas")||"[]"); }catch(_){ return []; } }
 function areaStore(a){ try{ localStorage.setItem("htg_areas", JSON.stringify(a)); return true; }catch(_){ toast("مقدرتش أحفظ على الجهاز"); return false; } }
 function areaMapReady(){ if(HTG.map && !HTG.map._areaHooked){ HTG.map._areaHooked = true; HTG.map.on("click", areaClick); } }
-function areaSize(){ return +document.getElementById("areaSize").value || 600; }
-let _areaT = null;
-function areaSetCenter(lat, lng){
-  const half = areaSize()/2, dLat = half/111000, dLng = half/(111000*Math.cos(lat*Math.PI/180));
-  AREA.cur = {name:"", center:[lat,lng], bounds:[[lat-dLat,lng-dLng],[lat+dLat,lng+dLng]]};
-  areaShowRect();
-  document.getElementById("areaHint").textContent = "✅ اكتب اسم للمنطقة واضغط حفظ (أو دوس مكان تاني على الخريطة لتحريك المربع)";
-  document.getElementById("areaSaveRow").style.display = "";
-  clearTimeout(_areaT); _areaT = setTimeout(areaLoadStreets, 700);
+function areaBounds(){ return L.latLngBounds(AREA.poly.map(p=>[p[0],p[1]])); }
+function areaVIcon(){ return L.divIcon({className:"", html:'<div style="width:24px;height:24px;border-radius:50%;background:#C9A24B;border:3px solid #1B2A4A;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>', iconSize:[24,24], iconAnchor:[12,12]}); }
+function areaMIcon(){ return L.divIcon({className:"", html:'<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #C9A24B;box-shadow:0 1px 3px rgba(0,0,0,.35)"></div>', iconSize:[16,16], iconAnchor:[8,8]}); }
+function areaChanged(){
+  AREA.ways = null; areaClearStreets();
+  if(AREA.cur && AREA.cur.id){ document.getElementById("areaSaveRow").style.display=""; document.getElementById("areaName").value = AREA.cur.name; document.getElementById("areaHint").textContent="✏️ عدّلت المنطقة — اضغط حفظ لتثبيت التعديل"; }
+  else if(AREA.poly.length>=3){ document.getElementById("areaSaveRow").style.display=""; document.getElementById("areaHint").textContent="✅ اكتب اسم للمنطقة واضغط حفظ (تقدر تزود نقط أو تحرك أي نقطة)"; }
+  clearTimeout(_areaT);
+  if(AREA.poly.length>=3) _areaT = setTimeout(areaLoadStreets, 1200);
 }
-function areaClick(e){ if(AREA.drawing) areaSetCenter(e.latlng.lat, e.latlng.lng); }
-function areaShowRect(){
-  if(AREA.rect) HTG.map.removeLayer(AREA.rect);
-  AREA.rect = L.rectangle(AREA.cur.bounds, {color:"#C9A24B", weight:3, fillOpacity:.07}).addTo(HTG.map);
-  HTG.map.fitBounds(AREA.cur.bounds, {padding:[10,10]});
-  document.getElementById("areaLock").style.display = "";
+function areaRedraw(){
+  const m = HTG.map; if(!m) return;
+  if(AREA.shape){ m.removeLayer(AREA.shape); AREA.shape=null; }
+  AREA.vMarks.forEach(x=>m.removeLayer(x)); AREA.mMarks.forEach(x=>m.removeLayer(x)); AREA.vMarks=[]; AREA.mMarks=[];
+  const P = AREA.poly, n = P.length;
+  if(n>=3) AREA.shape = L.polygon(P, {color:"#C9A24B", weight:3, fillOpacity:.08}).addTo(m);
+  else if(n===2) AREA.shape = L.polyline(P, {color:"#C9A24B", weight:3, dashArray:"6 6"}).addTo(m);
+  // middle handles
+  if(n>=2){
+    const edges = n===2 ? 1 : n;
+    for(let i=0;i<edges;i++){
+      const a = P[i], b = P[(i+1)%n];
+      const mk = L.marker([(a[0]+b[0])/2,(a[1]+b[1])/2], {icon:areaMIcon(), draggable:true, zIndexOffset:500}).addTo(m);
+      mk.on("click", ()=>{ const ll = mk.getLatLng(); P.splice(i+1,0,[ll.lat,ll.lng]); areaRedraw(); areaChanged(); });
+      mk.on("dragend", ()=>{ const ll = mk.getLatLng(); P.splice(i+1,0,[ll.lat,ll.lng]); areaRedraw(); areaChanged(); });
+      AREA.mMarks.push(mk);
+    }
+  }
+  P.forEach((pt,i)=>{
+    const mk = L.marker(pt, {icon:areaVIcon(), draggable:true, zIndexOffset:1000}).addTo(m);
+    mk.on("drag", ()=>{ const ll = mk.getLatLng(); P[i]=[ll.lat,ll.lng]; if(AREA.shape && AREA.shape.setLatLngs) AREA.shape.setLatLngs(P); });
+    mk.on("dragend", ()=>{ areaRedraw(); areaChanged(); });
+    mk.on("click", ()=>{ P.splice(i,1); areaRedraw(); areaChanged(); });
+    AREA.vMarks.push(mk);
+  });
+  document.getElementById("areaLock").style.display = n>=3 ? "" : "none";
 }
-function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; document.getElementById("areaStreets").innerHTML=""; }
+function areaClick(e){
+  if(!AREA.drawing) return;
+  AREA.poly.push([e.latlng.lat, e.latlng.lng]);
+  areaRedraw();
+  const n = AREA.poly.length;
+  if(n<3) document.getElementById("areaHint").textContent = `👆 كمّل دوس نقط على حدود المنطقة (${n}/٣ على الأقل)`;
+  areaChanged();
+}
+function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; const b=document.getElementById("areaStreets"); if(b) b.innerHTML=""; }
 async function areaLoadStreets(){
-  const box = document.getElementById("areaStreets"), a = AREA.cur;
-  areaClearStreets();
-  let ways = a.ways;
+  const box = document.getElementById("areaStreets");
+  if(AREA.poly.length<3) return;
+  const b = areaBounds(), sw=b.getSouthWest(), ne=b.getNorthEast();
+  if(htgDist({lat:sw.lat,lng:sw.lng},{lat:sw.lat,lng:ne.lng})>3000 || htgDist({lat:sw.lat,lng:sw.lng},{lat:ne.lat,lng:sw.lng})>3000){ box.innerHTML='<p>❌ المنطقة كبيرة (أقصى حاجة ٣ كم × ٣ كم) — صغّرها</p>'; return; }
+  const stamp = JSON.stringify(AREA.poly);
+  let ways = AREA.ways;
   if(!ways){
-    box.innerHTML = '<p class="muted">⏳ بجيب الشوارع...</p>';
-    const [s,w] = a.bounds[0], [n,e] = a.bounds[1];
-    const q = `[out:json][timeout:25];way["highway"]["name"](${s},${w},${n},${e});out geom;`;
+    areaClearStreets(); box.innerHTML = '<p class="muted">⏳ بجيب الشوارع...</p>';
+    const ps = AREA.poly.map(p=>p[0].toFixed(6)+" "+p[1].toFixed(6)).join(" ");
+    const q = `[out:json][timeout:25];way["highway"]["name"](poly:"${ps}");out geom;`;
     for(const srv of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
       try{
         const res = await fetch(srv+"?data="+encodeURIComponent(q));
@@ -224,11 +257,13 @@ async function areaLoadStreets(){
         break;
       }catch(_){}
     }
+    if(stamp!==JSON.stringify(AREA.poly)) return; // اتغيّرت المنطقة أثناء التحميل
     if(!ways){ box.innerHTML = '<p>❌ معرفتش أجيب الشوارع (النت أو السيرفر) — جرب تاني</p>'; return; }
-    a.ways = ways;
-    if(a.id){ const all = areaLoad(), i = all.findIndex(x=>x.id===a.id); if(i>=0){ all[i].ways = ways; areaStore(all); } }
+    AREA.ways = ways;
+    if(AREA.cur && AREA.cur.id){ const all = areaLoad(), i = all.findIndex(x=>x.id===AREA.cur.id); if(i>=0 && JSON.stringify(all[i].poly)===stamp){ all[i].ways = ways; areaStore(all); } }
   }
-  if(!ways.length){ box.innerHTML = '<p class="muted">مفيش شوارع مسمّية جوه المربع ده.</p>'; return; }
+  areaClearStreets();
+  if(!ways.length){ box.innerHTML = '<p class="muted">مفيش شوارع مسمّية جوه المنطقة دي.</p>'; return; }
   AREA.streetLayer = L.layerGroup().addTo(HTG.map);
   const byName = {};
   ways.forEach(w=>{ (byName[w.name] = byName[w.name]||[]).push(w); });
@@ -244,74 +279,85 @@ async function areaLoadStreets(){
 function areaPickStreet(name){
   const item = AREA.lines.find(x=>x.n===name); if(!item) return;
   AREA.lines.forEach(x=>x.lines.forEach(l=>l.setStyle({color:x.n===name?"#d33":"#1B2A4A", weight:x.n===name?7:5})));
-  const first = item.lines[0], pts = first.getLatLngs(), mid = pts[Math.floor(pts.length/2)];
-  htgSetPoint("to", {lat:mid.lat, lng:mid.lng, label:name+" (من مربعاتي)"});
+  const pts = item.lines[0].getLatLngs(), mid = pts[Math.floor(pts.length/2)];
+  htgSetPoint("to", {lat:mid.lat, lng:mid.lng, label:name+" (من مناطقي)"});
   document.getElementById("htgTo").value = name;
-  try{ HTG.map.fitBounds(L.featureGroup(item.lines).getBounds(), {padding:[30,30]}); }catch(_){}
   toast("🎯 "+name+" اتحدد كوجهة — اختار مكانك وادوس وريني الطريق");
 }
 function areaRenderList(){
   const all = areaLoad(), box = document.getElementById("areaList");
-  if(!all.length){ box.innerHTML = '<p class="muted" style="font-size:12px;margin:0">مفيش مربعات محفوظة لسه.</p>'; return; }
+  if(!all.length){ box.innerHTML = '<p class="muted" style="font-size:12px;margin:0">مفيش مناطق محفوظة لسه.</p>'; return; }
   box.innerHTML = all.map(a=>`<div class="row" style="gap:6px;margin:4px 0"><button type="button" class="btn btn-sm grow" style="text-align:right" data-area-open="${a.id}">🏘️ ${htgEsc(a.name)}${a.ways?" · "+new Set(a.ways.map(w=>w.name)).size+" شارع":""}</button><button type="button" class="btn btn-sm" data-area-del="${a.id}" title="مسح">🗑️</button></div>`).join("");
   box.querySelectorAll("[data-area-open]").forEach(b=>b.addEventListener("click", async ()=>{
     const a = areaLoad().find(x=>x.id===b.dataset.areaOpen); if(!a) return;
     if(!await htgEnsureMap()) return; areaMapReady();
-    AREA.cur = a; AREA.drawing=false; AREA.pts=[];
-    document.getElementById("areaSaveRow").style.display="none"; document.getElementById("areaHint").textContent = "📌 "+a.name;
-    areaShowRect(); areaLoadStreets();
+    const poly = a.poly || (a.bounds ? [[a.bounds[0][0],a.bounds[0][1]],[a.bounds[0][0],a.bounds[1][1]],[a.bounds[1][0],a.bounds[1][1]],[a.bounds[1][0],a.bounds[0][1]]] : []);
+    AREA.cur = a; AREA.poly = poly.map(p=>[p[0],p[1]]); AREA.ways = a.ways||null; AREA.drawing = false;
+    document.getElementById("areaSaveRow").style.display="none"; document.getElementById("areaHint").textContent = "📌 "+a.name+" — اسحب أي نقطة أو دوس العلامات البيضا لتعديلها";
+    areaRedraw(); HTG.map.fitBounds(areaBounds(), {padding:[10,10]}); areaLoadStreets();
     document.getElementById("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
   }));
   box.querySelectorAll("[data-area-del]").forEach(b=>b.addEventListener("click", ()=>{
-    const a = areaLoad().find(x=>x.id===b.dataset.areaDel); if(!a || !confirm("تمسح مربع «"+a.name+"»؟")) return;
+    const a = areaLoad().find(x=>x.id===b.dataset.areaDel); if(!a || !confirm("تمسح منطقة «"+a.name+"»؟")) return;
     areaStore(areaLoad().filter(x=>x.id!==a.id));
-    if(AREA.cur && AREA.cur.id===a.id){ if(AREA.rect){ HTG.map.removeLayer(AREA.rect); AREA.rect=null; } areaClearStreets(); AREA.cur=null; }
+    if(AREA.cur && AREA.cur.id===a.id){ areaReset(); }
     areaRenderList();
   }));
 }
+function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=false; if(HTG.map) areaRedraw(); areaClearStreets(); document.getElementById("areaSaveRow").style.display="none"; document.getElementById("areaHint").textContent=""; }
 (function(){
   const $ = id=>document.getElementById(id);
   const startPick = async ()=>{
-    if(!await htgEnsureMap()) return; areaMapReady();
+    if(!await htgEnsureMap()) return false; areaMapReady();
     if(AREA.locked) $("areaLock").click();
-    HTG.picking = false; AREA.drawing = true;
-    $("areaHint").textContent = "👆 دوس على الخريطة في وسط المنطقة";
+    HTG.picking = false; return true;
   };
-  $("areaDraw").addEventListener("click", async ()=>{ await startPick(); $("htgMap").scrollIntoView({block:"center", behavior:"smooth"}); });
+  $("areaDraw").addEventListener("click", async ()=>{
+    if(!await startPick()) return;
+    areaReset(); AREA.drawing = true;
+    $("areaHint").textContent = "👆 دوس على الخريطة نقطة نقطة على حدود المنطقة";
+    $("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
+  });
+  $("areaUndo").addEventListener("click", ()=>{ if(!AREA.poly.length) return; AREA.poly.pop(); areaRedraw(); areaChanged(); });
+  $("areaClear").addEventListener("click", ()=>{ if(!HTG.map) return; areaReset(); });
   $("areaGps").addEventListener("click", async ()=>{
     if(!navigator.geolocation){ toast("الجهاز مش بيدعم تحديد الموقع"); return; }
     $("areaHint").textContent = "⏳ بحدد موقعك...";
-    navigator.geolocation.getCurrentPosition(async pos=>{ await startPick(); areaSetCenter(pos.coords.latitude, pos.coords.longitude); },
+    navigator.geolocation.getCurrentPosition(async pos=>{ if(!await startPick()) return; HTG.map.setView([pos.coords.latitude,pos.coords.longitude], 17); $("areaHint").textContent="📍 وصلتك لموقعك — دوس «ابدأ رسم منطقة»"; },
       ()=>{ $("areaHint").textContent = "❌ مقدرتش أحدد موقعك — اسمح للمتصفح بالوصول للموقع (وافتح الرابط من كروم/سفاري)"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
   });
   const doSearch = async ()=>{
     const q = $("areaQ").value.trim(); if(!q){ toast("اكتب اسم الشارع أو المنطقة"); return; }
     $("areaHint").textContent = "⏳ بدوّر...";
     try{
-      if(!await htgEnsureMap()) return;
+      if(!await startPick()) return;
       const r = await htgGeocode(q, false);
       if(!r || !r.length){ $("areaHint").textContent = "❌ ملقيتش المكان ده — جرب تكتب الاسم مع المدينة"; return; }
-      await startPick(); areaSetCenter(+r[0].lat, +r[0].lon);
-      $("areaHint").textContent = "📍 "+r[0].display_name+" — دوس على الخريطة لو عايز تحرك المربع";
+      HTG.map.setView([+r[0].lat, +r[0].lon], 16);
+      $("areaHint").textContent = "📍 "+r[0].display_name+" — دوس «ابدأ رسم منطقة»";
     }catch(_){ $("areaHint").textContent = "❌ البحث مش شغال دلوقتي — جرب تاني"; }
   };
   $("areaQBtn").addEventListener("click", doSearch);
   $("areaQ").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); doSearch(); } });
-  $("areaSize").addEventListener("change", ()=>{ if(AREA.cur && AREA.cur.center && !AREA.cur.id) areaSetCenter(AREA.cur.center[0], AREA.cur.center[1]); });
   $("areaSave").addEventListener("click", ()=>{
     const name = $("areaName").value.trim();
-    if(!name){ toast("اكتب اسم للمربع"); return; }
-    if(!AREA.cur) return;
+    if(!name){ toast("اكتب اسم للمنطقة"); return; }
+    if(AREA.poly.length<3){ toast("لازم ٣ نقط على الأقل"); return; }
     const all = areaLoad();
-    const rec = {id:"a"+Date.now(), name, bounds:AREA.cur.bounds, ways:AREA.cur.ways||null};
-    all.push(rec);
-    if(areaStore(all)){ AREA.cur = rec; AREA.drawing=false; $("areaSaveRow").style.display="none"; $("areaName").value=""; $("areaHint").textContent="💾 اتحفظ: "+name; areaRenderList(); }
+    if(AREA.cur && AREA.cur.id){
+      const i = all.findIndex(x=>x.id===AREA.cur.id);
+      if(i>=0){ all[i] = {id:all[i].id, name, poly:AREA.poly.map(p=>[p[0],p[1]]), ways:AREA.ways||null}; AREA.cur = all[i]; }
+    }else{
+      const rec = {id:"a"+Date.now(), name, poly:AREA.poly.map(p=>[p[0],p[1]]), ways:AREA.ways||null};
+      all.push(rec); AREA.cur = rec;
+    }
+    if(areaStore(all)){ AREA.drawing=false; $("areaSaveRow").style.display="none"; $("areaName").value=""; $("areaHint").textContent="💾 اتحفظ: "+name; areaRenderList(); }
   });
   $("areaLock").addEventListener("click", ()=>{
-    if(!AREA.cur||!HTG.map) return;
+    if(AREA.poly.length<3||!HTG.map) return;
     AREA.locked = !AREA.locked;
-    if(AREA.locked){ HTG.map.setMaxBounds(L.latLngBounds(AREA.cur.bounds).pad(0.15)); HTG.map.setMinZoom(Math.max(HTG.map.getZoom()-1,12)); $("areaLock").textContent="🔒 الخريطة مثبّتة (دوس لفكها)"; }
-    else{ HTG.map.setMaxBounds(null); HTG.map.setMinZoom(0); $("areaLock").textContent="🔓 ثبّت الخريطة على المربع"; }
+    if(AREA.locked){ HTG.map.fitBounds(areaBounds(), {padding:[10,10]}); HTG.map.setMaxBounds(areaBounds().pad(0.15)); HTG.map.setMinZoom(Math.max(HTG.map.getZoom()-1,12)); $("areaLock").textContent="🔒 الخريطة مثبّتة (دوس لفكها)"; }
+    else{ HTG.map.setMaxBounds(null); HTG.map.setMinZoom(0); $("areaLock").textContent="🔓 ثبّت الخريطة"; }
   });
   areaRenderList();
 })();
