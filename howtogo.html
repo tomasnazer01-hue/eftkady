@@ -102,20 +102,29 @@ async function htgSearch(which){
   if(!q){ toast("اكتب اسم الشارع الأول"); return; }
   const info = document.getElementById(which==="from" ? "htgFromInfo" : "htgToInfo");
   info.textContent = "⏳ بدوّر...";
+  const areaHits = areaSearchStreets(q);
+  let geo = [], geoErr = null;
+  const local = which==="to";
   try{
     await htgEnsureMap();
-    const local = which==="to";
-    if(local && !HTG.from){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — البحث عن الوجهة بيبقى في حدود ٢ كم منك"; return; }
-    const r = await htgGeocode(q, local);
-    if(!r || !r.length){ info.textContent = local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
-    if(r.length===1){ htgSetPoint(which, {lat:+r[0].lat, lng:+r[0].lon, label:r[0].display_name}); return; }
-    info.innerHTML = "اختار المكان الصح:" + r.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal" data-htg-pick="${which}:${i}">📍 ${htgEsc(x.display_name)}</button></div>`).join("");
-    info._res = r;
-    info.querySelectorAll("[data-htg-pick]").forEach(b=>b.addEventListener("click", ()=>{
-      const i = +b.dataset.htgPick.split(":")[1], x = info._res[i];
-      htgSetPoint(which, {lat:+x.lat, lng:+x.lon, label:x.display_name});
-    }));
-  }catch(err){ console.error(err); info.textContent = "❌ البحث مش شغال دلوقتي (النت أو السيرفر) — جرب تاني"; }
+    if(local && !HTG.from){ if(!areaHits.length){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — البحث عن الوجهة بيبقى في حدود ٢ كم منك"; return; } }
+    else geo = await htgGeocode(q, local) || [];
+  }catch(err){ console.error(err); geoErr = err; }
+  if(!areaHits.length && !geo.length){
+    info.textContent = geoErr ? "❌ البحث مش شغال دلوقتي (النت أو السيرفر) — جرب تاني" : (local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة");
+    return;
+  }
+  const items = [
+    ...areaHits.map(h=>({lat:h.lat, lng:h.lng, label:h.name+" — "+h.area, btn:"🏘️ "+h.name+" · "+h.area, pri:true})),
+    ...geo.map(x=>({lat:+x.lat, lng:+x.lon, label:x.display_name, btn:"📍 "+x.display_name}))
+  ];
+  if(items.length===1){ htgSetPoint(which, items[0]); return; }
+  info.innerHTML = "اختار المكان الصح (شوارع مناطقك الأول):" + items.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal;${x.pri?"border-color:var(--gold);background:#FBF3D9;color:#1b1b1b;font-weight:700":""}" data-htg-pick="${which}:${i}">${htgEsc(x.btn)}</button></div>`).join("");
+  info._res = items;
+  info.querySelectorAll("[data-htg-pick]").forEach(b=>b.addEventListener("click", ()=>{
+    const x = info._res[+b.dataset.htgPick.split(":")[1]];
+    htgSetPoint(which, {lat:x.lat, lng:x.lng, label:x.label});
+  }));
 }
 function htgGps(){
   const info = document.getElementById("htgFromInfo");
@@ -236,6 +245,63 @@ function areaClick(e){
   if(n<3) document.getElementById("areaHint").textContent = `👆 كمّل دوس نقط على حدود المنطقة (${n}/٣ على الأقل)`;
   areaChanged();
 }
+
+function areaInPoly(pt, poly){
+  let ins=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const yi=poly[i][0], xi=poly[i][1], yj=poly[j][0], xj=poly[j][1];
+    if(((yi>pt[0])!==(yj>pt[0])) && (pt[1] < (xj-xi)*(pt[0]-yi)/(yj-yi)+xi)) ins=!ins;
+  }
+  return ins;
+}
+// بيقص كل شارع على حدود المنطقة: بيفضل الجزء اللي جوه بس
+function areaClipWays(ways, poly){
+  const out = [], n = poly.length;
+  if(n<3) return ways;
+  const near = (a,b)=>Math.abs(a[0]-b[0])<1e-9 && Math.abs(a[1]-b[1])<1e-9;
+  ways.forEach(w=>{
+    let runs = [], cur = null;
+    for(let k=0;k<w.g.length-1;k++){
+      const A=w.g[k], B=w.g[k+1], ts=[0,1];
+      for(let i=0;i<n;i++){
+        const C=poly[i], D=poly[(i+1)%n];
+        const r=[B[0]-A[0],B[1]-A[1]], s=[D[0]-C[0],D[1]-C[1]];
+        const den = r[0]*s[1]-r[1]*s[0]; if(Math.abs(den)<1e-14) continue;
+        const t = ((C[0]-A[0])*s[1]-(C[1]-A[1])*s[0])/den, u = ((C[0]-A[0])*r[1]-(C[1]-A[1])*r[0])/den;
+        if(t>0 && t<1 && u>=0 && u<=1) ts.push(t);
+      }
+      ts.sort((x,y)=>x-y);
+      for(let q=0;q<ts.length-1;q++){
+        const t0=ts[q], t1=ts[q+1]; if(t1-t0<1e-12) continue;
+        const mid=[A[0]+(B[0]-A[0])*(t0+t1)/2, A[1]+(B[1]-A[1])*(t0+t1)/2];
+        if(!areaInPoly(mid,poly)){ cur=null; continue; }
+        const p0=[A[0]+(B[0]-A[0])*t0, A[1]+(B[1]-A[1])*t0], p1=[A[0]+(B[0]-A[0])*t1, A[1]+(B[1]-A[1])*t1];
+        if(cur && near(cur[cur.length-1],p0)) cur.push(p1); else { cur=[p0,p1]; runs.push(cur); }
+      }
+    }
+    runs.forEach(g=>out.push({name:w.name, g:g.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)])}));
+  });
+  return out;
+}
+function htgNz(t){ return String(t||"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي").replace(/ة/g,"ه").replace(/[ً-ْ]/g,"").toLowerCase().trim(); }
+// الشوارع المحفوظة في مناطقي (المنطقة المفتوحة دلوقتي + كل المحفوظ) — لها الأولوية في البحث
+function areaSearchStreets(q){
+  const nq = htgNz(q); if(!nq) return [];
+  const sources = [];
+  if(typeof AREA!=="undefined" && AREA.ways && AREA.poly.length>=3) sources.push({label:(AREA.cur&&AREA.cur.name)||"المنطقة الحالية", ways:areaClipWays(AREA.ways, AREA.poly)});
+  try{ areaLoad().forEach(a=>{ if(a.ways && a.poly && !(AREA.cur && AREA.cur.id===a.id && AREA.ways)) sources.push({label:a.name, ways:areaClipWays(a.ways, a.poly)}); }); }catch(_){}
+  const hits = [], seen = new Set();
+  sources.forEach(src=>{
+    const by = {};
+    src.ways.forEach(w=>{ if(htgNz(w.name).includes(nq)) (by[w.name]=by[w.name]||[]).push(w); });
+    Object.keys(by).forEach(name=>{
+      const key = src.label+"|"+name; if(seen.has(key)) return; seen.add(key);
+      const g = by[name][0].g, mid = g[Math.floor(g.length/2)];
+      hits.push({name, area:src.label, lat:mid[0], lng:mid[1], exact:htgNz(name)===nq});
+    });
+  });
+  return hits.sort((a,b)=>(b.exact-a.exact));
+}
 function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; const b=document.getElementById("areaStreets"); if(b) b.innerHTML=""; }
 async function areaLoadStreets(){
   const box = document.getElementById("areaStreets");
@@ -259,9 +325,11 @@ async function areaLoadStreets(){
     }
     if(stamp!==JSON.stringify(AREA.poly)) return; // اتغيّرت المنطقة أثناء التحميل
     if(!ways){ box.innerHTML = '<p>❌ معرفتش أجيب الشوارع (النت أو السيرفر) — جرب تاني</p>'; return; }
+    ways = areaClipWays(ways, AREA.poly);
     AREA.ways = ways;
     if(AREA.cur && AREA.cur.id){ const all = areaLoad(), i = all.findIndex(x=>x.id===AREA.cur.id); if(i>=0 && JSON.stringify(all[i].poly)===stamp){ all[i].ways = ways; areaStore(all); } }
   }
+  ways = areaClipWays(ways, AREA.poly);
   areaClearStreets();
   if(!ways.length){ box.innerHTML = '<p class="muted">مفيش شوارع مسمّية جوه المنطقة دي.</p>'; return; }
   AREA.streetLayer = L.layerGroup().addTo(HTG.map);
@@ -269,7 +337,7 @@ async function areaLoadStreets(){
   ways.forEach(w=>{ (byName[w.name] = byName[w.name]||[]).push(w); });
   const names = Object.keys(byName).sort((x,y)=>x.localeCompare(y,"ar"));
   names.forEach(n=>{
-    const lines = byName[n].map(w=>L.polyline(w.g, {color:"#1B2A4A", weight:5, opacity:.8}).bindTooltip(n, {sticky:true}).addTo(AREA.streetLayer));
+    const lines = byName[n].map(w=>L.polyline(w.g, {color:"#1E88E5", weight:4, opacity:.9}).bindTooltip(n, {sticky:true}).addTo(AREA.streetLayer));
     lines.forEach(l=>l.on("click", ()=>areaPickStreet(n)));
     AREA.lines.push({n, lines});
   });
@@ -278,7 +346,7 @@ async function areaLoadStreets(){
 }
 function areaPickStreet(name){
   const item = AREA.lines.find(x=>x.n===name); if(!item) return;
-  AREA.lines.forEach(x=>x.lines.forEach(l=>l.setStyle({color:x.n===name?"#d33":"#1B2A4A", weight:x.n===name?7:5})));
+  AREA.lines.forEach(x=>x.lines.forEach(l=>l.setStyle({color:x.n===name?"#E53935":"#1E88E5", weight:x.n===name?7:4})));
   const pts = item.lines[0].getLatLngs(), mid = pts[Math.floor(pts.length/2)];
   htgSetPoint("to", {lat:mid.lat, lng:mid.lng, label:name+" (من مناطقي)"});
   document.getElementById("htgTo").value = name;
