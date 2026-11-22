@@ -2881,7 +2881,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v319</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v320</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3167,7 +3167,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v319</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v320</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29379,12 +29379,21 @@ async function htgRoute(){
   const gm = `https://www.google.com/maps/dir/?api=1&origin=${HTG.from.lat},${HTG.from.lng}&destination=${HTG.to.lat},${HTG.to.lng}&travelmode=${mode==="foot"?"walking":"driving"}`;
   const gbtn = `<a class="btn btn-gold btn-block" style="margin-top:8px;text-decoration:none;text-align:center" target="_blank" rel="noopener" href="${gm}">🗺️ افتح في خرائط جوجل (ملاحة صوتية)</a>`;
   try{
-    const base = mode==="foot" ? "https://routing.openstreetmap.de/routed-foot/route/v1/foot" : "https://router.project-osrm.org/route/v1/driving";
-    const url = `${base}/${HTG.from.lng},${HTG.from.lat};${HTG.to.lng},${HTG.to.lat}?overview=full&geometries=geojson&steps=true&language=ar`;
-    const res = await fetch(url);
-    if(!res.ok) throw new Error("route "+res.status);
-    const data = await res.json();
-    if(data.code!=="Ok" || !data.routes || !data.routes.length) throw new Error("no route");
+    const bases = mode==="foot"
+      ? ["https://routing.openstreetmap.de/routed-foot/route/v1/foot","https://routing.openstreetmap.de/routed-foot/route/v1/driving"]
+      : ["https://router.project-osrm.org/route/v1/driving","https://routing.openstreetmap.de/routed-car/route/v1/driving"];
+    let data = null, lastErr = "";
+    for(const base of bases){
+      try{
+        const ctl = new AbortController(), tm = setTimeout(()=>ctl.abort(), 12000);
+        const res = await fetch(`${base}/${HTG.from.lng},${HTG.from.lat};${HTG.to.lng},${HTG.to.lat}?overview=full&geometries=geojson&steps=true`, {signal:ctl.signal});
+        clearTimeout(tm);
+        const j = await res.json().catch(()=>null);
+        if(res.ok && j && j.code==="Ok" && j.routes && j.routes.length){ data = j; break; }
+        lastErr = (j && (j.code||j.message)) || ("HTTP "+res.status);
+      }catch(e){ lastErr = e && e.name==="AbortError" ? "timeout" : (e && e.message) || "network"; }
+    }
+    if(!data) throw new Error(lastErr);
     const r = data.routes[0];
     await htgEnsureMap();
     if(HTG.layer) HTG.map.removeLayer(HTG.layer);
@@ -29397,7 +29406,7 @@ async function htgRoute(){
       <p class="muted" style="font-size:11.5px">⚠️ الخطوات تقريبية من خرائط OpenStreetMap، ولو الطريق مهم اتأكد منه بخرائط جوجل.</p>${gbtn}`;
   }catch(err){
     console.error(err);
-    box.innerHTML = `<p>❌ معرفتش أحسب الطريق جوه التطبيق (السيرفر مشغول أو مفيش طريق). تقدر تفتحه مباشرة في خرائط جوجل:</p>${gbtn}`;
+    box.innerHTML = `<p>❌ معرفتش أحسب الطريق جوه التطبيق (${htgEsc(err&&err.message||"")}). ممكن السيرفر مشغول أو مفيش طريق بين النقطتين. تقدر تفتحه مباشرة في خرائط جوجل:</p>${gbtn}`;
   }
 }
 async function openHowToGo(){
@@ -29415,7 +29424,7 @@ async function openHowToGo(){
   $("htgGo").addEventListener("click", htgRoute);
 })();
 
-const APP_VERSION = "319"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "320"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
