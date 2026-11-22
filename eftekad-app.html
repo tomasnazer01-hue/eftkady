@@ -1204,7 +1204,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <div class="row" style="gap:6px"><input type="text" id="htgFrom" class="grow" placeholder="أو اكتب اسم شارع / مكان البداية" /><button type="button" class="btn btn-sm" id="htgFromSearch">بحث</button></div>
         <div id="htgFromInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
         <label style="font-weight:700;font-size:13px;margin-top:8px;display:block">🎯 رايح فين؟</label>
-        <div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان (في حدود ٢ كم منك)" /><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
+        <div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع (بيدوّر جوه مناطقك)" /><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
         <div id="htgToInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
         <div class="row" style="gap:6px;margin-top:6px">
           <select id="htgMode" class="grow"><option value="driving">🚗 بالعربية / المواصلات</option><option value="foot">🚶 مشي</option></select>
@@ -1219,12 +1219,13 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <h2 style="margin:0 0 4px;font-size:17px">🏘️ مناطقي (بالشوارع)</h2>
         <p class="muted" style="margin:0 0 6px;font-size:12px">حدد منطقتك زي وزنتي: دوس نقطة نقطة على حدود المنطقة (تمشي مع شكل الشوارع). علامة صغيرة بيضا في نص كل ضلع: دوس عليها أو اسحبها تزود نقطة بين نقطتين. اسحب أي نقطة بإيدك تحركها، ودوس على نقطة تمسحها.</p>
         <button type="button" class="btn btn-gold btn-block btn-sm" id="areaGps" style="margin-bottom:6px">📡 روح لموقعي الحالي</button>
-        <div class="row" style="gap:6px;margin-bottom:6px"><input type="search" id="areaQ" class="grow" placeholder="🔍 ابحث باسم الشارع أو المنطقة"><button type="button" class="btn btn-gold btn-sm" id="areaQBtn">بحث</button></div>
+        <div class="row" style="gap:6px;margin-bottom:6px"><input type="search" id="areaQ" class="grow" placeholder="🔍 ابحث عن شارع جوه مناطقك"><button type="button" class="btn btn-gold btn-sm" id="areaQBtn">بحث</button></div>
         <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
           <button type="button" class="btn btn-gold btn-sm" id="areaDraw">✏️ ابدأ رسم منطقة</button>
           <button type="button" class="btn btn-sm" id="areaUndo">↩️ تراجع عن آخر نقطة</button>
           <button type="button" class="btn btn-sm" id="areaClear">🧹 مسح الرسم</button>
           <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة</button></div>
+        <div id="areaQRes"></div>
         <div id="areaHint" class="muted" style="font-size:12px;margin:6px 0"></div>
         <div class="row" id="areaSaveRow" style="gap:6px;display:none"><input type="text" id="areaName" class="grow" placeholder="اسم المربع (مثلاً: حينا)"><button type="button" class="btn btn-gold btn-sm" id="areaSave">💾 حفظ</button></div>
         <div id="areaList" style="margin-top:8px"></div>
@@ -2896,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v325</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v326</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3182,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v325</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v326</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29379,11 +29380,12 @@ async function htgSearch(which){
   const local = which==="to";
   try{
     await htgEnsureMap();
-    if(local && !HTG.from){ if(!areaHits.length){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — البحث عن الوجهة بيبقى في حدود ٢ كم منك"; return; } }
+    if(areaHasStreets()){ /* عندك مناطق: البحث جواها بس */ }
+    else if(local && !HTG.from){ info.textContent = "📍 حدد مكانك الأول (موقعي / الخريطة) — أو ارسم منطقتك وابحث جواها"; return; }
     else geo = await htgGeocode(q, local) || [];
   }catch(err){ console.error(err); geoErr = err; }
   if(!areaHits.length && !geo.length){
-    info.textContent = geoErr ? "❌ البحث مش شغال دلوقتي (النت أو السيرفر) — جرب تاني" : (local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة");
+    info.textContent = geoErr ? "❌ البحث مش شغال دلوقتي (النت أو السيرفر) — جرب تاني" : (areaHasStreets() ? "❌ ملقيتش الشارع ده جوه مناطقك" : local ? "❌ ملقيتش المكان ده في حدود ٢ كم من مكانك" : "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة");
     return;
   }
   const items = [
@@ -29391,7 +29393,7 @@ async function htgSearch(which){
     ...geo.map(x=>({lat:+x.lat, lng:+x.lon, label:x.display_name, btn:"📍 "+x.display_name}))
   ];
   if(items.length===1){ htgSetPoint(which, items[0]); return; }
-  info.innerHTML = "اختار المكان الصح (شوارع مناطقك الأول):" + items.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal;${x.pri?"border-color:var(--gold);background:#FBF3D9;color:#1b1b1b;font-weight:700":""}" data-htg-pick="${which}:${i}">${htgEsc(x.btn)}</button></div>`).join("");
+  info.innerHTML = "اختار المكان الصح:" + items.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal;${x.pri?"border-color:var(--gold);background:#FBF3D9;color:#1b1b1b;font-weight:700":""}" data-htg-pick="${which}:${i}">${htgEsc(x.btn)}</button></div>`).join("");
   info._res = items;
   info.querySelectorAll("[data-htg-pick]").forEach(b=>b.addEventListener("click", ()=>{
     const x = info._res[+b.dataset.htgPick.split(":")[1]];
@@ -29574,8 +29576,8 @@ function htgNz(t){ return String(t||"").replace(/[أإآ]/g,"ا").replace(/ى/g,
 function areaSearchStreets(q){
   const nq = htgNz(q); if(!nq) return [];
   const sources = [];
-  if(typeof AREA!=="undefined" && AREA.ways && AREA.poly.length>=3) sources.push({label:(AREA.cur&&AREA.cur.name)||"المنطقة الحالية", ways:areaClipWays(AREA.ways, AREA.poly)});
-  try{ areaLoad().forEach(a=>{ if(a.ways && a.poly && !(AREA.cur && AREA.cur.id===a.id && AREA.ways)) sources.push({label:a.name, ways:areaClipWays(a.ways, a.poly)}); }); }catch(_){}
+  if(typeof AREA!=="undefined" && AREA.ways && AREA.poly.length>=3) sources.push({label:(AREA.cur&&AREA.cur.name)||"المنطقة الحالية", id:(AREA.cur&&AREA.cur.id)||null, ways:areaClipWays(AREA.ways, AREA.poly)});
+  try{ areaLoad().forEach(a=>{ if(a.ways && a.poly && !(AREA.cur && AREA.cur.id===a.id && AREA.ways)) sources.push({label:a.name, id:a.id, ways:areaClipWays(a.ways, a.poly)}); }); }catch(_){}
   const hits = [], seen = new Set();
   sources.forEach(src=>{
     const by = {};
@@ -29583,11 +29585,12 @@ function areaSearchStreets(q){
     Object.keys(by).forEach(name=>{
       const key = src.label+"|"+name; if(seen.has(key)) return; seen.add(key);
       const g = by[name][0].g, mid = g[Math.floor(g.length/2)];
-      hits.push({name, area:src.label, lat:mid[0], lng:mid[1], exact:htgNz(name)===nq});
+      hits.push({name, area:src.label, areaId:src.id, lat:mid[0], lng:mid[1], exact:htgNz(name)===nq});
     });
   });
-  return hits.sort((a,b)=>(b.exact-a.exact));
+  hits.sort((a,b)=>(b.exact-a.exact)); hits._sources = sources.length; return hits;
 }
+function areaHasStreets(){ return (AREA.ways && AREA.poly.length>=3) || areaLoad().some(a=>a.ways&&a.poly); }
 function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; const b=document.getElementById("areaStreets"); if(b) b.innerHTML=""; }
 async function areaLoadStreets(){
   const box = document.getElementById("areaStreets");
@@ -29630,10 +29633,11 @@ async function areaLoadStreets(){
   box.innerHTML = `<b style="font-size:13px">🛣️ الشوارع (${names.length}) — دوس على شارع عشان تروحله</b>` + names.map(n=>`<button type="button" class="btn btn-sm" style="margin:3px;white-space:normal" data-area-st="${htgEsc(n)}">${htgEsc(n)}</button>`).join("");
   box.querySelectorAll("[data-area-st]").forEach(b=>b.addEventListener("click", ()=>areaPickStreet(b.dataset.areaSt)));
 }
-function areaPickStreet(name){
+function areaPickStreet(name, noDest){
   const item = AREA.lines.find(x=>x.n===name); if(!item) return;
   AREA.lines.forEach(x=>x.lines.forEach(l=>l.setStyle({color:x.n===name?"#E53935":"#1E88E5", weight:x.n===name?7:4})));
   const pts = item.lines[0].getLatLngs(), mid = pts[Math.floor(pts.length/2)];
+  if(noDest){ try{ HTG.map.fitBounds(L.featureGroup(item.lines).getBounds(), {padding:[30,30]}); }catch(_){} return; }
   htgSetPoint("to", {lat:mid.lat, lng:mid.lng, label:name+" (من مناطقي)"});
   document.getElementById("htgTo").value = name;
   toast("🎯 "+name+" اتحدد كوجهة — اختار مكانك وادوس وريني الطريق");
@@ -29681,15 +29685,31 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
       ()=>{ $("areaHint").textContent = "❌ مقدرتش أحدد موقعك — اسمح للمتصفح بالوصول للموقع (وافتح الرابط من كروم/سفاري)"; }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
   });
   const doSearch = async ()=>{
-    const q = $("areaQ").value.trim(); if(!q){ toast("اكتب اسم الشارع أو المنطقة"); return; }
-    $("areaHint").textContent = "⏳ بدوّر...";
-    try{
+    const q = $("areaQ").value.trim(); if(!q){ toast("اكتب اسم الشارع"); return; }
+    const res = $("areaQRes");
+    if(!areaHasStreets()){
+      // مفيش مناطق لسه: بحث عادي عشان توصل للمكان وترسم
+      $("areaHint").textContent = "⏳ بدوّر...";
+      try{ if(!await startPick()) return; const r = await htgGeocode(q, false);
+        if(!r || !r.length){ $("areaHint").textContent = "❌ ملقيتش المكان ده — جرب تكتب الاسم مع المدينة"; return; }
+        HTG.map.setView([+r[0].lat, +r[0].lon], 16); $("areaHint").textContent = "📍 "+r[0].display_name+" — دوس «ابدأ رسم منطقة»";
+      }catch(_){ $("areaHint").textContent = "❌ البحث مش شغال دلوقتي — جرب تاني"; }
+      return;
+    }
+    const hits = areaSearchStreets(q);
+    if(!hits.length){ res.innerHTML = '<p class="muted" style="font-size:12.5px">❌ ملقيتش الشارع ده جوه مناطقك (البحث جوه المناطق المحفوظة بس)</p>'; return; }
+    res.innerHTML = '<div class="muted" style="font-size:12px">النتايج من مناطقك:</div>' + hits.map((h,i)=>`<button type="button" class="btn btn-sm" style="margin:3px;white-space:normal;border-color:var(--gold);background:#FBF3D9;color:#1b1b1b" data-area-hit="${i}">🏘️ ${htgEsc(h.name)} · ${htgEsc(h.area)}</button>`).join("");
+    res._hits = hits;
+    res.querySelectorAll("[data-area-hit]").forEach(b=>b.addEventListener("click", async ()=>{
+      const h = res._hits[+b.dataset.areaHit];
       if(!await startPick()) return;
-      const r = await htgGeocode(q, false);
-      if(!r || !r.length){ $("areaHint").textContent = "❌ ملقيتش المكان ده — جرب تكتب الاسم مع المدينة"; return; }
-      HTG.map.setView([+r[0].lat, +r[0].lon], 16);
-      $("areaHint").textContent = "📍 "+r[0].display_name+" — دوس «ابدأ رسم منطقة»";
-    }catch(_){ $("areaHint").textContent = "❌ البحث مش شغال دلوقتي — جرب تاني"; }
+      const curId = AREA.cur && AREA.cur.id;
+      if(h.areaId && h.areaId!==curId){ const ob = document.querySelector(`[data-area-open="${h.areaId}"]`); if(ob) ob.click(); }
+      for(let k=0;k<30;k++){ if(AREA.lines.some(x=>x.n===h.name)) break; await new Promise(r=>setTimeout(r,200)); }
+      areaPickStreet(h.name, true);
+      $("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
+    }));
+    if(hits.length===1) res.querySelector("[data-area-hit]").click();
   };
   $("areaQBtn").addEventListener("click", doSearch);
   $("areaQ").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); doSearch(); } });
@@ -29716,7 +29736,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "325"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "326"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
