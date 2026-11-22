@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1B2A4A"><title>أوصل ازاي</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--ink:#1B2A4A;--gold:#C9A24B;--bg:#f4f5f8;--card:#fff;--tx:#1b2030;--mut:#6b7280}
+@media(prefers-color-scheme:dark){:root{--bg:#10131c;--card:#1a1f2c;--tx:#eef0f6;--mut:#9aa1b3}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--tx);padding:12px 12px 40px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:0 auto 12px;max-width:640px;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+h1,h2{margin:0}h1{font-size:20px;color:var(--ink)}@media(prefers-color-scheme:dark){h1{color:var(--gold)}}
+.muted{color:var(--mut)}.row{display:flex;align-items:center}.grow{flex:1;min-width:0}
+input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc;background:var(--card);color:var(--tx);font:inherit}
+.btn{border:1px solid #cfd3dc;background:var(--card);color:var(--tx);border-radius:10px;padding:10px 12px;font:inherit;cursor:pointer}
+.btn-gold{background:var(--gold);color:#1b1b1b;border:none;font-weight:700}.btn-sm{padding:8px 10px;font-size:13px}.btn-block{display:block;width:100%}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B2A4A;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:9999}
+</style></head><body>
+<div class="card"><h1>🧭 أوصل ازاي</h1>
+<label style="font-weight:700;font-size:13px;margin-top:10px;display:block">📍 أنا فين؟ (نقطة البداية)</label>
+<div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0">
+<button type="button" class="btn btn-gold btn-sm" id="htgGps">📡 موقعي الحالي</button>
+<button type="button" class="btn btn-sm" id="htgPick">🗺️ حدد على الخريطة</button></div>
+<div class="row" style="gap:6px"><input type="text" id="htgFrom" class="grow" placeholder="أو اكتب اسم شارع / مكان البداية"><button type="button" class="btn btn-sm" id="htgFromSearch">بحث</button></div>
+<div id="htgFromInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
+<label style="font-weight:700;font-size:13px;margin-top:8px;display:block">🎯 رايح فين؟</label>
+<div class="row" style="gap:6px"><input type="text" id="htgTo" class="grow" placeholder="اكتب اسم الشارع أو المكان"><button type="button" class="btn btn-sm" id="htgToSearch">بحث</button></div>
+<div id="htgToInfo" class="muted" style="font-size:12px;margin:4px 0"></div>
+<div class="row" style="gap:6px;margin-top:6px"><select id="htgMode" class="grow"><option value="driving">🚗 بالعربية / المواصلات</option><option value="foot">🚶 مشي</option></select>
+<button type="button" class="btn btn-gold" id="htgGo">🧭 وريني الطريق</button></div></div>
+<div class="card"><div id="htgMapHint" class="muted" style="font-size:12px;margin-bottom:4px"></div><div id="htgMap" style="height:300px;border-radius:12px;overflow:hidden"></div></div>
+<div class="card" id="htgResult" style="display:none"></div>
+<div id="toast"></div>
+<script>
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.style.display="block";clearTimeout(toast._t);toast._t=setTimeout(()=>e.style.display="none",2500);}
+const HTG = {from:null, to:null, map:null, layer:null, fromM:null, toM:null, picking:false};
+function htgEsc(t){ return String(t==null?"":t).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+async function htgEnsureMap(){
+  if(typeof L==="undefined"){ toast("تعذر تحميل الخريطة، جرب شبكة تانية"); return false; }
+  if(HTG.map){ setTimeout(()=>HTG.map.invalidateSize(), 80); return true; }
+  HTG.map = L.map("htgMap").setView([30.0444,31.2357], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap contributors', maxZoom:19}).addTo(HTG.map);
+  HTG.map.on("click", e=>{
+    if(!HTG.picking) return;
+    HTG.picking = false;
+    htgSetPoint("from", {lat:e.latlng.lat, lng:e.latlng.lng, label:"النقطة اللي حددتها على الخريطة"});
+    document.getElementById("htgMapHint").textContent = "";
+  });
+  setTimeout(()=>HTG.map.invalidateSize(), 120);
+  return true;
+}
+function htgSetPoint(which, pt){
+  HTG[which] = pt;
+  const infoId = which==="from" ? "htgFromInfo" : "htgToInfo";
+  document.getElementById(infoId).textContent = "✅ " + pt.label;
+  if(!HTG.map) return;
+  const key = which==="from" ? "fromM" : "toM";
+  if(HTG[key]) HTG.map.removeLayer(HTG[key]);
+  HTG[key] = L.marker([pt.lat, pt.lng]).addTo(HTG.map).bindPopup(which==="from" ? "من" : "إلى");
+  HTG.map.setView([pt.lat, pt.lng], 15);
+}
+async function htgGeocode(q){
+  const near = HTG.from;
+  let url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&accept-language=ar&q=${encodeURIComponent(q)}`;
+  if(near){ const d=0.5; url += `&viewbox=${near.lng-d},${near.lat+d},${near.lng+d},${near.lat-d}`; }
+  else url += "&countrycodes=eg";
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("geocode "+res.status);
+  return res.json();
+}
+async function htgSearch(which){
+  const inp = document.getElementById(which==="from" ? "htgFrom" : "htgTo");
+  const q = inp.value.trim();
+  if(!q){ toast("اكتب اسم الشارع الأول"); return; }
+  const info = document.getElementById(which==="from" ? "htgFromInfo" : "htgToInfo");
+  info.textContent = "⏳ بدوّر...";
+  try{
+    await htgEnsureMap();
+    const r = await htgGeocode(q);
+    if(!r || !r.length){ info.textContent = "❌ ملقيتش المكان ده — جرب تكتب اسم الشارع واسم المنطقة/المدينة"; return; }
+    if(r.length===1){ htgSetPoint(which, {lat:+r[0].lat, lng:+r[0].lon, label:r[0].display_name}); return; }
+    info.innerHTML = "اختار المكان الصح:" + r.map((x,i)=>`<div><button type="button" class="btn btn-sm" style="margin:3px 0;text-align:right;white-space:normal" data-htg-pick="${which}:${i}">📍 ${htgEsc(x.display_name)}</button></div>`).join("");
+    info._res = r;
+    info.querySelectorAll("[data-htg-pick]").forEach(b=>b.addEventListener("click", ()=>{
+      const i = +b.dataset.htgPick.split(":")[1], x = info._res[i];
+      htgSetPoint(which, {lat:+x.lat, lng:+x.lon, label:x.display_name});
+    }));
+  }catch(err){ console.error(err); info.textContent = "❌ البحث مش شغال دلوقتي (النت أو السيرفر) — جرب تاني"; }
+}
+function htgGps(){
+  const info = document.getElementById("htgFromInfo");
+  if(!navigator.geolocation){ info.textContent = "❌ الجهاز مش بيدعم تحديد الموقع"; return; }
+  info.textContent = "⏳ بحدد موقعك...";
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    await htgEnsureMap();
+    htgSetPoint("from", {lat:pos.coords.latitude, lng:pos.coords.longitude, label:"موقعي الحالي"});
+  }, err=>{
+    info.textContent = "❌ مقدرتش أحدد موقعك — اسمح للمتصفح بالوصول للموقع، أو حدد على الخريطة";
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
+}
+function htgStepText(st){
+  const m = st.maneuver||{}, t = m.type, mod = m.modifier, name = st.name ? ` في ${st.name}` : "";
+  const dirs = {"left":"شمال","right":"يمين","slight left":"شمال شوية","slight right":"يمين شوية","sharp left":"شمال بحدة","sharp right":"يمين بحدة","straight":"على طول","uturn":"لف للخلف"};
+  const d = dirs[mod] || "";
+  if(t==="depart") return `ابدأ${st.name?" من "+st.name:""}${d&&mod!=="straight"?" واتجه "+d:""}`;
+  if(t==="arrive") return "وصلت لوجهتك 🎯";
+  if(t==="roundabout"||t==="rotary"||t==="roundabout turn") return `ادخل الدوران وخد المخرج رقم ${m.exit||"؟"}${name}`;
+  if(t==="turn"||t==="end of road"||t==="fork"||t==="on ramp"||t==="off ramp"||t==="merge"||t==="new name"||t==="continue"){
+    if(mod==="straight"||!mod) return `كمّل على طول${name}`;
+    if(mod==="uturn") return `لف للخلف${name}`;
+    return `لف ${d}${name}`;
+  }
+  return `كمّل${name}`;
+}
+function htgFmtDist(m){ return m>=1000 ? (m/1000).toFixed(1)+" كم" : Math.round(m/10)*10+" م"; }
+function htgFmtTime(sec){ const mn = Math.round(sec/60); if(mn<60) return mn+" دقيقة"; const h=Math.floor(mn/60); return h+" س "+(mn%60)+" د"; }
+async function htgRoute(){
+  if(!HTG.from){ toast("حدد مكانك الأول (موقعي / الخريطة / اسم شارع)"); return; }
+  if(!HTG.to){ toast("حدد المكان اللي رايحله (اكتب الاسم واضغط بحث)"); return; }
+  const mode = document.getElementById("htgMode").value;
+  const box = document.getElementById("htgResult");
+  box.style.display = ""; box.innerHTML = '<p class="muted">⏳ بحسب الطريق...</p>';
+  const gm = `https://www.google.com/maps/dir/?api=1&origin=${HTG.from.lat},${HTG.from.lng}&destination=${HTG.to.lat},${HTG.to.lng}&travelmode=${mode==="foot"?"walking":"driving"}`;
+  const gbtn = `<a class="btn btn-gold btn-block" style="margin-top:8px;text-decoration:none;text-align:center" target="_blank" rel="noopener" href="${gm}">🗺️ افتح في خرائط جوجل (ملاحة صوتية)</a>`;
+  try{
+    const base = mode==="foot" ? "https://routing.openstreetmap.de/routed-foot/route/v1/foot" : "https://router.project-osrm.org/route/v1/driving";
+    const url = `${base}/${HTG.from.lng},${HTG.from.lat};${HTG.to.lng},${HTG.to.lat}?overview=full&geometries=geojson&steps=true&language=ar`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("route "+res.status);
+    const data = await res.json();
+    if(data.code!=="Ok" || !data.routes || !data.routes.length) throw new Error("no route");
+    const r = data.routes[0];
+    await htgEnsureMap();
+    if(HTG.layer) HTG.map.removeLayer(HTG.layer);
+    HTG.layer = L.geoJSON(r.geometry, {style:{color:"#1B2A4A", weight:5, opacity:.85}}).addTo(HTG.map);
+    try{ HTG.map.fitBounds(HTG.layer.getBounds(), {padding:[20,20]}); }catch(_){}
+    const steps = (r.legs||[]).flatMap(l=>l.steps||[]);
+    box.innerHTML = `<h2 style="margin:0 0 4px">📏 ${htgFmtDist(r.distance)} · ⏱️ ${htgFmtTime(r.duration)}</h2>
+      <p class="muted" style="margin:0 0 6px;font-size:12px">من: ${htgEsc(HTG.from.label)}<br>إلى: ${htgEsc(HTG.to.label)}</p>
+      <ol style="padding-inline-start:22px;margin:6px 0;line-height:1.9;font-size:14px">${steps.map(st=>`<li>${htgEsc(htgStepText(st))}${st.distance>0&&st.maneuver?.type!=="arrive"?` <span class="muted" style="font-size:12px">(${htgFmtDist(st.distance)})</span>`:""}</li>`).join("")}</ol>
+      <p class="muted" style="font-size:11.5px">⚠️ الخطوات تقريبية من خرائط OpenStreetMap، ولو الطريق مهم اتأكد منه بخرائط جوجل.</p>${gbtn}`;
+  }catch(err){
+    console.error(err);
+    box.innerHTML = `<p>❌ معرفتش أحسب الطريق جوه التطبيق (السيرفر مشغول أو مفيش طريق). تقدر تفتحه مباشرة في خرائط جوجل:</p>${gbtn}`;
+  }
+}
+
+(function(){const $=id=>document.getElementById(id);
+$("htgGps").addEventListener("click",htgGps);
+$("htgPick").addEventListener("click",async()=>{if(await htgEnsureMap()){HTG.picking=true;$("htgMapHint").textContent="👆 دوس على الخريطة في مكانك";$("htgMap").scrollIntoView({block:"center",behavior:"smooth"});}});
+$("htgFromSearch").addEventListener("click",()=>htgSearch("from"));
+$("htgToSearch").addEventListener("click",()=>htgSearch("to"));
+$("htgFrom").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();htgSearch("from");}});
+$("htgTo").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();htgSearch("to");}});
+$("htgGo").addEventListener("click",htgRoute);
+window.addEventListener("load",()=>htgEnsureMap());})();
+</script></body></html>
