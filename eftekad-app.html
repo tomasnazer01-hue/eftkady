@@ -2897,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v326</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v327</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3183,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v326</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v327</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -29534,6 +29534,8 @@ function areaClick(e){
   areaChanged();
 }
 
+function htgSortKey(n){ return htgNz(n).replace(/^(شارع|حاره|طريق|ممر|كوبري|ش|حارة|زقاق|عطفه|عطفة)\s+/,"").replace(/^ال(?=\S)/,"").replace(/\s+ال(?=\S)/g," "); }
+function htgAlphaSort(a,b){ const ka=htgSortKey(a), kb=htgSortKey(b); return ka.localeCompare(kb,"ar") || String(a).localeCompare(String(b),"ar"); }
 function areaInPoly(pt, poly){
   let ins=false;
   for(let i=0,j=poly.length-1;i<poly.length;j=i++){
@@ -29588,7 +29590,7 @@ function areaSearchStreets(q){
       hits.push({name, area:src.label, areaId:src.id, lat:mid[0], lng:mid[1], exact:htgNz(name)===nq});
     });
   });
-  hits.sort((a,b)=>(b.exact-a.exact)); hits._sources = sources.length; return hits;
+  hits.sort((a,b)=>(b.exact-a.exact) || htgAlphaSort(a.name,b.name)); hits._sources = sources.length; return hits;
 }
 function areaHasStreets(){ return (AREA.ways && AREA.poly.length>=3) || areaLoad().some(a=>a.ways&&a.poly); }
 function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; const b=document.getElementById("areaStreets"); if(b) b.innerHTML=""; }
@@ -29624,7 +29626,7 @@ async function areaLoadStreets(){
   AREA.streetLayer = L.layerGroup().addTo(HTG.map);
   const byName = {};
   ways.forEach(w=>{ (byName[w.name] = byName[w.name]||[]).push(w); });
-  const names = Object.keys(byName).sort((x,y)=>x.localeCompare(y,"ar"));
+  const names = Object.keys(byName).sort(htgAlphaSort);
   names.forEach(n=>{
     const lines = byName[n].map(w=>L.polyline(w.g, {color:"#1E88E5", weight:4, opacity:.9}).bindTooltip(n, {sticky:true}).addTo(AREA.streetLayer));
     lines.forEach(l=>l.on("click", ()=>areaPickStreet(n)));
@@ -29736,7 +29738,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "326"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "327"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
