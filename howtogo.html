@@ -22,7 +22,7 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc
 .btn-gold{background:var(--gold);color:#1b1b1b;border:none;font-weight:700}.btn-sm{padding:8px 10px;font-size:13px}.btn-block{display:block;width:100%}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B2A4A;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:9999}
 </style></head><body>
-<div class="card"><h1>🧭 أوصل ازاي <span class="muted" style="font-size:10px;font-weight:400">v328</span></h1>
+<div class="card"><h1>🧭 أوصل ازاي <span class="muted" style="font-size:10px;font-weight:400">v329</span></h1>
 <label style="font-weight:700;font-size:13px;margin-top:10px;display:block">📍 أنا فين؟ (نقطة البداية)</label>
 <div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0">
 <button type="button" class="btn btn-gold btn-sm" id="htgGps">📡 موقعي الحالي</button>
@@ -45,6 +45,10 @@ input,select{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd3dc
           <button type="button" class="btn btn-sm" id="areaUndo">↩️ تراجع عن آخر نقطة</button>
           <button type="button" class="btn btn-sm" id="areaClear">🧹 مسح الرسم</button>
           <button type="button" class="btn btn-sm" id="areaLock" style="display:none">🔓 ثبّت الخريطة</button></div>
+        <div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px">
+          <select id="areaPaper"><option value="A4">ورق A4</option><option value="A3">ورق A3</option></select>
+          <button type="button" class="btn btn-gold btn-sm" id="areaPrint">🖨️ طباعة / PDF</button>
+          <button type="button" class="btn btn-sm" id="areaPng">🖼️ صورة PNG عالية</button></div>
         <div id="areaQRes"></div>
         <div id="areaHint" class="muted" style="font-size:12px;margin:6px 0"></div>
         <div class="row" id="areaSaveRow" style="gap:6px;display:none"><input type="text" id="areaName" class="grow" placeholder="اسم المربع (مثلاً: حينا)"><button type="button" class="btn btn-gold btn-sm" id="areaSave">💾 حفظ</button></div>
@@ -283,7 +287,7 @@ function areaClipWays(ways, poly){
         if(cur && near(cur[cur.length-1],p0)) cur.push(p1); else { cur=[p0,p1]; runs.push(cur); }
       }
     }
-    runs.forEach(g=>out.push({name:w.name, g:g.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)])}));
+    runs.forEach(g=>out.push({name:w.name, h:w.h||"", g:g.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)])}));
   });
   return out;
 }
@@ -307,6 +311,150 @@ function areaSearchStreets(q){
   hits.sort((a,b)=>(b.exact-a.exact) || htgAlphaSort(a.name,b.name)); hits._sources = sources.length; return hits;
 }
 function areaHasStreets(){ return (AREA.ways && AREA.poly.length>=3) || areaLoad().some(a=>a.ways&&a.poly); }
+// ==================== 🖨️ طباعة خريطة المنطقة (SVG فيكتور — جودة عالية) ====================
+function areaTextW(txt, sizeMm){
+  const c = areaTextW._c || (areaTextW._c = document.createElement("canvas").getContext("2d"));
+  c.font = "700 100px Tahoma, Arial, sans-serif";
+  return c.measureText(txt).width/100*sizeMm;
+}
+function areaHwClass(h){
+  if(/^(motorway|trunk|primary)/.test(h||"")) return {rank:0, w:1.5, fs:4.2};
+  if(/^secondary/.test(h||"")) return {rank:1, w:1.2, fs:3.6};
+  if(/^tertiary/.test(h||"")) return {rank:2, w:1.0, fs:3.2};
+  if(/^(service|footway|path|pedestrian|steps|track|cycleway|corridor)/.test(h||"")) return {rank:4, w:0.4, fs:2.0};
+  return {rank:3, w:0.8, fs:2.8};
+}
+function areaBuildPrint(paper){
+  if(!AREA.ways || AREA.poly.length<3) return null;
+  const poly = AREA.poly, ways = areaClipWays(AREA.ways, poly);
+  const name = (AREA.cur && AREA.cur.name) || (document.getElementById("areaName")||{}).value || "منطقتي";
+  const lat0 = poly.reduce((s,p)=>s+p[0],0)/poly.length, lng0 = poly.reduce((s,p)=>s+p[1],0)/poly.length;
+  const kx = 111320*Math.cos(lat0*Math.PI/180), ky = 110574;
+  const toM = p=>[(p[1]-lng0)*kx, -(p[0]-lat0)*ky]; // y لتحت
+  const pm = poly.map(toM);
+  const xs = pm.map(p=>p[0]), ys = pm.map(p=>p[1]);
+  const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  const bw = Math.max(x1-x0,1), bh = Math.max(y1-y0,1);
+  const land = bw >= bh;
+  const dims = paper==="A3" ? [420,297] : [297,210];
+  const PW = land ? dims[0] : dims[1], PH = land ? dims[1] : dims[0];
+  const M = 8, HEAD = 18, FOOT = 14;
+  const fx = M, fy = M+HEAD, fw = PW-2*M, fh = PH-2*M-HEAD-FOOT;
+  const sc = Math.min(fw/bw, fh/bh)*0.97; // mm لكل متر
+  const ox = fx + (fw - bw*sc)/2 - x0*sc, oy = fy + (fh - bh*sc)/2 - y0*sc;
+  const P = pm => [pm[0]*sc+ox, pm[1]*sc+oy];
+  const polyPts = pm.map(P);
+  // مسارات الشوارع بالملّي
+  const items = ways.filter(w=>w.g.length>=2).map(w=>{
+    const pts = w.g.map(g=>P(toM(g))); let L=0; const cum=[0];
+    for(let i=1;i<pts.length;i++){ L += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); cum.push(L); }
+    return {name:w.name, pts, cum, L, cls:areaHwClass(w.h)};
+  }).filter(it=>it.L>0.2);
+  const at = (it,s)=>{ s=Math.max(0,Math.min(it.L,s)); let i=1; while(i<it.cum.length-1 && it.cum[i]<s) i++; const a=it.pts[i-1], b=it.pts[i], seg=(it.cum[i]-it.cum[i-1])||1, t=(s-it.cum[i-1])/seg; return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]; };
+  const placed = [], labels = [], tags = [];
+  const rectFor=(cx,cy,w,h,ang)=>{ const c=Math.abs(Math.cos(ang)), s=Math.abs(Math.sin(ang)); const hw=(w*c+h*s)/2, hh=(w*s+h*c)/2; return {x1:cx-hw,y1:cy-hh,x2:cx+hw,y2:cy+hh}; };
+  const hit = r=>placed.some(p=>!(r.x2<p.x1||r.x1>p.x2||r.y2<p.y1||r.y1>p.y2));
+  const MINFS = 1.7;
+  const tryPlace = (it, text, fs0)=>{
+    for(const k of [1,.85,.72,MINFS/fs0]){
+      const fs = Math.max(MINFS, fs0*k), tw = areaTextW(text, fs), th = fs*1.15;
+      for(const f of [.5,.4,.6,.3,.7,.2,.8]){
+        if(tw>it.L*1.02 && f!==.5) continue;
+        const s = it.L*f, a = at(it,s-tw/2), b = at(it,s+tw/2), c = at(it,s);
+        let ang = Math.atan2(b[1]-a[1], b[0]-a[0]); if(Math.abs(ang)>Math.PI/2) ang += (ang>0?-Math.PI:Math.PI);
+        const nx = -Math.sin(ang), ny = Math.cos(ang), off = it.cls.w/2 + fs*0.68;
+        for(const o of [0, off, -off]){
+          const cx=c[0]+nx*o, cy=c[1]+ny*o, r = rectFor(cx,cy,tw*1.04,th,ang);
+          if(!hit(r)){ placed.push(r); labels.push({x:cx,y:cy,ang:ang*180/Math.PI,fs,text,bold:it.cls.rank<=2}); return true; }
+        }
+      }
+    }
+    return false;
+  };
+  // الأهم أولاً ثم الأطول
+  const byName = {};
+  items.forEach(it=>{ (byName[it.name]=byName[it.name]||[]).push(it); });
+  const names = Object.keys(byName).sort((a,b)=>{
+    const ra=Math.min(...byName[a].map(i=>i.cls.rank)), rb=Math.min(...byName[b].map(i=>i.cls.rank));
+    const la=byName[a].reduce((s,i)=>s+i.L,0), lb=byName[b].reduce((s,i)=>s+i.L,0);
+    return ra-rb || lb-la;
+  });
+  names.forEach(n=>{
+    const group = byName[n].sort((a,b)=>b.L-a.L), best = group[0];
+    const ok = tryPlace(best, n, best.cls.fs);
+    // الشارع الطويل: تسمية تانية على أطول جزء تاني
+    group.slice(1,3).forEach(it=>{ if(it.L > areaTextW(n,it.cls.fs)*2.5) tryPlace(it, n, it.cls.fs); });
+    if(!ok){
+      const c = at(best, best.L/2), idx = tags.length+1;
+      tags.push({n:idx, name:n, x:c[0], y:c[1]});
+    }
+  });
+  // ترتيب الرقم يتبع الترتيب الأبجدي للأسماء في الجدول
+  const tagList = tags.slice().sort((a,b)=>htgAlphaSort(a.name,b.name));
+  const esc = htgEsc;
+  const line = (pts)=>"M"+pts.map(p=>p[0].toFixed(2)+" "+p[1].toFixed(2)).join("L");
+  const casing = items.map(it=>`<path d="${line(it.pts)}" stroke="#4a4a4a" stroke-width="${(it.cls.w+0.28).toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join("");
+  const fills = items.map(it=>`<path d="${line(it.pts)}" stroke="#ffffff" stroke-width="${it.cls.w.toFixed(2)}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`).join("");
+  const labelSvg = labels.map(l=>`<text transform="translate(${l.x.toFixed(2)} ${l.y.toFixed(2)}) rotate(${l.ang.toFixed(1)})" text-anchor="middle" dominant-baseline="central" font-size="${l.fs.toFixed(2)}" font-weight="${l.bold?700:600}" fill="#111" stroke="#fff" stroke-width="${(l.fs*0.3).toFixed(2)}" stroke-linejoin="round" paint-order="stroke" direction="rtl">${esc(l.text)}</text>`).join("");
+  const tagSvg = tags.map(t=>{
+    const num = tagList.findIndex(x=>x.name===t.name)+1;
+    return `<g><circle cx="${t.x.toFixed(2)}" cy="${t.y.toFixed(2)}" r="1.9" fill="#fff" stroke="#111" stroke-width="0.25"/><text x="${t.x.toFixed(2)}" y="${t.y.toFixed(2)}" text-anchor="middle" dominant-baseline="central" font-size="${num>99?1.6:2.1}" font-weight="700" fill="#111">${num}</text></g>`;
+  }).join("");
+  // مقياس رسم وسهم الشمال
+  const nice = [20,50,100,200,250,500,1000,2000].find(v=>v*sc >= 25) || 2000;
+  const sbx = fx, sby = PH-M-6, sbw = nice*sc;
+  const scaleDen = Math.round(1000/sc/100)*100;
+  const date = new Date().toLocaleDateString("ar-EG");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${PW}mm" height="${PH}mm" font-family="Tahoma, Arial, sans-serif">
+<rect width="${PW}" height="${PH}" fill="#fff"/>
+<text x="${PW-M}" y="${M+8}" text-anchor="start" font-size="8" font-weight="700" fill="#1B2A4A" direction="rtl">${esc(name)}</text>
+<text x="${PW-M}" y="${M+14.5}" text-anchor="start" font-size="3.2" fill="#555" direction="rtl">${names.length} شارع · مقياس رسم تقريبي 1:${scaleDen.toLocaleString("en")} · ${esc(date)}</text>
+<rect x="${fx}" y="${fy}" width="${fw}" height="${fh}" fill="none" stroke="#999" stroke-width="0.3"/>
+<path d="${line(polyPts)}Z" fill="#fbfaf4" stroke="#C9A24B" stroke-width="1.1" stroke-dasharray="4 2"/>
+${casing}${fills}${tagSvg}${labelSvg}
+<g transform="translate(${sbx} ${sby})"><rect x="0" y="0" width="${sbw.toFixed(2)}" height="1.4" fill="#111"/><rect x="${(sbw/2).toFixed(2)}" y="0" width="${(sbw/2).toFixed(2)}" height="1.4" fill="#fff" stroke="#111" stroke-width="0.2"/><text x="0" y="5" font-size="2.6" fill="#111">0</text><text x="${sbw.toFixed(2)}" y="5" text-anchor="end" font-size="2.6" fill="#111">${nice>=1000?(nice/1000)+" كم":nice+" م"}</text></g>
+<g transform="translate(${PW/2} ${PH-M-7})"><path d="M0 -1 L2 6 L0 4.6 L-2 6 Z" fill="#111"/><text x="0" y="-2" text-anchor="middle" font-size="3" font-weight="700" fill="#111">N</text></g>
+<text x="${PW-M}" y="${PH-M-1}" text-anchor="start" font-size="2.2" fill="#666" direction="rtl">© مساهمو OpenStreetMap · أوصل ازاي</text>
+</svg>`;
+  return {svg, PW, PH, land, paper:(paper==="A3"?"A3":"A4"), name, tagList, labelCount:labels.length, total:names.length};
+}
+function areaPrintHtml(r){
+  const legend = r.tagList.length ? `<div class="pg2"><h2>🗂️ دليل الشوارع المرقّمة (${r.tagList.length})</h2><div class="cols">${r.tagList.map((t,i)=>`<div><b>${i+1}</b> ${htgEsc(t.name)}</div>`).join("")}</div></div>` : "";
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>${htgEsc(r.name)}</title><style>
+@page{size:${r.paper} ${r.land?"landscape":"portrait"};margin:0}
+html,body{margin:0;background:#888}
+.pg{width:${r.PW}mm;height:${r.PH}mm;background:#fff;margin:0 auto 6mm;page-break-after:always;overflow:hidden}
+.pg svg{display:block;width:100%;height:100%}
+.pg2{width:${r.PW}mm;min-height:${r.PH}mm;background:#fff;margin:0 auto;padding:12mm;box-sizing:border-box;font-family:Tahoma,Arial,sans-serif}
+.pg2 h2{margin:0 0 6mm;font-size:16pt;color:#1B2A4A}.cols{columns:3;column-gap:8mm;font-size:11pt;line-height:1.9}.cols div{break-inside:avoid}.cols b{display:inline-block;min-width:8mm;color:#C9A24B}
+@media print{html,body{background:#fff}.pg{margin:0}.bar{display:none}}
+.bar{position:sticky;top:0;background:#1B2A4A;color:#fff;padding:8px;text-align:center;font-family:Tahoma,Arial}.bar button{font:inherit;padding:8px 16px;border-radius:8px;border:0;background:#C9A24B;color:#111;font-weight:700}
+</style></head><body><div class="bar"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div><div class="pg">${r.svg}</div>${legend}</body></html>`;
+}
+function areaDoPrint(){
+  const paper = (document.getElementById("areaPaper")||{}).value || "A4";
+  const r = areaBuildPrint(paper);
+  if(!r){ toast("ارسم منطقة واستنى الشوارع تتحمل الأول"); return; }
+  const html = areaPrintHtml(r);
+  const w = window.open("", "_blank");
+  if(w){ w.document.open(); w.document.write(html); w.document.close(); setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){} }, 900); }
+  else{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([html],{type:"text/html"})); a.download=(r.name||"map")+".html"; a.click(); toast("اتحفظ ملف — افتحه واطبع منه"); }
+}
+function areaDoPng(){
+  const paper = (document.getElementById("areaPaper")||{}).value || "A4";
+  const r = areaBuildPrint(paper);
+  if(!r){ toast("ارسم منطقة واستنى الشوارع تتحمل الأول"); return; }
+  const dpi = 300, W = Math.round(r.PW/25.4*dpi), H = Math.round(r.PH/25.4*dpi);
+  const img = new Image();
+  img.onload = ()=>{
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const c = cv.getContext("2d"); c.fillStyle="#fff"; c.fillRect(0,0,W,H); c.drawImage(img,0,0,W,H);
+    cv.toBlob(b=>{ if(!b){ toast("الصورة كبيرة على الجهاز — استخدم الطباعة / PDF"); return; } const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=(r.name||"map")+".png"; a.click(); }, "image/png");
+  };
+  img.onerror = ()=>toast("تعذر إنشاء الصورة — استخدم الطباعة / PDF");
+  img.src = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(r.svg);
+}
+
 function areaClearStreets(){ if(AREA.streetLayer){ HTG.map.removeLayer(AREA.streetLayer); AREA.streetLayer=null; } AREA.lines=[]; const b=document.getElementById("areaStreets"); if(b) b.innerHTML=""; }
 async function areaLoadStreets(){
   const box = document.getElementById("areaStreets");
@@ -324,7 +472,7 @@ async function areaLoadStreets(){
         const res = await fetch(srv+"?data="+encodeURIComponent(q));
         if(!res.ok) continue;
         const j = await res.json();
-        ways = (j.elements||[]).filter(x=>x.geometry&&x.tags&&x.tags.name).map(x=>({name:x.tags["name:ar"]||x.tags.name, g:x.geometry.map(p=>[+p.lat.toFixed(6),+p.lon.toFixed(6)])}));
+        ways = (j.elements||[]).filter(x=>x.geometry&&x.tags&&x.tags.name).map(x=>({name:x.tags["name:ar"]||x.tags.name, h:x.tags.highway||"", g:x.geometry.map(p=>[+p.lat.toFixed(6),+p.lon.toFixed(6)])}));
         break;
       }catch(_){}
     }
@@ -392,6 +540,8 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
     $("areaHint").textContent = "👆 دوس على الخريطة نقطة نقطة على حدود المنطقة";
     $("htgMap").scrollIntoView({block:"center", behavior:"smooth"});
   });
+  $("areaPrint").addEventListener("click", areaDoPrint);
+  $("areaPng").addEventListener("click", areaDoPng);
   $("areaUndo").addEventListener("click", ()=>{ if(!AREA.poly.length) return; AREA.poly.pop(); areaRedraw(); areaChanged(); });
   $("areaClear").addEventListener("click", ()=>{ if(!HTG.map) return; areaReset(); });
   $("areaGps").addEventListener("click", async ()=>{
