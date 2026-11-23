@@ -2897,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v329</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v330</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3183,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v329</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v330</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -7372,7 +7372,7 @@ function showEncouragementMessage(){
     const q = new URLSearchParams(location.search);
     const u = q.get("u"); const el = document.getElementById("loginEmail");
     if(u && el) el.value = u;
-    if(q.get("go")==="mydata") window.__goMyData = true;
+    // (اتشال) لينك الخادم مبقاش يفتح «بياناتي» تلقائي — حتى اللينكات القديمة اللي فيها go=mydata بتتجاهل
   }catch(_){}
 })();
 async function startAppListeners(churchCode){
@@ -16188,7 +16188,7 @@ async function adminChangeServantPassword(sv){
   }
 }
 function servantPersonalLink(email){
-  return `${location.origin}${location.pathname}?u=${encodeURIComponent(email||"")}&go=mydata`;
+  return `${location.origin}${location.pathname}?u=${encodeURIComponent(email||"")}`;
 }
 function servantLoginMessage(name, email, password){
   const siteLink = servantPersonalLink(email);
@@ -29789,7 +29789,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "329"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "330"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
