@@ -2897,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v328</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v329</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3183,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v328</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v329</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -16144,12 +16144,28 @@ async function adminChangeServantPassword(sv){
   if(!sv || !sv.email){ toast("مفيش إيميل للخادم ده"); return; }
   if(myRole!=="admin"){ toast("تغيير الباسورد للأمين بس"); return; }
   const isDefaultKnown = sv.pwSetByAdmin===true && /^[^@]+@gmail\.com$/.test(sv.email);
-  const cur = prompt(`الباسورد الحالي لـ ${sv.name||sv.email}:\n(لازم تعرفه عشان تغيّره. لو مش عارفه سيبه فاضي وهنعرض عليك إرسال رابط إعادة تعيين على إيميله)`, isDefaultKnown ? sv.email.split("@")[0] : "");
+  const cur = prompt(`الباسورد الحالي لـ ${sv.name||sv.email}:\n(لو الخادم نسيه سيب الخانة فاضية وهتحدد له باسورد جديد مباشرة)`, isDefaultKnown ? sv.email.split("@")[0] : "");
   if(cur===null) return;
   if(!cur.trim()){
-    if(!confirm(`نبعت رابط إعادة تعيين الباسورد على ${sv.email}؟\n(بيوصل بس لو الإيميل ده حقيقي ويقدر يفتحه)`)) return;
-    try{ await sendPasswordResetEmail(auth, sv.email); logActivity("إرسال رابط إعادة تعيين باسورد", sv.name||sv.email); toast("📧 اتبعت رابط إعادة التعيين على الإيميل"); }
-    catch(err){ console.error(err); toast("تعذر إرسال الرابط — تأكد إن الإيميل صحيح"); }
+    const nw2 = prompt(`الباسورد الجديد لـ ${sv.name||sv.email} (٦ حروف/أرقام على الأقل):`);
+    if(nw2===null) return;
+    if(nw2.length<6){ toast("الباسورد لازم ٦ حروف/أرقام على الأقل"); return; }
+    try{
+      const tok = await auth.currentUser.getIdToken(true);
+      const r = await fetch("/api/set-password", {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok}, body:JSON.stringify({uid:sv.id, newPassword:nw2})});
+      const j = await r.json().catch(()=>({}));
+      if(r.ok && j.ok){
+        try{ await updateDoc(doc(db,"users",sv.id), {pwSetByAdmin:false}); }catch(_){}
+        logActivity("تغيير باسورد خادم (مباشر)", sv.name||sv.email);
+        toast("✅ الباسورد اتغيّر");
+        if(sv.phone && confirm("تبعت له بيانات الدخول الجديدة على واتساب؟")) window.open(waLink(sv.phone, servantLoginMessage(sv.name||"", sv.email, nw2)), "_blank");
+      }else if(r.status===501 || r.status===404){
+        if(confirm("التغيير المباشر لسه مش متفعّل على السيرفر (محتاج إعداد مفتاح Firebase على Vercel مرة واحدة).\nتبعت رابط إعادة تعيين على الإيميل بدلاً منه؟ (بيوصل بس لو الإيميل حقيقي)")){
+          try{ await sendPasswordResetEmail(auth, sv.email); toast("📧 اتبعت رابط إعادة التعيين"); }catch(e){ toast("تعذر إرسال الرابط"); }
+        }
+      }else if(r.status===403){ toast("❌ مش مسموح — للأمين بس ولخدام نفس الكنيسة"); }
+      else toast("تعذر تغيير الباسورد — حاول تاني");
+    }catch(err){ console.error(err); toast("تعذر الاتصال بالسيرفر — تأكد من النت"); }
     return;
   }
   const nw = prompt("الباسورد الجديد (٦ حروف/أرقام على الأقل):");
@@ -29773,7 +29789,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "328"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "329"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
