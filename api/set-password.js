@@ -2,21 +2,29 @@
 // محتاج متغير بيئة FIREBASE_SERVICE_ACCOUNT (محتوى ملف مفتاح الخدمة JSON) على Vercel.
 const admin = require("firebase-admin");
 
+let initReason = "";
 function init() {
   if (admin.apps.length) return true;
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) return false;
-  let cred;
-  try { cred = JSON.parse(raw); } catch (_) { try { cred = JSON.parse(Buffer.from(raw, "base64").toString("utf8")); } catch (e) { return false; } }
-  if (cred.private_key) cred.private_key = cred.private_key.replace(/\\n/g, "\n");
-  admin.initializeApp({ credential: admin.credential.cert(cred) });
+  let raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw || !raw.trim()) { initReason = "env_missing"; return false; }
+  raw = raw.trim();
+  if ((raw[0] === '"' && raw[raw.length - 1] === '"') || (raw[0] === "'" && raw[raw.length - 1] === "'")) raw = raw.slice(1, -1);
+  let cred = null;
+  try { cred = JSON.parse(raw); } catch (_) {}
+  if (!cred) { try { cred = JSON.parse(Buffer.from(raw, "base64").toString("utf8")); } catch (_) {} }
+  if (!cred) { initReason = "env_not_json"; return false; }
+  if (typeof cred === "string") { try { cred = JSON.parse(cred); } catch (_) { initReason = "env_not_json"; return false; } }
+  if (!cred.private_key || !cred.client_email) { initReason = "env_missing_fields"; return false; }
+  cred.private_key = String(cred.private_key).replace(/\\n/g, "\n");
+  try { admin.initializeApp({ credential: admin.credential.cert(cred) }); }
+  catch (e) { initReason = "bad_key"; console.error("init failed", e && e.message); return false; }
   return true;
 }
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
-  if (!init()) return res.status(501).json({ error: "not_configured" });
+  if (!init()) return res.status(501).json({ error: "not_configured", reason: initReason });
   try {
     const m = /^Bearer (.+)$/.exec(req.headers.authorization || "");
     if (!m) return res.status(401).json({ error: "no_token" });

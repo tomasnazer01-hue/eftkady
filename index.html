@@ -2897,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v330</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v331</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3183,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v330</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v331</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -16160,7 +16160,8 @@ async function adminChangeServantPassword(sv){
         toast("✅ الباسورد اتغيّر");
         if(sv.phone && confirm("تبعت له بيانات الدخول الجديدة على واتساب؟")) window.open(waLink(sv.phone, servantLoginMessage(sv.name||"", sv.email, nw2)), "_blank");
       }else if(r.status===501 || r.status===404){
-        if(confirm("التغيير المباشر لسه مش متفعّل على السيرفر (محتاج إعداد مفتاح Firebase على Vercel مرة واحدة).\nتبعت رابط إعادة تعيين على الإيميل بدلاً منه؟ (بيوصل بس لو الإيميل حقيقي)")){
+        const why = ({env_missing:"المتغير FIREBASE_SERVICE_ACCOUNT مش موجود (أو الـRedeploy لسه ما خدوش)", env_not_json:"قيمة المتغير مش JSON صحيح (لازم تتلصق محتوى الملف كله من { لـ })", env_missing_fields:"القيمة ناقصة (مفيش private_key / client_email)", bad_key:"مفتاح الخدمة مرفوض (اتأكد إنه من مشروع eftkad-pro وجديد)"})[j.reason] || (r.status===404 ? "ملف السيرفر /api/set-password مش منشور" : "سبب غير معروف");
+        if(confirm("التغيير المباشر مش شغال: "+why+".\nتبعت رابط إعادة تعيين على الإيميل بدلاً منه؟ (بيوصل بس لو الإيميل حقيقي)")){
           try{ await sendPasswordResetEmail(auth, sv.email); toast("📧 اتبعت رابط إعادة التعيين"); }catch(e){ toast("تعذر إرسال الرابط"); }
         }
       }else if(r.status===403){ toast("❌ مش مسموح — للأمين بس ولخدام نفس الكنيسة"); }
@@ -29789,7 +29790,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "330"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "331"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
