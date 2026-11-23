@@ -2897,7 +2897,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v327</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v328</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3183,7 +3183,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v327</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v328</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -5376,7 +5376,7 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut,
   GoogleAuthProvider, signInWithPopup,
-  EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword
+  EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -16138,6 +16138,39 @@ async function createServantAccount({name, phoneRaw, grade, birthday, confessorN
   }
   throw lastErr || new Error("تعذر توليد إيميل غير مستخدم");
 }
+
+// 🔑 الأمين يغيّر باسورد خادم: لازم الباسورد الحالي (للحسابات اللي الأمين عملها بيكون الافتراضي)، أو يبعتله رابط إعادة تعيين على إيميله
+async function adminChangeServantPassword(sv){
+  if(!sv || !sv.email){ toast("مفيش إيميل للخادم ده"); return; }
+  if(myRole!=="admin"){ toast("تغيير الباسورد للأمين بس"); return; }
+  const isDefaultKnown = sv.pwSetByAdmin===true && /^[^@]+@gmail\.com$/.test(sv.email);
+  const cur = prompt(`الباسورد الحالي لـ ${sv.name||sv.email}:\n(لازم تعرفه عشان تغيّره. لو مش عارفه سيبه فاضي وهنعرض عليك إرسال رابط إعادة تعيين على إيميله)`, isDefaultKnown ? sv.email.split("@")[0] : "");
+  if(cur===null) return;
+  if(!cur.trim()){
+    if(!confirm(`نبعت رابط إعادة تعيين الباسورد على ${sv.email}؟\n(بيوصل بس لو الإيميل ده حقيقي ويقدر يفتحه)`)) return;
+    try{ await sendPasswordResetEmail(auth, sv.email); logActivity("إرسال رابط إعادة تعيين باسورد", sv.name||sv.email); toast("📧 اتبعت رابط إعادة التعيين على الإيميل"); }
+    catch(err){ console.error(err); toast("تعذر إرسال الرابط — تأكد إن الإيميل صحيح"); }
+    return;
+  }
+  const nw = prompt("الباسورد الجديد (٦ حروف/أرقام على الأقل):");
+  if(nw===null) return;
+  if(nw.length<6){ toast("الباسورد لازم ٦ حروف/أرقام على الأقل"); return; }
+  if(nw===cur){ toast("الباسورد الجديد زي القديم"); return; }
+  try{
+    const cred = await signInWithEmailAndPassword(authSecondary, sv.email, cur);
+    await updatePassword(cred.user, nw);
+    try{ await signOut(authSecondary); }catch(_){}
+    try{ await updateDoc(doc(db,"users",sv.id), {pwSetByAdmin:false}); }catch(_){}
+    logActivity("تغيير باسورد خادم", sv.name||sv.email);
+    toast("✅ الباسورد اتغيّر");
+    if(sv.phone && confirm("تبعت له بيانات الدخول الجديدة على واتساب؟")) window.open(waLink(sv.phone, servantLoginMessage(sv.name||"", sv.email, nw)), "_blank");
+  }catch(err){
+    console.error(err);
+    try{ await signOut(authSecondary); }catch(_){}
+    const c = err.code||"";
+    toast(c==="auth/invalid-credential"||c==="auth/wrong-password" ? "❌ الباسورد الحالي غلط" : c==="auth/too-many-requests" ? "محاولات كتير — استنى شوية وجرب تاني" : "تعذر تغيير الباسورد — تأكد من النت");
+  }
+}
 function servantPersonalLink(email){
   return `${location.origin}${location.pathname}?u=${encodeURIComponent(email||"")}&go=mydata`;
 }
@@ -16615,6 +16648,7 @@ function renderRolesList(){
       </select>` : ''}
       <button class="btn btn-sage btn-sm" data-save-role="${s.id}">حفظ بيانات ${isSelf?'حسابك':'الخادم'}</button>
       ${(!isSelf && s.pwSetByAdmin===true && s.phone && /^[^@]+@gmail\.com$/.test(s.email||"")) ? `<button class="btn btn-outline btn-sm" data-wa-login="${s.id}">📲 ابعت بياناته واتساب</button>` : ""}
+      ${(!isSelf && s.email && myRole==="admin") ? `<button class="btn btn-outline btn-sm" data-change-pw="${s.id}">🔑 تغيير الباسورد</button>` : ""}
       ${isSelf ? '' : `<button class="btn btn-ghost btn-sm" style="color:#B23B3B" data-delete-servant="${s.id}">🗑 حذف الخادم</button>`}
     </details>`;
   }).join("");
@@ -16675,6 +16709,7 @@ function renderRolesList(){
     window.open(waLink(sv.phone, servantLoginMessage(sv.name||"", sv.email, pw)), "_blank");
     logActivity("إرسال بيانات دخول خادم", sv.name||sv.email||"");
   }));
+  wrap.querySelectorAll("[data-change-pw]").forEach(b=>b.addEventListener("click", ()=>adminChangeServantPassword(churchServants.find(x=>x.id===b.dataset.changePw))));
   wrap.querySelectorAll("[data-delete-servant]").forEach(b=>b.addEventListener("click", async ()=>{
     const s = churchServants.find(x=>x.id===b.dataset.deleteServant);
     if(!confirm(`حذف الخادم "${s?.name||s?.email}"؟ هيفقد وصوله للتطبيق فورًا. لو عايز تضيفه تاني بنفس الرقم بعد كده، التطبيق هيعمله حساب جديد تلقائي (حسابه القديم مش بيتحذف فعليًا، بس مش هيقدر يستخدمه).`)) return;
@@ -29738,7 +29773,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "327"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "328"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
