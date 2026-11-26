@@ -769,6 +769,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <label class="field-label">👤 أب الاعتراف</label>
       <input type="text" id="memberConfessorName" placeholder="اسم أب الاعتراف" />
       <div style="height:10px"></div>
+      <div style="display:none">
       <label class="field-label">🕊️ آخر اعتراف</label>
       <div class="row">
         <input type="date" id="memberLastConfession" class="grow" />
@@ -779,6 +780,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <div class="row">
         <input type="date" id="memberLastCommunion" class="grow" />
         <button class="btn btn-outline btn-sm" id="btnMemberCommunionToday">اليوم</button>
+      </div>
       </div>
       <div id="memberFamilyBox" style="display:none">
         <div style="height:12px;border-top:1.5px dashed var(--line);margin-top:12px"></div>
@@ -982,7 +984,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
         <p class="muted" style="margin-top:0">صلاة، كتاب مقدس، قداس، اجتماع، واعتراف = نقط وثمار. بستان الثمار وبساتين الفصول وتهاني الثمار في مكان واحد.</p>
         <button class="btn btn-gold btn-block" id="btnOpenTree">فتح الشجرة</button>
       </div>
-      <div class="card" data-card-key="sacraments">
+      <div class="card" data-card-key="sacraments" style="display:none !important">
         <h2>🕊️ متابعة الأسرار</h2>
         <p class="muted" style="margin-top:0">كل اللي محتاجين اعتراف أو تناول في مكان لوحده.</p>
         <button class="btn btn-gold btn-block" id="btnOpenSacraments">فتح متابعة الأسرار</button>
@@ -2901,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v333</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v334</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3187,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v333</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v334</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3859,11 +3861,13 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <label class="field-label" style="margin-top:10px">👤 أب الاعتراف</label>
       <input type="text" id="addPersonConfessor" placeholder="اسم أب الاعتراف" />
       <div style="height:10px"></div>
+      <div style="display:none">
       <label class="field-label">🕊️ آخر اعتراف</label>
       <input type="date" id="addPersonLastConfession" />
       <div style="height:10px"></div>
       <label class="field-label">🕊️ آخر تناول</label>
       <input type="date" id="addPersonLastCommunion" />
+      </div>
       <div style="height:10px"></div>
       <label class="field-label">🌱 المرحلة الروحية</label>
       <select id="addPersonStage"><option value="">— بدون تحديد —</option></select>
@@ -4122,6 +4126,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <label class="field-label" style="margin-top:10px">👤 أب الاعتراف</label>
       <input type="text" id="editConfessorName" placeholder="اسم أب الاعتراف" />
       <div style="height:10px"></div>
+      <div style="display:none">
       <label class="field-label">🕊️ آخر اعتراف</label>
       <div class="row">
         <input type="date" id="editLastConfession" class="grow" />
@@ -4132,6 +4137,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
       <div class="row">
         <input type="date" id="editLastCommunion" class="grow" />
         <button class="btn btn-outline btn-sm" id="btnCommunionToday">اليوم</button>
+      </div>
       </div>
       <div style="height:10px"></div>
       <label class="field-label">🌱 المرحلة الروحية</label>
@@ -13796,8 +13802,6 @@ document.getElementById("btnSuggestMessage").addEventListener("click", async ()=
     `الاسم: ${c.name}`,
     `حالة الافتقاد: ${c.visited ? `تم (${c.visitMethod||''})` : 'بانتظار'}`,
     stageName ? `المرحلة الروحية: ${stageName}` : '',
-    c.lastConfession ? `آخر اعتراف: ${c.lastConfession}` : '',
-    c.lastCommunion ? `آخر تناول: ${c.lastCommunion}` : '',
     lastNote ? `آخر ملاحظة: ${lastNote}` : ''
   ].filter(Boolean).join("\n");
   const prompt = `اكتب رسالة افتقاد قصيرة بالعامية المصرية لشخص في خدمة كنسية قبطية، بناءً على البيانات دي:\n${contextLines}\n\nالرسالة تكون دافئة وشخصية ومناسبة لواتساب، من غير مبالغة، وميزيدش عن ٤-٥ أسطر. اكتب الرسالة بس من غير أي شرح أو مقدمة.`;
@@ -16820,8 +16824,6 @@ document.getElementById("btnExportContactsExcel").addEventListener("click", asyn
       "الموقع (خط الطول)": c.location?.lng ?? "",
       "تاريخ الميلاد": c.birthday||"",
       "أب الاعتراف": c.confessorName||"",
-      "آخر اعتراف": c.lastConfession||"",
-      "آخر تناول": c.lastCommunion||"",
       "حالة الافتقاد": c.visited ? `تم (${c.visitMethod||''})` : "بانتظار",
       "رقم غلط": c.wrongNumber ? "نعم" : "",
       "مفيش واتساب": c.noWhatsapp ? "نعم" : "",
@@ -17800,7 +17802,6 @@ const APP_MENU_ITEMS = [
   {key:"competitions", icon:"🏆", label:"مسابقات", cond:()=>myRole==="admin"||competitions.some(c=>c.forServants||c.showToServants), action:()=>openCompetitions()},
   {key:"league", icon:"⚽", label:"دوري وكأس", action:()=>openLeague()},
   {key:"quiz", icon:"❓", label:"بنك الأسئلة والمسابقات", action:()=>document.getElementById('btnOpenQuiz').click()},
-  {key:"sacraments", icon:"🕊️", label:"متابعة الأسرار", action:()=>document.getElementById('btnOpenSacraments').click()},
   {key:"leaderboard", icon:"🏆", label:"لوحة الصدارة", action:()=>document.getElementById('btnOpenLeaderboard').click()},
   {key:"resources", icon:"📚", label:"مكتبة المصادر", action:()=>document.getElementById('btnOpenResources').click()},
   {key:"contentgen", icon:"✨", label:"توليد محتوى بالـAI", action:()=>document.getElementById('btnOpenContentGen').click()},
@@ -19130,7 +19131,7 @@ document.getElementById("chkCodesSelectAll").addEventListener("change", (e)=>{
 // ==================================================================
 let directLinksSelected = new Set();
 function hasFilledMemberData(c){
-  return !!(c.address && c.location && c.birthday && c.confessorName && c.lastConfession && c.lastCommunion);
+  return !!(c.address && c.location && c.birthday && c.confessorName);
 }
 let directLinksFilter = "all", dlGroup = "all", dlServant = "all";
 function dlBase(){
@@ -29966,7 +29967,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "333"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "334"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
