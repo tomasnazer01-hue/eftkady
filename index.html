@@ -2903,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v334</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v335</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3189,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v334</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v335</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -11741,14 +11741,13 @@ function waKOpen(only){
   if(waK.running) waKRender(); else waKRefresh();
 }
 // 🛡️ v314 — حماية رقم الواتساب من الحظر: فاصل عشوائي بين الرسايل + حد للساعة واليوم (العدّاد على الجهاز)
-const WAG_DEF = {gapMin:120, gapMax:240, perHour:15, perDay:40};
+const WAG_DEF = {breakEvery:25, breakMin:15, perHour:0, perDay:40};
 const WAG_KEY = "waGuardLog_v1";
 let wagMem = [], wagNext = 0, wagTimer = null;
 try{ wagNext = +localStorage.getItem(WAG_KEY+"_next") || 0; }catch(_){}
 function wagCfg(){
   const o = {...WAG_DEF};
-  try{ const s = msgOv["waguard:"+(myService||"")]; if(s){ const p = JSON.parse(s); ["gapMin","gapMax","perHour","perDay"].forEach(k=>{ const n = +p[k]; if(isFinite(n) && n>=0) o[k] = n; }); } }catch(_){}
-  if(o.gapMax < o.gapMin) o.gapMax = o.gapMin;
+  try{ const s = msgOv["waguard:"+(myService||"")]; if(s){ const p = JSON.parse(s); ["breakEvery","breakMin","perHour","perDay"].forEach(k=>{ const n = +p[k]; if(isFinite(n) && n>=0) o[k] = n; }); } }catch(_){}
   return o;
 }
 function wagLog(){
@@ -11758,8 +11757,9 @@ function wagLog(){
 function wagRecord(){
   const cfg = wagCfg(), a = wagLog(); a.push(Date.now()); wagMem = a;
   try{ localStorage.setItem(WAG_KEY, JSON.stringify(a)); }catch(_){}
-  wagNext = Date.now() + (cfg.gapMin + Math.random()*(cfg.gapMax-cfg.gapMin))*1000;
-  try{ localStorage.setItem(WAG_KEY+"_next", String(wagNext)); }catch(_){}
+  let cnt = 0; try{ cnt = (+localStorage.getItem(WAG_KEY+"_cnt") || 0) + 1; }catch(_){ cnt = 1; }
+  if(cfg.breakEvery && cnt >= cfg.breakEvery){ cnt = 0; wagNext = Date.now() + cfg.breakMin*60e3; }
+  try{ localStorage.setItem(WAG_KEY+"_cnt", String(cnt)); localStorage.setItem(WAG_KEY+"_next", String(wagNext)); }catch(_){}
 }
 function wagState(){
   const cfg = wagCfg(), a = wagLog(), now = Date.now();
@@ -11784,11 +11784,11 @@ function wagBar(st, id){
   let msg = "";
   if(st.why==="day") msg = `🛑 وصلت حد النهارده (${c.perDay} رسالة). كمّل بكره عشان رقمك ما ياخدش حظر.`;
   else if(st.why==="hour") msg = `🛑 وصلت حد الساعة (${c.perHour}). تقدر تكمّل بعد <b data-wag-cd>${wagFmt(st.until-Date.now())}</b>`;
-  else if(st.why==="gap") msg = `⏳ استنى <b data-wag-cd>${wagFmt(st.until-Date.now())}</b> قبل الرسالة الجاية (حماية من الحظر)`;
+  else if(st.why==="gap") msg = `☕ بريك بعد ${c.breakEvery} رسالة — كمّل بعد <b data-wag-cd>${wagFmt(st.until-Date.now())}</b> (حماية من الحظر)`;
   else if(warn) msg = "⚠️ قربت من الحد — خليك براحة";
   return `<div id="${id||"wagBar"}" style="background:${bg};border-radius:10px;padding:8px 10px;font-size:12.5px;margin:8px 0">📊 الساعة دي: <b>${st.hr}/${c.perHour||"∞"}</b> • النهارده: <b>${st.day}/${c.perDay||"∞"}</b>${msg?`<div style="margin-top:4px">${msg}</div>`:""}</div>`;
 }
-function wagBlocked(){ const st = wagState(); if(!st.until) return false; toast(st.why==="gap" ? "استنى الوقت اللي في العدّاد الأول ⏳" : "وصلت حد الإرسال 🛑"); return true; }
+function wagBlocked(){ const st = wagState(); if(!st.until) return false; toast(st.why==="gap" ? "البريك شغال — استنى العدّاد ☕" : "وصلت حد الإرسال 🛑"); return true; }
 function wagWire(box, ids, rerender){
   if(wagTimer){ clearInterval(wagTimer); wagTimer = null; }
   const st = wagState(); if(!st.until) return;
@@ -11804,18 +11804,17 @@ function wagSetupHtml(){
   const inp = "width:80px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;font:inherit";
   return wagBar(st, "wagBarS") + (adm ? `<details style="font-size:12.5px;margin:0 0 8px"><summary style="cursor:pointer">⚙️ حدود الإرسال (لأمين الخدمة)</summary>
     <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-top:6px">
-      <span>أقل فاصل بين الرسايل (بالثانية)</span><input type="number" min="0" id="wagGapMin" value="${c.gapMin}" style="${inp}">
-      <span>أكبر فاصل (بالثانية)</span><input type="number" min="0" id="wagGapMax" value="${c.gapMax}" style="${inp}">
+      <span>بريك كل كام رسالة</span><input type="number" min="0" id="wagBreakEvery" value="${c.breakEvery}" style="${inp}">
+      <span>مدة البريك (بالدقيقة)</span><input type="number" min="0" id="wagBreakMin" value="${c.breakMin}" style="${inp}">
       <span>أقصى عدد رسايل في الساعة</span><input type="number" min="0" id="wagPerHour" value="${c.perHour}" style="${inp}">
       <span>أقصى عدد رسايل في اليوم</span><input type="number" min="0" id="wagPerDay" value="${c.perDay}" style="${inp}">
     </div>
-    <div class="muted" style="margin:6px 0">0 = من غير حد. الحدود دي للخدمة دي بس، والعدّاد بيتحسب على موبايل كل خادم لوحده (لأن كل واحد بيبعت من رقمه). الفاصل بيتختار عشوائي بين الرقمين.</div>
+    <div class="muted" style="margin:6px 0">0 = من غير حد. الحدود دي للخدمة دي بس، والعدّاد بيتحسب على موبايل كل خادم لوحده (لأن كل واحد بيبعت من رقمه). </div>
     <button type="button" class="btn btn-primary btn-sm" id="wagSave">💾 حفظ الحدود</button></details>` : "");
 }
 async function wagSave(root){
   const g = id=>Math.max(0, Math.round(+(root.querySelector("#"+id)||{}).value || 0));
-  const v = {gapMin:g("wagGapMin"), gapMax:g("wagGapMax"), perHour:g("wagPerHour"), perDay:g("wagPerDay")};
-  if(v.gapMax < v.gapMin) v.gapMax = v.gapMin;
+  const v = {breakEvery:g("wagBreakEvery"), breakMin:g("wagBreakMin"), perHour:g("wagPerHour"), perDay:g("wagPerDay")};
   const k = "waguard:"+(myService||""), old = msgOv[k];
   msgOv[k] = JSON.stringify(v);
   try{ await saveMsgOvAll(); toast("اتحفظت حدود الإرسال ✅"); }
@@ -29967,7 +29966,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "334"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "335"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
