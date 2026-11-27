@@ -2903,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v338</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v339</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3189,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v338</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v339</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -13323,9 +13323,17 @@ function renderMarriedTab(){
   }
   document.getElementById("marriedReportPreview").style.display = marriedTab==="report" ? "block" : "none";
   document.getElementById("btnExportMarriedReport").style.display = (marriedTab==="report" && lastMarriedReport && lastMarriedReport.sessions.length>0) ? "block" : "none";
-  if(marriedTab==="report"){ body.innerHTML = ""; return; }
+  if(marriedTab==="report"){ body.innerHTML = ""; delete body.dataset.rtab; delete body.dataset.rhtml; return; }
   const map = {anniv:renderMarriedAnniv, grad:renderMarriedGrad, done:renderMarriedDone, links:renderMarriedLinks, distribute:renderMarriedDistribute, msg:renderMarriedMsg, attendance:renderMarriedAttendance, incomplete:renderMarriedIncomplete, completedata:renderMarriedComplete, pending:renderMarriedPending};
-  body.innerHTML = (map[marriedTab]||renderMarriedAnniv)();
+  const _html = (map[marriedTab]||renderMarriedAnniv)();
+  // v339: لو المحتوى ما اتغيّرش (تحديث لحظي من الداتا) ما نبدّلش العناصر — عشان الضغطة ما تضيعش والصفحة ما تقفزش
+  const _sameTab = body.dataset.rtab === marriedTab && body.dataset.rhtml === _html;
+  if(_sameTab) return;
+  const _sc = document.scrollingElement ? document.scrollingElement.scrollTop : 0, _app = document.getElementById("app"), _sa = _app ? _app.scrollTop : 0;
+  const _tabChanged = body.dataset.rtab !== marriedTab;
+  body.dataset.rtab = marriedTab; body.dataset.rhtml = _html;
+  body.innerHTML = _html;
+  if(!_tabChanged){ try{ if(document.scrollingElement) document.scrollingElement.scrollTop = _sc; if(_app) _app.scrollTop = _sa; }catch(_){} }
   bindMarriedRowActions(body);
   if(marriedTab==="pending") bindMarriedPendingActions(body);
   document.getElementById("btnOpenDistributeMarried")?.addEventListener("click", openDistributeMarriedModal);
@@ -30083,7 +30091,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "338"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "339"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
