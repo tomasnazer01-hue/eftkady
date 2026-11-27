@@ -2903,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v336</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v337</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3189,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v336</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v337</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3375,6 +3375,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <label class="field-label">اليوم</label>
           <input type="date" id="servantGridDate" />
           <input type="search" id="servantGridSearch" placeholder="🔍 دوّر باسم الخادم..." style="margin-top:8px" autocomplete="off" />
+          <div id="sgColsAdmin" style="display:none;margin-top:8px"><button type="button" class="btn btn-outline btn-sm" id="btnSgColsEdit">⚙️ تعديل الخانات (تسمية / إضافة / حذف)</button><div id="sgColsEditor" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px"></div></div>
           <div style="margin-top:8px;font-size:12px;font-weight:700">📷 تسجيل بالاسكانر (اختار نوع الحضور وامسح كود الخادم):</div>
           <div id="sgScanRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
           <div id="sgScanPanel" style="display:none;margin-top:8px">
@@ -25985,16 +25986,28 @@ document.getElementById("adminPerfDetails").addEventListener("toggle", e=>{ if(e
 // ==================================================================
 // جدول تسجيل حضور الخدام (✓ قدام كل اسم) — للأمين + ليدر الفصل + مسؤول الحضور
 // ==================================================================
-const SERVANT_GRID_COLS = [
+const SERVANT_GRID_BASE = [
   {key:"liturgy", label:"القداس",        defName:"قداس"},
   {key:"comm",    label:"التناول",       defName:"تناول"},
   {key:"service", label:"الخدمة",        defName:"خدمة"},
   {key:"prep",    label:"التحضير",       defName:"تحضير"},
   {key:"meeting", label:"اجتماع الخدام", defName:"اجتماع الخدام"}
 ];
+// v337: خانات حضور الخدام قابلة للتعديل (تسمية/إضافة/حذف) — الإعداد محفوظ في msgOv["sgcols"]
+function sgConf(){ try{ const o = JSON.parse(msgOv["sgcols"]||"{}"); return {labels:o.labels||{}, hidden:o.hidden||[], custom:o.custom||[]}; }catch(_){ return {labels:{}, hidden:[], custom:[]}; } }
+function sgCols(){
+  const c = sgConf();
+  return [
+    ...SERVANT_GRID_BASE.filter(b=>!c.hidden.includes(b.key)).map(b=>({...b, label:(c.labels[b.key]||b.label)})),
+    ...c.custom.map(x=>({key:x.key, label:x.label, defName:x.label, mid:x.mid||null, custom:true}))
+  ];
+}
 function servantGridMeetingsFor(key){
-  const list = meetings.filter(m=>servantMeetingKind(m)===key);
-  const def = SERVANT_GRID_COLS.find(c=>c.key===key).defName;
+  const cc = sgConf().custom, cu = cc.find(x=>x.key===key);
+  if(cu) return meetings.filter(m=>m.id===cu.mid);
+  const cmids = new Set(cc.map(x=>x.mid).filter(Boolean));
+  const list = meetings.filter(m=>!cmids.has(m.id) && servantMeetingKind(m)===key);
+  const def = SERVANT_GRID_BASE.find(c=>c.key===key).defName;
   return list.sort((a,b)=>((b.name||"").includes(def)?1:0)-((a.name||"").includes(def)?1:0));
 }
 function servantGridVisibleServants(){
@@ -26013,6 +26026,8 @@ function renderServantGrid(){
   const card = document.getElementById("servantGridCard"); if(!card) return;
   if(!canUseServantGrid()){ card.style.display = "none"; return; }
   card.style.display = "block";
+  document.getElementById("sgColsAdmin").style.display = myRole==="admin" ? "block" : "none";
+  try{ sgBuildScanRow(); }catch(_){}
   const dateInp = document.getElementById("servantGridDate");
   if(!dateInp.value) dateInp.value = todayStr();
   const date = dateInp.value;
@@ -26027,14 +26042,14 @@ function renderServantGrid(){
   }
   if(!fullList.length){ document.getElementById("servantGridBody").innerHTML = `<div class="muted">مفيش خدام تسجل حضورهم</div>`; return; }
   if(!list.length){ document.getElementById("servantGridBody").innerHTML = `<div class="muted">مفيش خادم بالاسم ده</div>`; return; }
-  const idsByCol = {}; SERVANT_GRID_COLS.forEach(c=>{ idsByCol[c.key] = new Set(servantGridMeetingsFor(c.key).map(m=>m.id)); });
+  const idsByCol = {}; sgCols().forEach(c=>{ idsByCol[c.key] = new Set(servantGridMeetingsFor(c.key).map(m=>m.id)); });
   const recFor = (uid,key)=>servantAttendance.filter(a=>a.servantUid===uid && a.date===date && idsByCol[key].has(a.meetingId));
   const th = "border:1px solid var(--line);padding:6px 8px;text-align:center;background:var(--bg);font-size:12px;white-space:nowrap";
   const td = "border:1px solid var(--line);padding:4px 6px;text-align:center";
-  const counts = SERVANT_GRID_COLS.map(c=>fullList.filter(s=>recFor(s.id,c.key).length).length);
+  const counts = sgCols().map(c=>fullList.filter(s=>recFor(s.id,c.key).length).length);
   document.getElementById("servantGridBody").innerHTML = `<table style="border-collapse:collapse;width:100%;min-width:430px">
-    <thead><tr><th style="${th};text-align:right">الاسم</th>${SERVANT_GRID_COLS.map(c=>`<th style="${th}">${c.label}</th>`).join("")}</tr></thead>
-    <tbody>${list.map(s=>`<tr><td style="${td};text-align:right;font-weight:700;font-size:13px">${cardEsc(s.name||s.email||"")}</td>${SERVANT_GRID_COLS.map(c=>{
+    <thead><tr><th style="${th};text-align:right">الاسم</th>${sgCols().map(c=>`<th style="${th}">${c.label}</th>`).join("")}</tr></thead>
+    <tbody>${list.map(s=>`<tr><td style="${td};text-align:right;font-weight:700;font-size:13px">${cardEsc(s.name||s.email||"")}</td>${sgCols().map(c=>{
       const on = recFor(s.id,c.key).length>0;
       return `<td style="${td}"><button type="button" data-sg-uid="${s.id}" data-sg-col="${c.key}" style="width:34px;height:34px;border-radius:8px;border:1.5px solid ${on?'var(--sage)':'var(--line)'};background:${on?'var(--sage)':'#fff'};color:#fff;font-size:18px;font-weight:800;cursor:pointer">${on?'✓':''}</button></td>`;
     }).join("")}</tr>`).join("")}
@@ -26043,7 +26058,7 @@ function renderServantGrid(){
 async function servantGridToggle(uid, key, addOnly){
   const date = document.getElementById("servantGridDate").value || todayStr();
   const s = churchServants.find(x=>x.id===uid); if(!s) return;
-  const col = SERVANT_GRID_COLS.find(c=>c.key===key);
+  const col = sgCols().find(c=>c.key===key);
   const ms = servantGridMeetingsFor(key);
   const ids = new Set(ms.map(m=>m.id));
   const existing = servantAttendance.filter(a=>a.servantUid===uid && a.date===date && ids.has(a.meetingId));
@@ -26059,6 +26074,7 @@ async function servantGridToggle(uid, key, addOnly){
       // بيتضاف تلقائي من غير سؤال
       const ref = await addDoc(colMeetings, {name:col.defName, weekday:null, reminderTime:null, points:0, bonusCount:0, bonusPoints:0, bothBonusPoints:0, churchCode:myChurchCode, createdAt:serverTimestamp()});
       meetingId = ref.id;
+      if(col.custom){ const cf = sgConf(), cu = cf.custom.find(x=>x.key===key); if(cu){ cu.mid = ref.id; await sgSaveConf(cf); } }
     }
     const attId = `${uid}__${meetingId}__${date}`.replace(/[\/#\[\]]/g,"-");
     await setDoc(doc(db,"servantAttendance",attId), {
@@ -26076,14 +26092,56 @@ document.getElementById("servantGridBody").addEventListener("click", (e)=>{
   const b = e.target.closest("[data-sg-uid]"); if(!b) return;
   servantGridToggle(b.dataset.sgUid, b.dataset.sgCol);
 });
+async function sgSaveConf(c){
+  const k = "sgcols", old = msgOv[k]; msgOv[k] = JSON.stringify(c);
+  try{ await saveMsgOvAll(); return true; }
+  catch(err){ if(old===undefined) delete msgOv[k]; else msgOv[k] = old; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); return false; }
+}
+function sgRenderEditor(){
+  const box = document.getElementById("sgColsEditor"); if(!box) return;
+  const cols = sgCols(), inp = "flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit";
+  box.innerHTML = cols.map(c=>`<div class="row" style="gap:6px;margin-bottom:6px;align-items:center"><input type="text" value="${cardEsc(c.label)}" data-sg-rename="${c.key}" style="${inp}"><button type="button" class="btn btn-primary btn-sm" data-sg-ren-save="${c.key}">💾</button><button type="button" class="btn btn-ghost btn-sm" data-sg-del="${c.key}" title="حذف الخانة">🗑️</button></div>`).join("")
+   + `<div class="row" style="gap:6px;margin:8px 0;align-items:center"><input type="text" id="sgNewColName" placeholder="اسم خانة جديدة (مثال: رحلة / صلاة)" style="${inp}"><button type="button" class="btn btn-gold btn-sm" id="btnSgAddCol">➕ إضافة</button></div>`
+   + `<div class="muted" style="font-size:11.5px">الحذف بيشيل الخانة من الجدول بس، وبيانات الحضور القديمة بتفضل محفوظة. تقدر ترجّع الخانات الأصلية بزر الرجوع.</div><button type="button" class="btn btn-ghost btn-sm" id="btnSgReset" style="margin-top:6px">↩️ رجّع الخانات الأصلية</button>`;
+}
+document.getElementById("btnSgColsEdit").addEventListener("click", ()=>{ const b = document.getElementById("sgColsEditor"); b.style.display = b.style.display==="none" ? "block" : "none"; if(b.style.display==="block") sgRenderEditor(); });
+document.getElementById("sgColsEditor").addEventListener("click", async (e)=>{
+  if(myRole!=="admin") return;
+  const t = e.target.closest("button"); if(!t) return;
+  const c = sgConf();
+  if(t.dataset.sgRenSave){
+    const key = t.dataset.sgRenSave, v = (document.querySelector(`[data-sg-rename="${key}"]`).value||"").trim();
+    if(!v){ toast("اكتب الاسم"); return; }
+    const cu = c.custom.find(x=>x.key===key);
+    if(cu){ cu.label = v; if(cu.mid){ try{ await updateDoc(doc(db,"meetings",cu.mid), {name:v}); }catch(err){ console.warn(err); } } } else c.labels[key] = v;
+    if(await sgSaveConf(c)){ toast("اتغيّر الاسم ✅"); }
+  } else if(t.dataset.sgDel){
+    const key = t.dataset.sgDel, cu = c.custom.find(x=>x.key===key);
+    if(!confirm("تحذف الخانة دي من الجدول؟ (بيانات الحضور القديمة هتفضل محفوظة)")) return;
+    if(cu) c.custom = c.custom.filter(x=>x.key!==key); else if(!c.hidden.includes(key)) c.hidden.push(key);
+    await sgSaveConf(c);
+  } else if(t.id==="btnSgAddCol"){
+    const v = (document.getElementById("sgNewColName").value||"").trim();
+    if(!v){ toast("اكتب اسم الخانة"); return; }
+    let mid = null;
+    try{ const ref = await addDoc(colMeetings, {name:v, weekday:null, reminderTime:null, points:0, bonusCount:0, bonusPoints:0, bothBonusPoints:0, churchCode:myChurchCode, createdAt:serverTimestamp()}); mid = ref.id; }catch(err){ console.warn(err); }
+    c.custom.push({key:"c"+Date.now().toString(36), label:v, mid});
+    await sgSaveConf(c);
+  } else if(t.id==="btnSgReset"){
+    if(!confirm("ترجّع الخانات الأصلية؟ (الخانات الجديدة هتتشال من الجدول)")) return;
+    await sgSaveConf({labels:{}, hidden:[], custom:[]});
+  } else return;
+  sgRenderEditor(); renderServantGrid(); sgBuildScanRow();
+});
 document.getElementById("servantGridDate").addEventListener("change", renderServantGrid);
 document.getElementById("servantGridSearch").addEventListener("input", renderServantGrid);
 
 // اسكانر حضور الخدام فوق كل عمود (قداس/تناول/خدمة/تحضير/اجتماع)
 let sgScanner = null, sgScanKey = null, sgLastScan = 0, sgLastCode = "";
+function sgBuildScanRow(){ const r = document.getElementById("sgScanRow"), sig = sgCols().map(c=>c.key+c.label).join("|"); if(r.dataset.sig===sig && r.children.length) return; r.dataset.sig = sig; r.innerHTML = sgCols().map(c=>`<button type="button" class="btn btn-ghost btn-sm" data-sg-scan="${c.key}">📷 ${c.label}</button>`).join(""); }
 (function(){
   const row = document.getElementById("sgScanRow");
-  row.innerHTML = SERVANT_GRID_COLS.map(c=>`<button type="button" class="btn btn-ghost btn-sm" data-sg-scan="${c.key}">📷 ${c.label}</button>`).join("");
+  sgBuildScanRow();
   row.addEventListener("click", (e)=>{ const b = e.target.closest("[data-sg-scan]"); if(b) sgStartScan(b.dataset.sgScan); });
   document.getElementById("btnSgScanStop").addEventListener("click", sgStopScan);
 })();
@@ -26097,7 +26155,7 @@ async function sgStartScan(key){
   await sgStopScan();
   try{ await scannerReady; }catch(_){ toast("تعذر تحميل الماسح — تأكد من الإنترنت"); return; }
   if(!window.Html5Qrcode){ toast("جاري تحميل الماسح، حاول تاني بعد ثانية"); return; }
-  const col = SERVANT_GRID_COLS.find(c=>c.key===key);
+  const col = sgCols().find(c=>c.key===key);
   sgScanKey = key;
   document.getElementById("sgScanPanel").style.display = "block";
   document.getElementById("sgScanTitle").textContent = `📷 بتسجل: ${col.label} — يوم ${document.getElementById("servantGridDate").value||todayStr()}`;
@@ -29972,7 +30030,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "336"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "337"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
