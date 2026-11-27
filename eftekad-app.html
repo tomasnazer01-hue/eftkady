@@ -2903,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v337</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v338</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3189,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v337</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v338</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -3199,12 +3199,8 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           </div>
           <input type="search" id="mgSearch" placeholder="🔍 دوّر باسم المخدوم..." style="margin-top:8px" autocomplete="off" />
           <div style="margin-top:8px;font-size:12px;font-weight:700">📷 تسجيل بالاسكانر:</div>
-          <div class="row wrap" style="gap:6px;margin-top:6px">
-            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="liturgy">📷 القداس</button>
-            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="meeting">📷 الاجتماع</button>
-            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="club">📷 النادي</button>
-            <button type="button" class="btn btn-ghost btn-sm" data-mg-scan="participation">📷 المشاركة</button>
-          </div>
+          <div class="row wrap" id="mgScanRow" style="gap:6px;margin-top:6px"></div>
+          <div id="mgColsAdmin" style="display:none;margin-top:8px"><button type="button" class="btn btn-outline btn-sm" id="btnMgColsEdit">⚙️ تعديل الأعمدة (تسمية / إضافة / حذف)</button><div id="mgColsEditor" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:10px;padding:8px"></div></div>
           <div id="mgScanPanel" style="display:none;margin-top:8px">
             <div id="mgScanTitle" style="font-weight:800;margin-bottom:4px"></div>
             <div id="qr-reader-mg"></div>
@@ -18902,7 +18898,7 @@ document.querySelectorAll('[data-atab]').forEach(b=>{
 // ==================================================================
 // جدول تسجيل حضور المخدومين (قداس / اجتماع) + اسكانر
 // ==================================================================
-const MEMBER_GRID_COLS = [
+const MEMBER_GRID_BASE = [
   {key:"liturgy", label:"القداس", defName:"قداس"},
   {key:"meeting", label:"الاجتماع", defName:"اجتماع"},
   {key:"club", label:"النادي", defName:"نادي"},
@@ -18918,9 +18914,21 @@ function memberGridType(m){
   if(n.includes("مشارك")) return "participation";
   return "";
 }
+// v338: أعمدة حضور المخدومين قابلة للتعديل (تسمية/إضافة/حذف) — الإعداد في msgOv["mgcols"]
+function mgConf(){ try{ const o = JSON.parse(msgOv["mgcols"]||"{}"); return {labels:o.labels||{}, hidden:o.hidden||[], custom:o.custom||[]}; }catch(_){ return {labels:{}, hidden:[], custom:[]}; } }
+function mgCols(){
+  const c = mgConf();
+  return [
+    ...MEMBER_GRID_BASE.filter(b=>!c.hidden.includes(b.key)).map(b=>({...b, label:(c.labels[b.key]||b.label)})),
+    ...c.custom.map(x=>({key:x.key, label:x.label, defName:x.label, mid:x.mid||null, custom:true}))
+  ];
+}
 function memberMeetingsFor(key){
-  const list = meetings.filter(m=>!(m.name||"").includes("خدام") && memberGridType(m)===key);
-  const def = MEMBER_GRID_COLS.find(c=>c.key===key).defName;
+  const cc = mgConf().custom, cu = cc.find(x=>x.key===key);
+  if(cu) return meetings.filter(m=>m.id===cu.mid);
+  const cmids = new Set(cc.map(x=>x.mid).filter(Boolean));
+  const list = meetings.filter(m=>!cmids.has(m.id) && !(m.name||"").includes("خدام") && memberGridType(m)===key);
+  const def = MEMBER_GRID_BASE.find(c=>c.key===key).defName;
   return list.sort((a,b)=>((b.name||"").includes(def)?1:0)-((a.name||"").includes(def)?1:0));
 }
 function memberGridVisible(){
@@ -18940,6 +18948,8 @@ function memberGridRecs(c, key, date){
 function renderMemberGrid(){
   const card = document.getElementById("memberGridCard"); if(!card) return;
   if(document.activeElement && document.activeElement.dataset && document.activeElement.dataset.mgPts!==undefined) return; // بيكتب نقاط — ما نقطعوش
+  document.getElementById("mgColsAdmin").style.display = myRole==="admin" ? "block" : "none";
+  try{ mgBuildScanRow(); }catch(_){}
   const dateInp = document.getElementById("mgDate"); if(!dateInp.value) dateInp.value = todayStr();
   const date = dateInp.value;
   try{ populateGroupServantFilters("mgGroup","mgServant"); }catch(e){ console.error("mg filters", e); }
@@ -18952,11 +18962,11 @@ function renderMemberGrid(){
   if(!list.length){ body.innerHTML = `<div class="muted">مفيش مخدومين بالفلتر ده</div>`; return; }
   const th = "border:1px solid var(--line);padding:6px 8px;text-align:center;background:var(--bg);font-size:12px;white-space:nowrap";
   const td = "border:1px solid var(--line);padding:4px 6px;text-align:center";
-  const counts = MEMBER_GRID_COLS.map(col=>full.filter(c=>memberGridRecs(c,col.key,date).length).length);
+  const counts = mgCols().map(col=>full.filter(c=>memberGridRecs(c,col.key,date).length).length);
   const shown = list.slice(0,300);
   body.innerHTML = `<table style="border-collapse:collapse;width:100%;min-width:300px">
-    <thead><tr><th style="${th};text-align:right">الاسم</th>${MEMBER_GRID_COLS.map(c=>{ const pv = memberMeetingsFor(c.key)[0]?.points||0; return `<th style="${th}">${c.label}<div style="margin-top:3px;font-weight:400"><input type="number" inputmode="numeric" min="0" data-mg-pts="${c.key}" value="${pv}" ${myRole==="admin"?"":"disabled"} title="نقاط ${c.label} لكل حضور" style="width:54px;padding:3px;text-align:center;font-size:12px;border:1.5px solid var(--gold);border-radius:6px"> <span style="font-size:10px">نقطة</span></div></th>`; }).join("")}</tr></thead>
-    <tbody>${shown.map(c=>`<tr><td style="${td};text-align:right;font-weight:700;font-size:13px">${cardEsc(c.name||"")}</td>${MEMBER_GRID_COLS.map(col=>{
+    <thead><tr><th style="${th};text-align:right">الاسم</th>${mgCols().map(c=>{ const pv = memberMeetingsFor(c.key)[0]?.points||0; return `<th style="${th}">${c.label}<div style="margin-top:3px;font-weight:400"><input type="number" inputmode="numeric" min="0" data-mg-pts="${c.key}" value="${pv}" ${myRole==="admin"?"":"disabled"} title="نقاط ${c.label} لكل حضور" style="width:54px;padding:3px;text-align:center;font-size:12px;border:1.5px solid var(--gold);border-radius:6px"> <span style="font-size:10px">نقطة</span></div></th>`; }).join("")}</tr></thead>
+    <tbody>${shown.map(c=>`<tr><td style="${td};text-align:right;font-weight:700;font-size:13px">${cardEsc(c.name||"")}</td>${mgCols().map(col=>{
       const on = memberGridRecs(c,col.key,date).length>0;
       return `<td style="${td}"><button type="button" data-mg-cid="${c.id}" data-mg-col="${col.key}" style="width:34px;height:34px;border-radius:8px;border:1.5px solid ${on?'var(--sage)':'var(--line)'};background:${on?'var(--sage)':'#fff'};color:#fff;font-size:18px;font-weight:800;cursor:pointer">${on?'✓':''}</button></td>`;
     }).join("")}</tr>`).join("")}
@@ -18964,7 +18974,7 @@ function renderMemberGrid(){
 }
 async function memberGridMark(c, key, addOnly){
   const date = document.getElementById("mgDate").value || todayStr();
-  const col = MEMBER_GRID_COLS.find(x=>x.key===key);
+  const col = mgCols().find(x=>x.key===key);
   const existing = memberGridRecs(c, key, date);
   try{
     if(existing.length){
@@ -19010,7 +19020,7 @@ async function memberGridMark(c, key, addOnly){
 document.getElementById("mgBody").addEventListener("change", async (e)=>{
   const inp = e.target.closest("[data-mg-pts]"); if(!inp) return;
   if(myRole!=="admin"){ toast("تعديل النقاط للأمين بس"); return; }
-  const key = inp.dataset.mgPts, col = MEMBER_GRID_COLS.find(x=>x.key===key);
+  const key = inp.dataset.mgPts, col = mgCols().find(x=>x.key===key);
   const pts = Math.max(0, parseInt(normalizeDigits(inp.value))||0);
   try{
     const m = memberMeetingsFor(key)[0];
@@ -19046,7 +19056,7 @@ async function mgStartScan(key){
   await mgStopScan();
   try{ await scannerReady; }catch(_){ toast("تعذر تحميل الماسح — تأكد من الإنترنت"); return; }
   if(!window.Html5Qrcode){ toast("جاري تحميل الماسح، حاول تاني بعد ثانية"); return; }
-  const col = MEMBER_GRID_COLS.find(c=>c.key===key); mgScanKey = key;
+  const col = mgCols().find(c=>c.key===key); mgScanKey = key;
   document.getElementById("mgScanPanel").style.display = "block";
   document.getElementById("mgScanTitle").textContent = `📷 بتسجل: ${col.label} — يوم ${document.getElementById("mgDate").value||todayStr()}`;
   document.getElementById("mgScanMsg").textContent = "";
@@ -19070,7 +19080,50 @@ async function mgOnScan(text){
   if(r==="added"){ msg.style.color="var(--sage)"; msg.textContent = `✅ ${c.name} — تم تسجيل الحضور`; toast(`✅ ${c.name}`); }
   else if(r==="already"){ msg.style.color="#B8860B"; msg.textContent = `${c.name} — مسجل بالفعل`; }
 }
-document.querySelectorAll("[data-mg-scan]").forEach(b=>b.addEventListener("click", ()=>mgStartScan(b.dataset.mgScan)));
+document.getElementById("mgScanRow").addEventListener("click", (e)=>{ const b = e.target.closest("[data-mg-scan]"); if(b) mgStartScan(b.dataset.mgScan); });
+function mgBuildScanRow(){ const r = document.getElementById("mgScanRow"), sig = mgCols().map(c=>c.key+c.label).join("|"); if(r.dataset.sig===sig && r.children.length) return; r.dataset.sig = sig; r.innerHTML = mgCols().map(c=>`<button type="button" class="btn btn-ghost btn-sm" data-mg-scan="${c.key}">📷 ${cardEsc(c.label)}</button>`).join(""); }
+mgBuildScanRow();
+async function mgSaveConf(c){
+  const k = "mgcols", old = msgOv[k]; msgOv[k] = JSON.stringify(c);
+  try{ await saveMsgOvAll(); return true; }
+  catch(err){ if(old===undefined) delete msgOv[k]; else msgOv[k] = old; console.error(err); toast("تعذر الحفظ" + (err&&err.code ? " ("+err.code+")" : "")); return false; }
+}
+function mgRenderEditor(){
+  const box = document.getElementById("mgColsEditor"); if(!box) return;
+  const inp = "flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit";
+  box.innerHTML = mgCols().map(c=>`<div class="row" style="gap:6px;margin-bottom:6px;align-items:center"><input type="text" value="${cardEsc(c.label)}" data-mg-rename="${c.key}" style="${inp}"><button type="button" class="btn btn-primary btn-sm" data-mg-ren-save="${c.key}">💾</button><button type="button" class="btn btn-ghost btn-sm" data-mg-del="${c.key}" title="حذف العمود">🗑️</button></div>`).join("")
+   + `<div class="row" style="gap:6px;margin:8px 0;align-items:center"><input type="text" id="mgNewColName" placeholder="اسم عمود جديد (مثال: رحلة / صلاة)" style="${inp}"><button type="button" class="btn btn-gold btn-sm" id="btnMgAddCol">➕ إضافة</button></div>`
+   + `<div class="muted" style="font-size:11.5px">الحذف بيشيل العمود من الجدول بس، وبيانات الحضور القديمة ونقاطها بتفضل محفوظة. تقدر ترجّع الأعمدة الأصلية بزر الرجوع.</div><button type="button" class="btn btn-ghost btn-sm" id="btnMgReset" style="margin-top:6px">↩️ رجّع الأعمدة الأصلية</button>`;
+}
+document.getElementById("btnMgColsEdit").addEventListener("click", ()=>{ const b = document.getElementById("mgColsEditor"); b.style.display = b.style.display==="none" ? "block" : "none"; if(b.style.display==="block") mgRenderEditor(); });
+document.getElementById("mgColsEditor").addEventListener("click", async (e)=>{
+  if(myRole!=="admin") return;
+  const t = e.target.closest("button"); if(!t) return;
+  const c = mgConf();
+  if(t.dataset.mgRenSave){
+    const key = t.dataset.mgRenSave, v = (document.querySelector(`[data-mg-rename="${key}"]`).value||"").trim();
+    if(!v){ toast("اكتب الاسم"); return; }
+    const cu = c.custom.find(x=>x.key===key);
+    if(cu){ cu.label = v; if(cu.mid){ try{ await updateDoc(doc(db,"meetings",cu.mid), {name:v}); }catch(err){ console.warn(err); } } } else c.labels[key] = v;
+    if(await mgSaveConf(c)) toast("اتغيّر الاسم ✅");
+  } else if(t.dataset.mgDel){
+    const key = t.dataset.mgDel, cu = c.custom.find(x=>x.key===key);
+    if(!confirm("تحذف العمود ده من الجدول؟ (بيانات الحضور القديمة هتفضل محفوظة)")) return;
+    if(cu) c.custom = c.custom.filter(x=>x.key!==key); else if(!c.hidden.includes(key)) c.hidden.push(key);
+    await mgSaveConf(c);
+  } else if(t.id==="btnMgAddCol"){
+    const v = (document.getElementById("mgNewColName").value||"").trim();
+    if(!v){ toast("اكتب اسم العمود"); return; }
+    let mid = null;
+    try{ const ref = await addDoc(colMeetings, {name:v, weekday:null, reminderTime:null, points:0, bonusCount:0, bonusPoints:0, bothBonusPoints:0, treeType:"none", churchCode:myChurchCode, createdAt:serverTimestamp()}); mid = ref.id; }catch(err){ console.warn(err); toast("تعذر إنشاء العمود"); return; }
+    c.custom.push({key:"c"+Date.now().toString(36), label:v, mid});
+    await mgSaveConf(c);
+  } else if(t.id==="btnMgReset"){
+    if(!confirm("ترجّع الأعمدة الأصلية؟ (الأعمدة الجديدة هتتشال من الجدول)")) return;
+    await mgSaveConf({labels:{}, hidden:[], custom:[]});
+  } else return;
+  mgRenderEditor(); mgBuildScanRow(); renderMemberGrid();
+});
 document.getElementById("btnMgScanStop").addEventListener("click", mgStopScan);
 document.querySelectorAll('[data-atab]').forEach(b=>b.addEventListener("click", ()=>{ if(b.dataset.atab!=="scan") mgStopScan(); }));
 
@@ -30030,7 +30083,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "337"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "338"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
