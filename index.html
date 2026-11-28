@@ -2903,7 +2903,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
           <button class="btn btn-outline btn-sm" id="btnNoLocFilter">📍 بدون لوكيشن</button>
           <button class="btn btn-gold btn-sm" id="btnSeqFromContacts">▶ حدد الموقع واحد واحد</button>
           <span id="streetFilterActive"></span>
-          <span class="muted" style="font-size:10px;margin-inline-start:auto">v339</span>
+          <span class="muted" style="font-size:10px;margin-inline-start:auto">v340</span>
         </div>
         <div class="row" style="margin-bottom:8px;gap:6px">
           <button class="btn btn-outline btn-sm" id="btnToggleContactFilters">🎛️ فلتر <span id="contactFiltersBadge"></span></button>
@@ -3189,7 +3189,7 @@ try{ if(!sessionStorage.getItem("idxRedir") && location.pathname==="/" && !locat
 
       <div id="atab-scan" style="display:none">
         <div class="card" id="memberGridCard">
-          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v339</span></h2>
+          <h2 style="margin:0 0 4px">✅ تسجيل حضور المخدومين <span class="muted" style="font-size:10px;font-weight:400">v340</span></h2>
           <p class="muted" style="margin-top:0;font-size:12px">اختار اليوم، وبعدين دوس على الخانة قدام كل اسم (قداس / اجتماع) أو استخدم الاسكانر. دوسة تانية على ✓ بتلغي الحضور.</p>
           <label class="field-label">اليوم</label>
           <input type="date" id="mgDate" />
@@ -14370,6 +14370,7 @@ document.getElementById("btnSaveEdit").addEventListener("click", async ()=>{
     assignedToName: assignedServant ? (assignedServant.name||assignedServant.email) : null
   };
   const contactService = myService || c.service || null;
+  if(chosenGroup !== c.group && (assignedUid||null) === (c.assignedTo||null)){ autoReset(); const ra = regroupAssign(c, chosenGroup); if(ra){ Object.assign(updates, ra); toast("🔀 اتوزّع تلقائي على: " + ra.assignedToName); } }
   if(contactService==="ابتدائي"){
     updates.fatherName = document.getElementById("editFatherName").value.trim() || null;
     updates.fatherPhone = document.getElementById("editFatherPhone").value.trim() || null;
@@ -14803,6 +14804,14 @@ function autoAssignPicker(gid, svc){
   _autoPlans.set(k, pick); setTimeout(()=>_autoPlans.delete(k), 60000);
   return pick;
 }
+// v340: لما المخدوم يتنقل لمجموعة تانية ← يتوزع تلقائي على خدام المجموعة الجديدة (الأقل عددًا)
+function regroupAssign(c, newGid){
+  try{
+    if(autoAssignOff || !c || isFamilyRecord(c) || (c.service||myService)==="متزوجين") return null;
+    const g = groups.find(x=>x.id===newGid); if(!g || g.special) return null;
+    const p = autoAssignPicker(newGid, c.service||myService||null); return p ? p() : null;
+  }catch(_){ return null; }
+}
 // الأسر (متزوجين): خانة الزوج ← خدام (أنكل) الأقل أسر، وخانة الزوجة ← خادمات (تاسوني) الأقل أسر. بيكمّل الخانة الناقصة بس.
 function autoAssignFamilyPlan(){
   const act = autoActiveServants(myService||null);
@@ -15073,9 +15082,13 @@ document.getElementById("btnConfirmMove").addEventListener("click", async ()=>{
     const c = contacts.find(x=>x.id===id);
     return {id, group: c?.group||null, prevGroup: c?.prevGroup||null};
   });
+  autoReset();
   for(const id of selectedIds){
-    await updateDoc(doc(db,"contacts",id), { group: gid, prevGroup: null });
+    const c0 = contacts.find(x=>x.id===id);
+    const ra = (c0 && c0.group!==gid) ? regroupAssign(c0, gid) : null;
+    await updateDoc(doc(db,"contacts",id), { group: gid, prevGroup: null, ...(ra||{}) });
   }
+  autoReset();
   logActivity("نقل أشخاص لمجموعة", `${selectedIds.size} شخص → ${groupName(gid)}`);
   recordUndo(`نقل ${selectedIds.size} شخص لمجموعة ${groupName(gid)}`, before);
   closeModal("modalMove"); selectedIds.clear(); renderContacts();
@@ -17239,8 +17252,11 @@ document.getElementById("btnConfirmGroupMatch").addEventListener("click", async 
     });
     let batch = writeBatch(db);
     let ops = 0;
+    autoReset();
     for(const id of chosenIds){
-      batch.update(doc(db,"contacts",id), {group: targetGroup, prevGroup: null});
+      const c0 = contacts.find(x=>x.id===id);
+      const ra = (c0 && c0.group!==targetGroup) ? regroupAssign(c0, targetGroup) : null;
+      batch.update(doc(db,"contacts",id), {group: targetGroup, prevGroup: null, ...(ra||{})});
       ops++;
       if(ops>=400){ await batch.commit(); batch = writeBatch(db); ops=0; }
     }
@@ -30091,7 +30107,7 @@ function areaReset(){ AREA.poly=[]; AREA.cur=null; AREA.ways=null; AREA.drawing=
   areaRenderList();
 })();
 
-const APP_VERSION = "339"; // shown in the members' install card so we can tell which build is really live
+const APP_VERSION = "340"; // shown in the members' install card so we can tell which build is really live
 // The installable-app manifests are REAL files on the server (manifest.json = servants' app, manifest-member.json =
 // members' "شجرتي" app), picked by the small script in <head>. Chrome on Android will not build an installable app
 // from a manifest generated at runtime (blob: URL) — it only offers a shortcut — so nothing here builds one anymore.
